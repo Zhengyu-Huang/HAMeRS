@@ -98,6 +98,37 @@ ConvectiveFluxReconstructorFirstOrderHLLC::computeConvectiveFluxAndSourceOnPatch
             patch.getPatchGeometry()));
     
     const double* const dx = patch_geom->getDx();
+    const double* const x_lo = patch_geom->getXLower();
+
+    /*
+     * Compute the cell status.
+     */
+
+    boost::shared_ptr<pdat::CellData<int> > cell_status;
+    cell_status.reset(
+            new pdat::CellData<int>(interior_box, 1, d_num_conv_ghosts));
+    cell_status->fillAll(int(1));
+    if (d_dim == tbox::Dimension(1))
+    {}else if (d_dim == tbox::Dimension(1))
+    {
+        /*
+         * Compute the status of cells, including ghost cells
+         */
+
+        int* cell_status_data = cell_status->getPointer(0);
+        for (int i = 0; i < interior_dims[0] + 2*d_num_conv_ghosts[0]; i++)
+            for (int j = 0; j < interior_dims[1] + 2*d_num_conv_ghosts[1]; j++)
+            {
+                // Compute the linear indices.
+                const double x = x_lo[0] + (i + 0.5 - d_num_conv_ghosts[0])*dx[0], y = x_lo[1] + (j + 0.5 - d_num_conv_ghosts[1])*dx[1];
+                const int idx = i + j*(interior_dims[1] + 2*d_num_conv_ghosts[1]);
+                cell_status_data[idx] = 0;
+            }
+
+
+    }else if (d_dim == tbox::Dimension(3))
+    {}
+
     
     // Get the side data of convective flux.
     boost::shared_ptr<pdat::SideData<double> > convective_flux(
