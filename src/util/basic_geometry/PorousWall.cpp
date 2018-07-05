@@ -52,9 +52,11 @@ computeCellStatus(boost::shared_ptr<pdat::CellData<int> > &cell_status,
 
         for (int i = 0; i < interior_dims[0] + 2 * d_num_conv_ghosts[0]; i++)
             for (int j = 0; j < interior_dims[1] + 2 * d_num_conv_ghosts[1]; j++) {
-                const double x = x_lo[0] + (i + 0.5 - d_num_conv_ghosts[0]) * dx[0], y =
-                        x_lo[1] + (j + 0.5 - d_num_conv_ghosts[1]) * dx[1];
-                const int idx = i + j * (interior_dims[1] + 2 * d_num_conv_ghosts[1]);
+                const double x = x_lo[0] + (i + 0.5 - d_num_conv_ghosts[0]) * dx[0],
+                             y = x_lo[1] + (j + 0.5 - d_num_conv_ghosts[1]) * dx[1];
+                const int idx = i + j * (interior_dims[0] + 2 * d_num_conv_ghosts[0]);
+                //std::cout << "(i,j) " << i << " " << j << " interior dim " << interior_dims
+                //          << " ghosts " << d_num_conv_ghosts << " idx " << idx << std::endl;
                 cell_status_data[idx] = isOutside(2, x, y);
             }
 
