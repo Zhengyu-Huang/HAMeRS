@@ -1,7 +1,7 @@
 #include "flow/convective_flux_reconstructors/first_order/ConvectiveFluxReconstructorFirstOrderHLLC.hpp"
 
 #include "SAMRAI/geom/CartesianPatchGeometry.h"
-
+#include "util/basic_geometry/PorousWall.hpp"
 ConvectiveFluxReconstructorFirstOrderHLLC::ConvectiveFluxReconstructorFirstOrderHLLC(
     const std::string& object_name,
     const tbox::Dimension& dim,
@@ -107,27 +107,8 @@ ConvectiveFluxReconstructorFirstOrderHLLC::computeConvectiveFluxAndSourceOnPatch
     boost::shared_ptr<pdat::CellData<int> > cell_status;
     cell_status.reset(
             new pdat::CellData<int>(interior_box, 1, d_num_conv_ghosts));
-    cell_status->fillAll(int(1));
-    if (d_dim == tbox::Dimension(1))
-    {}else if (d_dim == tbox::Dimension(1))
-    {
-        /*
-         * Compute the status of cells, including ghost cells
-         */
-
-        int* cell_status_data = cell_status->getPointer(0);
-        for (int i = 0; i < interior_dims[0] + 2*d_num_conv_ghosts[0]; i++)
-            for (int j = 0; j < interior_dims[1] + 2*d_num_conv_ghosts[1]; j++)
-            {
-                // Compute the linear indices.
-                const double x = x_lo[0] + (i + 0.5 - d_num_conv_ghosts[0])*dx[0], y = x_lo[1] + (j + 0.5 - d_num_conv_ghosts[1])*dx[1];
-                const int idx = i + j*(interior_dims[1] + 2*d_num_conv_ghosts[1]);
-                cell_status_data[idx] = 0;
-            }
-
-
-    }else if (d_dim == tbox::Dimension(3))
-    {}
+    int* cell_status_data = cell_status->getPointer(0);
+    computeCellStatus(cell_status, x_lo,  dx);
 
     
     // Get the side data of convective flux.
@@ -443,9 +424,32 @@ ConvectiveFluxReconstructorFirstOrderHLLC::computeConvectiveFluxAndSourceOnPatch
                     const int idx_R = (i + num_subghosts_conservative_var[ei][0]) +
                         (j + num_subghosts_conservative_var[ei][1])*
                             subghostcell_dims_conservative_var[ei][0];
-                    
+
                     Q_minus[ei][idx_face_x] = Q[ei][idx_L];
                     Q_plus[ei][idx_face_x] = Q[ei][idx_R];
+
+                    /*
+                     * Modify flow states near the wall, to impose transmission condition,
+                     * weakly impose the transmission condition.
+                     */
+                    if(cell_status_data[idx_L] == 0){
+                        if(ei == 1)
+                            Q_minus[ei][idx_face_x] = -Q_plus[ei][idx_face_x];
+                        else
+                            Q_minus[ei][idx_face_x] = Q_plus[ei][idx_face_x];
+
+                        //std::cout << "L(i,j)=( " <<i << " , " << j << " ) " << "(x,yc) " << x_lo[0] + i*dx[0]  <<  " , " <<  x_lo[1] + (j + 0.5)*dx[1]  << " ei " << ei << std::endl;
+
+                    } else if(cell_status_data[idx_R] == 0)
+                    {
+                        if(ei == 1)
+                            Q_plus[ei][idx_face_x] = -Q_minus[ei][idx_face_x];
+                        else
+                            Q_plus[ei][idx_face_x]  = Q_minus[ei][idx_face_x];
+
+                        //std::cout << "R(i,j)=( " <<i << " , " << j << " ) " << "(x,yc) " << x_lo[0] + i*dx[0]  <<  " , " <<  x_lo[1] + (j + 0.5)*dx[1]  << " ei " << ei << std::endl;
+
+                    }
                 }
             }
         }
@@ -520,6 +524,29 @@ ConvectiveFluxReconstructorFirstOrderHLLC::computeConvectiveFluxAndSourceOnPatch
                     
                     Q_minus[ei][idx_face_y] = Q[ei][idx_B];
                     Q_plus[ei][idx_face_y] = Q[ei][idx_T];
+
+                    /*
+                     * Modify flow states near the wall, to impose transmission condition,
+                     * weakly impose the transmission condition.
+                     */
+                    if(cell_status_data[idx_B] == 0){
+                        if(ei == 2)
+                            Q_minus[ei][idx_face_y] = -Q_plus[ei][idx_face_y];
+                        else
+                            Q_minus[ei][idx_face_y] = Q_plus[ei][idx_face_y];
+
+                        //std::cout << "B(i,j)=( " <<i << " , " << j << " ) " << "(x,yc) " << x_lo[0] + (i + 0.5)*dx[0]  <<  " , " <<  x_lo[1] + j*dx[1]  << " ei " << ei << std::endl;
+
+                    } else if(cell_status_data[idx_T] == 0)
+                    {
+                        if(ei == 2)
+                            Q_plus[ei][idx_face_y] = -Q_minus[ei][idx_face_y];
+                        else
+                            Q_plus[ei][idx_face_y]  = Q_minus[ei][idx_face_y];
+
+                        //std::cout << "T(i,j)=( " <<i << " , " << j << " ) " << "(x,yc) " << x_lo[0] + (i + 0.5)*dx[0]  <<  " , " <<  x_lo[1] + j*dx[1]  << " ei " << ei << std::endl;
+
+                    }
                 }
             }
         }

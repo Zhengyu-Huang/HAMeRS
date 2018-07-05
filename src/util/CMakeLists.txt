@@ -8,4 +8,4 @@ set(utils_source_files
 add_library(utils ${utils_source_files})
 
 TARGET_LINK_LIBRARIES(utils derivatives differences gradient_sensors
-  wavelet_transform mixing_rules basic_boundary_conditions)
+  wavelet_transform mixing_rules basic_boundary_conditions basic_geometry)
