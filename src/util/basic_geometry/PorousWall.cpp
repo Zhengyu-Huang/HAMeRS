@@ -18,7 +18,7 @@ int isOutside(int dim, double x, double y, double z)
     *           4 solid in y and z directions, each of size 6;
     * 3 2 6 2 6 2 6 2 3
     */
-    double x0 = 0.5, r_hole = 1./32;
+    double x0 = 0.0, r_hole = 1./32;
     if(fabs(x - x0) > r_hole) return 1;
     if(dim == 2){
         double yy = y/r_hole;
