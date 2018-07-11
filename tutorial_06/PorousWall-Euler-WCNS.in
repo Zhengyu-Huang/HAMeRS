@@ -25,8 +25,7 @@ Euler
     }
 
     // Convective flux reconstructor to use
-    // convective_flux_reconstructor = "WCNS6_LD_HLLC_HLL"
-    convective_flux_reconstructor = "FIRST_ORDER_HLLC"
+    convective_flux_reconstructor = "WCNS6_LD_HLLC_HLL"
     Convective_flux_reconstructor{}
 
     Boundary_data
@@ -105,7 +104,7 @@ Main
 
 CartesianGeometry
 {
-    domain_boxes = [(0, 0), (1023, 255)] // Lower and upper indices of compuational domain
+    domain_boxes = [(0, 0), (255, 63)] // Lower and upper indices of compuational domain
     x_lo         = -1.0, 0.0             // Lower end of computational domain
     x_up         =  3.0, 1.0             // Upper end of computational domain
 
@@ -126,7 +125,7 @@ ExtendedTagAndInitialize
 PatchHierarchy
 {
     // Maximum number of levels in hierarchy
-    max_levels = 3
+    max_levels = 2
 
     ratio_to_coarser
     {

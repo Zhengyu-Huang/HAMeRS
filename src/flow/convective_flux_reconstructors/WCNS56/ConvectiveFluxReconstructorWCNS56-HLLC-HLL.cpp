@@ -1,4 +1,5 @@
 #include "flow/convective_flux_reconstructors/WCNS56/ConvectiveFluxReconstructorWCNS56-HLLC-HLL.hpp"
+#include "util/basic_geometry/PorousWall.hpp"
 
 #define EPSILON HAMERS_EPSILON
 
@@ -66,6 +67,17 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
             patch.getPatchGeometry()));
     
     const double* const dx = patch_geom->getDx();
+    const double* const x_lo = patch_geom->getXLower();
+
+    /*
+     * Compute the cell status.
+     */
+
+    boost::shared_ptr<pdat::CellData<int> > cell_status;
+    cell_status.reset(
+            new pdat::CellData<int>(interior_box, 1, d_num_conv_ghosts));
+    int* cell_status_data = cell_status->getPointer(0);
+    computeCellStatus(cell_status, x_lo,  dx);
     
     // Get the side data of convective flux.
     boost::shared_ptr<pdat::SideData<double> > convective_flux(
@@ -141,7 +153,7 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
          */
         
         d_flow_model->registerPatchWithDataContext(patch, data_context);
-        
+
         std::unordered_map<std::string, hier::IntVector> num_subghosts_of_data;
         
         num_subghosts_of_data.insert(std::pair<std::string, hier::IntVector>("VELOCITY", d_num_conv_ghosts));
@@ -468,7 +480,7 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                 const int idx_midpoint_x_R = i + 2;
                 const int idx_node_L = i - 1 + num_subghosts_0_convective_flux_x;
                 const int idx_node_R = i + num_subghosts_0_convective_flux_x;
-                
+
                 F_face_x[idx_face_x] = dt*(
                     double(1)/double(30)*(F_midpoint_x[ei][idx_midpoint_x_R] +
                         F_midpoint_x[ei][idx_midpoint_x_L]) -
@@ -597,7 +609,8 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
         const int num_subghosts_0_convective_flux_y = num_subghosts_convective_flux_y[0];
         const int num_subghosts_1_convective_flux_y = num_subghosts_convective_flux_y[1];
         const int subghostcell_dim_0_convective_flux_y = subghostcell_dims_convective_flux_y[0];
-        
+
+        //todo where are these from, just place holder ???
         double* u     = velocity->getPointer(0);
         double* v     = velocity->getPointer(1);
         double* theta = dilatation->getPointer(0);
@@ -609,6 +622,7 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
         std::vector<double*> F_node_y;
         F_node_x.reserve(d_num_eqn);
         F_node_y.reserve(d_num_eqn);
+        //todo convective_flux_node  are Fx and Fy  ???
         for (int ei = 0; ei < d_num_eqn; ei++)
         {
             F_node_x.push_back(convective_flux_node[0]->getPointer(ei));
@@ -652,7 +666,8 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
         
         boost::shared_ptr<DerivativeFirstOrder> derivative_first_order_y(
             new DerivativeFirstOrder("first order derivative in y-direction", d_dim, DIRECTION::Y_DIRECTION, 1));
-        
+
+        //todo: modify these derivatives
         // Compute dudx.
         derivative_first_order_x->computeDerivative(
             velocity_derivatives,
@@ -746,10 +761,10 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
         std::vector<hier::IntVector> subghostcell_dims_primitive_var;
         subghostcell_dims_primitive_var.reserve(d_num_eqn);
         
-        std::vector<double*> Q;
+        std::vector<double*> Q;//conservative variables
         Q.reserve(d_num_eqn);
         
-        std::vector<double*> V;
+        std::vector<double*> V;//primitive variables
         V.reserve(d_num_eqn);
         
         int count_eqn = 0;
