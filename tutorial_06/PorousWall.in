@@ -90,7 +90,7 @@ Main
     // Setting to dump viz output: CONSTANT_TIME_INTERVAL, CONSTANT_TIMESTEP_INTERVAL
     viz_dump_setting = "CONSTANT_TIME_INTERVAL"
     // Frequency at which to dump viz output (0 to turn off)
-    viz_dump_interval = 0.05
+    viz_dump_interval = 0.01
     // Name of directory in which to place viz output
     viz_dump_dirname = "viz_2D_porous_wall"
     // Number of processors which write to each viz file
@@ -105,9 +105,9 @@ Main
 
 CartesianGeometry
 {
-    domain_boxes = [(0, 0), (63, 31)] // Lower and upper indices of compuational domain
+    domain_boxes = [(0, 0), (1023, 255)] // Lower and upper indices of compuational domain
     x_lo         = -1.0, 0.0             // Lower end of computational domain
-    x_up         =  1.0, 1.0             // Upper end of computational domain
+    x_up         =  3.0, 1.0             // Upper end of computational domain
 
     // Periodic_dimension. A non-zero value indicates that the direction is periodic
     periodic_dimension = 0, 1
@@ -163,7 +163,7 @@ RungeKuttaLevelIntegrator
 TimeRefinementIntegrator
 {
     start_time           = 0.0e0  // Initial simulation time
-    end_time             = 5.0e-1 // Final simulation time
+    end_time             = 1.5e0 // Final simulation time
     grow_dt              = 1.0e0  // Growth factor for timesteps
     max_integrator_steps = 10000  // Max number of simulation timesteps
 }

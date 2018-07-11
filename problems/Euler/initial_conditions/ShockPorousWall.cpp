@@ -76,13 +76,13 @@ EulerInitialConditions::initializeDataOnPatch(
         // Post-shock condition.
         const double rho_post = double(1.0);
         const double p_post   = double(1.0)/gamma;
-        const double u_post   = double(0);
+        const double u_post   = double(1.8);
         const double v_post   = double(0);
         
         // Pre-shock condition.
         const double rho_pre = double(1.);
-        const double p_pre   = double(1)/gamma;
-        const double u_pre   = double(1.8);
+        const double p_pre   = double(1.)/gamma;
+        const double u_pre   = double(0);
         const double v_pre   = double(0);
 
         //seperation between preshock and postshock
