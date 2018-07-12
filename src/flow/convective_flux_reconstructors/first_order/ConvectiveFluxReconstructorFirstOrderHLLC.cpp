@@ -103,12 +103,17 @@ ConvectiveFluxReconstructorFirstOrderHLLC::computeConvectiveFluxAndSourceOnPatch
     /*
      * Compute the cell status.
      */
+    d_flow_model->registerPatchWithDataContext(patch, data_context);
+    boost::shared_ptr<pdat::CellData<double> > cell_status
+            = d_flow_model->getGlobalCellStatus();
+    double* cell_status_data = cell_status->getPointer(0);
 
-    boost::shared_ptr<pdat::CellData<int> > cell_status;
-    cell_status.reset(
-            new pdat::CellData<int>(interior_box, 1, d_num_conv_ghosts));
-    int* cell_status_data = cell_status->getPointer(0);
-    computeCellStatus(cell_status, x_lo,  dx);
+    boost::shared_ptr<pdat::CellData<double> > cell_status2;
+    cell_status2.reset(
+            new pdat::CellData<double>(interior_box, 1, d_num_conv_ghosts));
+
+    computeCellStatus(cell_status2, x_lo,  dx);
+    double* cell_status2_data = cell_status2->getPointer(0);
 
     
     // Get the side data of convective flux.
@@ -155,7 +160,7 @@ ConvectiveFluxReconstructorFirstOrderHLLC::computeConvectiveFluxAndSourceOnPatch
          * Register the patch and data context.
          */
         
-        d_flow_model->registerPatchWithDataContext(patch, data_context);
+        //d_flow_model->registerPatchWithDataContext(patch, data_context);
         
         /*
          * Get the pointers to the conservative variables.
@@ -311,7 +316,7 @@ ConvectiveFluxReconstructorFirstOrderHLLC::computeConvectiveFluxAndSourceOnPatch
          * Unregister the patch in the flow model.
          */
         
-        d_flow_model->unregisterPatch();
+        //d_flow_model->unregisterPatch();
         
     } // if (d_dim == tbox::Dimension(1))
     else if (d_dim == tbox::Dimension(2))
@@ -334,7 +339,7 @@ ConvectiveFluxReconstructorFirstOrderHLLC::computeConvectiveFluxAndSourceOnPatch
          * Register the patch and data context.
          */
         
-        d_flow_model->registerPatchWithDataContext(patch, data_context);
+        //d_flow_model->registerPatchWithDataContext(patch, data_context);
         
         /*
          * Get the pointers to the conservative variables.
@@ -432,22 +437,22 @@ ConvectiveFluxReconstructorFirstOrderHLLC::computeConvectiveFluxAndSourceOnPatch
                      * Modify flow states near the wall, to impose transmission condition,
                      * weakly impose the transmission condition.
                      */
-                    if(cell_status_data[idx_L] == 0){
+                    if(fabs(cell_status2_data[idx_L] - cell_status_data[idx_L]) > 1.0e-6)
+                        std::cout << cell_status2_data[idx_L] << " status2 L status " <<cell_status_data[idx_L] << std::endl;
+                    if(fabs(cell_status2_data[idx_R] - cell_status_data[idx_R]) > 1.0e-6)
+                        std::cout << cell_status2_data[idx_R] << " status2 R status " <<cell_status_data[idx_R] << std::endl;
+                    if(cell_status_data[idx_L] < 0.5){
                         if(ei == 1)
                             Q_minus[ei][idx_face_x] = -Q_plus[ei][idx_face_x];
                         else
                             Q_minus[ei][idx_face_x] = Q_plus[ei][idx_face_x];
 
-                        //std::cout << "L(i,j)=( " <<i << " , " << j << " ) " << "(x,yc) " << x_lo[0] + i*dx[0]  <<  " , " <<  x_lo[1] + (j + 0.5)*dx[1]  << " ei " << ei << std::endl;
-
-                    } else if(cell_status_data[idx_R] == 0)
+                    } else if(cell_status_data[idx_R] < 0.5)
                     {
                         if(ei == 1)
                             Q_plus[ei][idx_face_x] = -Q_minus[ei][idx_face_x];
                         else
                             Q_plus[ei][idx_face_x]  = Q_minus[ei][idx_face_x];
-
-                        //std::cout << "R(i,j)=( " <<i << " , " << j << " ) " << "(x,yc) " << x_lo[0] + i*dx[0]  <<  " , " <<  x_lo[1] + (j + 0.5)*dx[1]  << " ei " << ei << std::endl;
 
                     }
                 }
@@ -642,7 +647,7 @@ ConvectiveFluxReconstructorFirstOrderHLLC::computeConvectiveFluxAndSourceOnPatch
          * Unregister the patch in the flow model.
          */
         
-        d_flow_model->unregisterPatch();
+        //d_flow_model->unregisterPatch();
         
     } // if (d_dim == tbox::Dimension(2))
     else if (d_dim == tbox::Dimension(3))
@@ -668,7 +673,7 @@ ConvectiveFluxReconstructorFirstOrderHLLC::computeConvectiveFluxAndSourceOnPatch
          * Register the patch and data context.
          */
         
-        d_flow_model->registerPatchWithDataContext(patch, data_context);
+        //d_flow_model->registerPatchWithDataContext(patch, data_context);
         
         /*
          * Get the pointers to the conservative variables.
@@ -1070,7 +1075,8 @@ ConvectiveFluxReconstructorFirstOrderHLLC::computeConvectiveFluxAndSourceOnPatch
          * Unregister the patch in the flow model.
          */
         
-        d_flow_model->unregisterPatch();
+
         
     } // if (d_dim == tbox::Dimension(3))
+    d_flow_model->unregisterPatch();
 }

@@ -306,6 +306,12 @@ class FlowModel:
          */
         virtual std::vector<boost::shared_ptr<pdat::CellData<double> > >
         getGlobalCellDataConservativeVariables() = 0;
+
+        /*
+         * Get the global cell data of cell status in the registered patch.
+         */
+         virtual boost::shared_ptr<pdat::CellData<double> >
+         getGlobalCellStatus(){};
         
         /*
          * Get the global cell data of the primitive variables in the registered patch.

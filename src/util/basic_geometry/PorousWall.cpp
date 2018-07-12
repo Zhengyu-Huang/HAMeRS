@@ -35,7 +35,7 @@ int isOutside(int dim, double x, double y, double z)
 
 
 void
-computeCellStatus(boost::shared_ptr<pdat::CellData<int> > &cell_status,
+computeCellStatus(boost::shared_ptr<pdat::CellData<double> > &cell_status,
                   const double* x_lo,  const double* dx)
 {
     const tbox::Dimension d_dim = cell_status->getDim();
@@ -43,7 +43,7 @@ computeCellStatus(boost::shared_ptr<pdat::CellData<int> > &cell_status,
 
     const hier::IntVector d_num_conv_ghosts = cell_status->getGhostCellWidth();
 
-    int* cell_status_data = cell_status->getPointer(0);
+    double* cell_status_data = cell_status->getPointer(0);
     if (d_dim == tbox::Dimension(1)) {}
     else if (d_dim == tbox::Dimension(2)) {
 /*

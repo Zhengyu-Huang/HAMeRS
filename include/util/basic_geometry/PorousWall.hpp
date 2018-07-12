@@ -22,6 +22,6 @@ isOutside(int dim, double x, double y, double z = 0.0);
 
 
 void
-computeCellStatus(boost::shared_ptr<pdat::CellData<int> > &cell_status,
+computeCellStatus(boost::shared_ptr<pdat::CellData<double> > &cell_status,
                   const double* x_lo,  const double* dx);
 #endif /* POROUS_WALL_CONDITIONS_HPP */

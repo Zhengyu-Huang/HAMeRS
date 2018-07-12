@@ -7,7 +7,7 @@
 boost::shared_ptr<pdat::CellVariable<double> > FlowModelSingleSpecies::s_variable_density;
 boost::shared_ptr<pdat::CellVariable<double> > FlowModelSingleSpecies::s_variable_momentum;
 boost::shared_ptr<pdat::CellVariable<double> > FlowModelSingleSpecies::s_variable_total_energy;
-
+boost::shared_ptr<pdat::CellVariable<double> > FlowModelSingleSpecies::s_cell_status;
 FlowModelSingleSpecies::FlowModelSingleSpecies(
     const std::string& object_name,
     const tbox::Dimension& dim,
@@ -80,7 +80,12 @@ FlowModelSingleSpecies::FlowModelSingleSpecies(
     
     s_variable_total_energy = boost::shared_ptr<pdat::CellVariable<double> > (
         new pdat::CellVariable<double>(d_dim, "total energy", 1));
-    
+
+    /*
+     * Initialize the cell status.
+     */
+    s_cell_status = boost::shared_ptr<pdat::CellVariable<double> > (
+            new pdat::CellVariable<double>(d_dim, "cell_status", 1));
     /*
      * Initialize d_equation_of_state_mixing_rules_manager and get the equation of state
      * mixing rules object.
@@ -518,6 +523,15 @@ FlowModelSingleSpecies::registerConservativeVariables(
         d_grid_geometry,
         "CONSERVATIVE_COARSEN",
         "CONSERVATIVE_LINEAR_REFINE");
+
+    integrator->registerVariable(
+        s_cell_status,
+        num_ghosts,
+        num_ghosts_intermediate,
+        RungeKuttaLevelIntegrator::TIME_DEP,
+        d_grid_geometry,
+        "CONSERVATIVE_COARSEN",
+        "CONSTANT_REFINE");
 }
 
 
@@ -6830,6 +6844,20 @@ FlowModelSingleSpecies::getGlobalCellDataDensity()
     
     return data_density;
 }
+
+/*
+ * Get the global cell data of density in the registered patch.
+ */
+boost::shared_ptr<pdat::CellData<double> >
+FlowModelSingleSpecies::getGlobalCellStatus()
+{
+    // Get the cell data of the registered cell status.
+    boost::shared_ptr<pdat::CellData<double> > cell_status(
+            BOOST_CAST<pdat::CellData<double>, hier::PatchData>(
+                    d_patch->getPatchData(s_cell_status, getDataContext())));
+    return cell_status;
+}
+
 
 
 /*

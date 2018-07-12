@@ -69,15 +69,6 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
     const double* const dx = patch_geom->getDx();
     const double* const x_lo = patch_geom->getXLower();
 
-    /*
-     * Compute the cell status.
-     */
-
-    boost::shared_ptr<pdat::CellData<int> > cell_status;
-    cell_status.reset(
-            new pdat::CellData<int>(interior_box, 1, d_num_conv_ghosts));
-    int* cell_status_data = cell_status->getPointer(0);
-    computeCellStatus(cell_status, x_lo,  dx);
     
     // Get the side data of convective flux.
     boost::shared_ptr<pdat::SideData<double> > convective_flux(
@@ -336,7 +327,7 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
          * Compute global side data of the projection variables for transformation between
          * primitive variables and characteristic variables.
          */
-        
+        //todo need change
         d_flow_model->computeGlobalSideDataProjectionVariablesForPrimitiveVariables(
             projection_variables);
         
@@ -345,7 +336,7 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
          */
         
         for (int m = 0; m < 6; m++)
-        {
+        {   //todo need change
             d_flow_model->computeGlobalSideDataCharacteristicVariablesFromPrimitiveVariables(
                 characteristic_variables[m],
                 primitive_variables,

@@ -332,6 +332,12 @@ class FlowModelSingleSpecies: public FlowModel
          */
         boost::shared_ptr<pdat::CellData<double> >
         getGlobalCellDataTotalEnergy();
+
+        /*
+         * Get the global cell data of cell status in the registered patch.
+         */
+        boost::shared_ptr<pdat::CellData<double> >
+        getGlobalCellStatus();
         
         /*
          * Compute the global cell data of velocity in the registered patch.
@@ -392,6 +398,10 @@ class FlowModelSingleSpecies: public FlowModel
         static boost::shared_ptr<pdat::CellVariable<double> > s_variable_density;
         static boost::shared_ptr<pdat::CellVariable<double> > s_variable_momentum;
         static boost::shared_ptr<pdat::CellVariable<double> > s_variable_total_energy;
+        /*
+         * boost::shared_ptr to registered cell status.
+         */
+        static boost::shared_ptr<pdat::CellVariable<double> > s_cell_status;
         
         /*
          * Number of sub-ghost cells of derived cell data.
