@@ -67,9 +67,7 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
             patch.getPatchGeometry()));
     
     const double* const dx = patch_geom->getDx();
-    const double* const x_lo = patch_geom->getXLower();
 
-    
     // Get the side data of convective flux.
     boost::shared_ptr<pdat::SideData<double> > convective_flux(
         BOOST_CAST<pdat::SideData<double>, hier::PatchData>(

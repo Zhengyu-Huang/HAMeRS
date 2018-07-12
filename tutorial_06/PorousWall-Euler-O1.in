@@ -105,8 +105,8 @@ Main
 
 CartesianGeometry
 {
-//    domain_boxes = [(0, 0), (1023, 255)] // Lower and upper indices of compuational domain
-    domain_boxes = [(0, 0), (255, 63)] // Lower and upper indices of compuational domain
+    domain_boxes = [(0, 0), (1023, 255)] // Lower and upper indices of compuational domain
+    //domain_boxes = [(0, 0), (255, 63)] // Lower and upper indices of compuational domain
 
     x_lo         = -1.0, 0.0             // Lower end of computational domain
     x_up         =  3.0, 1.0             // Upper end of computational domain
