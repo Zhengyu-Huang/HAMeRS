@@ -1,7 +1,7 @@
 # Define a variable basic_geometry_source_files containing
 # a list of the source files for the basic_geometry library
 set(basic_geometry_source_files
-    PorousWall.cpp
+    WallTreatment.cpp
 )
 
 # Create a library called basic_boundary_conditions which includes the 

@@ -1,5 +1,5 @@
 #include "flow/convective_flux_reconstructors/WCNS56/ConvectiveFluxReconstructorWCNS56-HLLC-HLL.hpp"
-#include "util/basic_geometry/PorousWall.hpp"
+#include "util/basic_geometry/WallTreatment.hpp"
 
 #define EPSILON HAMERS_EPSILON
 
@@ -136,11 +136,11 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
          */
         
         const int interior_dim_0 = interior_dims[0];
-        
+
         /*
          * Register the patch and derived cell variables in the flow model and compute the corresponding cell data.
          */
-        
+
         d_flow_model->registerPatchWithDataContext(patch, data_context);
 
         std::unordered_map<std::string, hier::IntVector> num_subghosts_of_data;
@@ -325,7 +325,7 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
          * Compute global side data of the projection variables for transformation between
          * primitive variables and characteristic variables.
          */
-        //todo need change
+
         d_flow_model->computeGlobalSideDataProjectionVariablesForPrimitiveVariables(
             projection_variables);
         
@@ -334,7 +334,7 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
          */
         
         for (int m = 0; m < 6; m++)
-        {   //todo need change
+        {
             d_flow_model->computeGlobalSideDataCharacteristicVariablesFromPrimitiveVariables(
                 characteristic_variables[m],
                 primitive_variables,
@@ -544,11 +544,11 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
         
         const int interior_dim_0 = interior_dims[0];
         const int interior_dim_1 = interior_dims[1];
-        
+
         /*
          * Register the patch and derived cell variables in the flow model and compute the corresponding cell data.
          */
-        
+
         d_flow_model->registerPatchWithDataContext(patch, data_context);
         
         std::unordered_map<std::string, hier::IntVector> num_subghosts_of_data;
@@ -565,6 +565,11 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
             AVERAGING::SIMPLE);
         
         d_flow_model->computeGlobalDerivedCellData();
+
+        /*
+         * Get the cell status
+         */
+        boost::shared_ptr<pdat::CellData<double> > cell_status = d_flow_model->getGlobalCellStatus();
         
         /*
          * Get the pointers to the velocity and convective flux cell data inside the flow model.
@@ -657,6 +662,8 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
             new DerivativeFirstOrder("first order derivative in y-direction", d_dim, DIRECTION::Y_DIRECTION, 1));
 
         //todo: modify these derivatives
+
+        mirrorGhostCell(velocity, cell_status, DIRECTION::X_DIRECTION);
         // Compute dudx.
         derivative_first_order_x->computeDerivative(
             velocity_derivatives,
@@ -664,7 +671,15 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
             dx[0],
             0,
             0);
-        
+
+        // Compute dvdx.
+        derivative_first_order_x->computeDerivative(
+                velocity_derivatives,
+                velocity,
+                dx[0],
+                2,
+                1);
+        mirrorGhostCell(velocity, cell_status, DIRECTION::Y_DIRECTION);
         // Compute dudy.
         derivative_first_order_y->computeDerivative(
             velocity_derivatives,
@@ -672,14 +687,6 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
             dx[1],
             1,
             0);
-        
-        // Compute dvdx.
-        derivative_first_order_x->computeDerivative(
-            velocity_derivatives,
-            velocity,
-            dx[0],
-            2,
-            1);
         
         // Compute dvdy.
         derivative_first_order_y->computeDerivative(
@@ -872,7 +879,7 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
          * Compute global side data of the projection variables for transformation between
          * primitive variables and characteristic variables.
          */
-        
+
         d_flow_model->computeGlobalSideDataProjectionVariablesForPrimitiveVariables(
             projection_variables);
         
@@ -881,7 +888,7 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
          */
         
         for (int m = 0; m < 6; m++)
-        {
+        {   //todo need change
             d_flow_model->computeGlobalSideDataCharacteristicVariablesFromPrimitiveVariables(
                 characteristic_variables[m],
                 primitive_variables,

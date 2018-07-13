@@ -18,7 +18,7 @@
 #include "SAMRAI/tbox/Timer.h"
 #include "SAMRAI/tbox/TimerManager.h"
 #include "SAMRAI/tbox/Utilities.h"
-#include "util/basic_geometry/PorousWall.hpp"
+#include "util/basic_geometry/WallTreatment.hpp"
 
 #include <cfloat>
 #include <cmath>
@@ -475,7 +475,7 @@ Euler::initializeDataOnPatch(
     d_flow_model->registerPatchWithDataContext(patch, getDataContext());
 
 
-    //todo also register cell status
+
     // Get the grid spacing.
     const boost::shared_ptr<geom::CartesianPatchGeometry> patch_geom(
             BOOST_CAST<geom::CartesianPatchGeometry, hier::PatchGeometry>(
@@ -484,6 +484,7 @@ Euler::initializeDataOnPatch(
     const double* const dx = patch_geom->getDx();
     const double* const x_lo = patch_geom->getXLower();
 
+    //initialize cell status
     boost::shared_ptr<pdat::CellData<double> > cell_status
             = d_flow_model->getGlobalCellStatus();
 

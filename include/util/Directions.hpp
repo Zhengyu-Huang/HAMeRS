@@ -3,9 +3,9 @@
 
 namespace DIRECTION
 {
-    enum TYPE { X_DIRECTION,
-                Y_DIRECTION,
-                Z_DIRECTION };
+    enum TYPE { X_DIRECTION = 0,
+                Y_DIRECTION = 1,
+                Z_DIRECTION = 2 };
 }
 
 #endif /* DIRECTIONS_HPP */

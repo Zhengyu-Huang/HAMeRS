@@ -3,7 +3,7 @@
 #include "flow/flow_models/single-species/FlowModelBoundaryUtilitiesSingleSpecies.hpp"
 #include "flow/flow_models/single-species/FlowModelRiemannSolverSingleSpecies.hpp"
 #include "flow/flow_models/single-species/FlowModelStatisticsUtilitiesSingleSpecies.hpp"
-
+#include "util/basic_geometry/WallTreatment.hpp"
 boost::shared_ptr<pdat::CellVariable<double> > FlowModelSingleSpecies::s_variable_density;
 boost::shared_ptr<pdat::CellVariable<double> > FlowModelSingleSpecies::s_variable_momentum;
 boost::shared_ptr<pdat::CellVariable<double> > FlowModelSingleSpecies::s_variable_total_energy;
@@ -1652,6 +1652,12 @@ FlowModelSingleSpecies::computeGlobalSideDataProjectionVariablesForPrimitiveVari
     
     double* rho_average = nullptr;
     double* c_average = nullptr;
+
+     /*
+      * get cell status of fluid nodes
+      */
+    boost::shared_ptr<pdat::CellData<double> > cell_status = getGlobalCellStatus();
+    double* cell_status_data = cell_status->getPointer(0);
     
     if (d_dim == tbox::Dimension(1))
     {
@@ -1767,6 +1773,16 @@ FlowModelSingleSpecies::computeGlobalSideDataProjectionVariablesForPrimitiveVari
                         
                         rho_average[idx_face_x] = double(1)/double(2)*(rho[idx_L] + rho[idx_R]);
                         c_average[idx_face_x] = double(1)/double(2)*(c[idx_sound_speed_L] + c[idx_sound_speed_R]);
+
+                        if(cell_status_data[idx_L] < 0.5)
+                        {
+                            rho_average[idx_face_x] = rho[idx_R];
+                            c_average[idx_face_x]   = c[idx_sound_speed_R];
+                        } else if(cell_status_data[idx_R] < 0.5)
+                        {
+                            rho_average[idx_face_x] = rho[idx_L];
+                            c_average[idx_face_x]   = c[idx_sound_speed_L];
+                        }
                     }
                 }
                 
@@ -1803,6 +1819,18 @@ FlowModelSingleSpecies::computeGlobalSideDataProjectionVariablesForPrimitiveVari
                         
                         rho_average[idx_face_y] = double(1)/double(2)*(rho[idx_B] + rho[idx_T]);
                         c_average[idx_face_y] = double(1)/double(2)*(c[idx_sound_speed_B] + c[idx_sound_speed_T]);
+
+                        if(cell_status_data[idx_B] < 0.5)
+                        {
+                            rho_average[idx_face_y] = rho[idx_T];
+                            c_average[idx_face_y]   = c[idx_sound_speed_T];
+
+                        } else if(cell_status_data[idx_T] < 0.5)
+                        {
+                            rho_average[idx_face_y] = rho[idx_B];
+                            c_average[idx_face_y]   = c[idx_sound_speed_B];
+
+                        }
                     }
                 }
                 
@@ -2061,7 +2089,7 @@ FlowModelSingleSpecies::computeGlobalSideDataCharacteristicVariablesFromConserva
 void
 FlowModelSingleSpecies::computeGlobalSideDataCharacteristicVariablesFromPrimitiveVariables(
     std::vector<boost::shared_ptr<pdat::SideData<double> > >& characteristic_variables,
-    const std::vector<boost::shared_ptr<pdat::CellData<double> > >& primitive_variables,
+    std::vector<boost::shared_ptr<pdat::CellData<double> > >& primitive_variables,
     const std::vector<boost::shared_ptr<pdat::SideData<double> > >& projection_variables,
     const int& idx_offset)
 {
@@ -2249,6 +2277,11 @@ FlowModelSingleSpecies::computeGlobalSideDataCharacteristicVariablesFromPrimitiv
     
     double* rho_average = nullptr;
     double* c_average = nullptr;
+
+    /*
+     * Get cell status
+     */
+    boost::shared_ptr<pdat::CellData<double> > cell_status = getGlobalCellStatus();
     
     if (d_dim == tbox::Dimension(1))
     {
@@ -2328,6 +2361,14 @@ FlowModelSingleSpecies::computeGlobalSideDataCharacteristicVariablesFromPrimitiv
         {
             W[ei] = characteristic_variables[ei]->getPointer(0);
         }
+
+        /*
+         * populate ghost nodes in x direction by mirroring
+         */
+        for (int vi = 0; vi < static_cast<int>(primitive_variables.size()); vi++)
+        {
+            mirrorGhostCell(primitive_variables[vi], cell_status, DIRECTION::X_DIRECTION);
+        }
         
         rho_average = projection_variables[0]->getPointer(0);
         c_average = projection_variables[1]->getPointer(0);
@@ -2370,6 +2411,13 @@ FlowModelSingleSpecies::computeGlobalSideDataCharacteristicVariablesFromPrimitiv
         for (int ei = 0; ei < d_num_eqn; ei++)
         {
             W[ei] = characteristic_variables[ei]->getPointer(1);
+        }
+        /*
+         * populate ghost nodes in x direction by mirroring
+         */
+        for (int vi = 0; vi < static_cast<int>(primitive_variables.size()); vi++)
+        {
+            mirrorGhostCell(primitive_variables[vi], cell_status, DIRECTION::Y_DIRECTION);
         }
         
         rho_average = projection_variables[0]->getPointer(1);

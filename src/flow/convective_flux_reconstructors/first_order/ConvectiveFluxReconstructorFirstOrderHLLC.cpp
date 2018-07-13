@@ -1,7 +1,7 @@
 #include "flow/convective_flux_reconstructors/first_order/ConvectiveFluxReconstructorFirstOrderHLLC.hpp"
 
 #include "SAMRAI/geom/CartesianPatchGeometry.h"
-#include "util/basic_geometry/PorousWall.hpp"
+#include "util/basic_geometry/WallTreatment.hpp"
 ConvectiveFluxReconstructorFirstOrderHLLC::ConvectiveFluxReconstructorFirstOrderHLLC(
     const std::string& object_name,
     const tbox::Dimension& dim,
@@ -534,7 +534,7 @@ ConvectiveFluxReconstructorFirstOrderHLLC::computeConvectiveFluxAndSourceOnPatch
                      * Modify flow states near the wall, to impose transmission condition,
                      * weakly impose the transmission condition.
                      */
-                    if(cell_status_data[idx_B] == 0){
+                    if(cell_status_data[idx_B] < 0.5){
                         if(ei == 2)
                             Q_minus[ei][idx_face_y] = -Q_plus[ei][idx_face_y];
                         else
@@ -542,7 +542,7 @@ ConvectiveFluxReconstructorFirstOrderHLLC::computeConvectiveFluxAndSourceOnPatch
 
                         //std::cout << "B(i,j)=( " <<i << " , " << j << " ) " << "(x,yc) " << x_lo[0] + (i + 0.5)*dx[0]  <<  " , " <<  x_lo[1] + j*dx[1]  << " ei " << ei << std::endl;
 
-                    } else if(cell_status_data[idx_T] == 0)
+                    } else if(cell_status_data[idx_T] < 0.5)
                     {
                         if(ei == 2)
                             Q_plus[ei][idx_face_y] = -Q_minus[ei][idx_face_y];
