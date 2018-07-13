@@ -1,8 +1,8 @@
-#include "flow/convective_flux_reconstructors/first_order/ConvectiveFluxReconstructorFirstOrderHLLC.hpp"
+#include "flow/convective_flux_reconstructors/second_order/ConvectiveFluxReconstructorSecondOrderHLLC.hpp"
 
 #include "SAMRAI/geom/CartesianPatchGeometry.h"
 #include "util/basic_geometry/WallTreatment.hpp"
-ConvectiveFluxReconstructorFirstOrderHLLC::ConvectiveFluxReconstructorFirstOrderHLLC(
+ConvectiveFluxReconstructorSecondOrderHLLC::ConvectiveFluxReconstructorSecondOrderHLLC(
     const std::string& object_name,
     const tbox::Dimension& dim,
     const boost::shared_ptr<geom::CartesianGridGeometry>& grid_geometry,
@@ -34,16 +34,16 @@ ConvectiveFluxReconstructorFirstOrderHLLC::ConvectiveFluxReconstructorFirstOrder
  * Print all characteristics of the convective flux reconstruction class.
  */
 void
-ConvectiveFluxReconstructorFirstOrderHLLC::printClassData(
+ConvectiveFluxReconstructorSecondOrderHLLC::printClassData(
     std::ostream& os) const
 {
-    os << "\nPrint ConvectiveFluxReconstructorFirstOrderHLLC object..."
+    os << "\nPrint ConvectiveFluxReconstructorSecondOrderHLLC object..."
        << std::endl;
     
     os << std::endl;
     
-    os << "ConvectiveFluxReconstructorFirstOrderHLLC: this = "
-       << (ConvectiveFluxReconstructorFirstOrderHLLC *)this
+    os << "ConvectiveFluxReconstructorSecondOrderHLLC: this = "
+       << (ConvectiveFluxReconstructorSecondOrderHLLC *)this
        << std::endl;
     os << "d_object_name = "
        << d_object_name
@@ -56,7 +56,7 @@ ConvectiveFluxReconstructorFirstOrderHLLC::printClassData(
  * into the restart database.
  */
 void
-ConvectiveFluxReconstructorFirstOrderHLLC::putToRestart(
+ConvectiveFluxReconstructorSecondOrderHLLC::putToRestart(
    const boost::shared_ptr<tbox::Database>& restart_db) const
 {
     restart_db->putString("d_shock_capturing_scheme", "FIRST_ORDER_HLLC");
@@ -67,7 +67,7 @@ ConvectiveFluxReconstructorFirstOrderHLLC::putToRestart(
  * Compute the convective flux and source due to splitting of convective term on a patch.
  */
 void
-ConvectiveFluxReconstructorFirstOrderHLLC::computeConvectiveFluxAndSourceOnPatch(
+ConvectiveFluxReconstructorSecondOrderHLLC::computeConvectiveFluxAndSourceOnPatch(
     hier::Patch& patch,
     const boost::shared_ptr<pdat::SideVariable<double> >& variable_convective_flux,
     const boost::shared_ptr<pdat::CellVariable<double> >& variable_source,
@@ -98,6 +98,7 @@ ConvectiveFluxReconstructorFirstOrderHLLC::computeConvectiveFluxAndSourceOnPatch
             patch.getPatchGeometry()));
     
     const double* const dx = patch_geom->getDx();
+    const double* const x_lo = patch_geom->getXLower();
 
     /*
      * Compute the cell status.
@@ -105,7 +106,7 @@ ConvectiveFluxReconstructorFirstOrderHLLC::computeConvectiveFluxAndSourceOnPatch
     d_flow_model->registerPatchWithDataContext(patch, data_context);
     boost::shared_ptr<pdat::CellData<double> > cell_status
             = d_flow_model->getGlobalCellStatus();
-    double* cell_status_data = cell_status->getPointer(0);
+
     
     // Get the side data of convective flux.
     boost::shared_ptr<pdat::SideData<double> > convective_flux(
@@ -127,7 +128,7 @@ ConvectiveFluxReconstructorFirstOrderHLLC::computeConvectiveFluxAndSourceOnPatch
     
     // Allocate temporary patch data.
     boost::shared_ptr<pdat::SideData<double> > velocity_intercell;
-    
+
     if (d_has_advective_eqn_form)
     {
         velocity_intercell.reset(new pdat::SideData<double>(
@@ -146,12 +147,6 @@ ConvectiveFluxReconstructorFirstOrderHLLC::computeConvectiveFluxAndSourceOnPatch
         {
             F_face_x.push_back(convective_flux->getPointer(0, ei));
         }
-        
-        /*
-         * Register the patch and data context.
-         */
-        
-        //d_flow_model->registerPatchWithDataContext(patch, data_context);
         
         /*
          * Get the pointers to the conservative variables.
@@ -273,11 +268,11 @@ ConvectiveFluxReconstructorFirstOrderHLLC::computeConvectiveFluxAndSourceOnPatch
                 F_face_x[ei][idx_face_x] *= dt;
             }
         }
-        
+
         /*
          * Compute the source.
          */
-        
+
         if (d_has_advective_eqn_form)
         {
             for (int ei = 0; ei < d_num_eqn; ei ++)
@@ -285,18 +280,18 @@ ConvectiveFluxReconstructorFirstOrderHLLC::computeConvectiveFluxAndSourceOnPatch
                 if (d_eqn_form[ei] == EQN_FORM::ADVECTIVE)
                 {
                     double* S = source->getPointer(ei);
-                    
+
                     for (int i = 0; i < interior_dims[0]; i++)
                     {
-                        // Compute the linear indices. 
+                        // Compute the linear indices.
                         const int idx_cell_wghost = i + num_subghosts_conservative_var[ei][0];
                         const int idx_cell_nghost = i;
                         const int idx_face_x_L = i;
                         const int idx_face_x_R = i + 1;
-                        
+
                         const double& u_L = velocity_intercell->getPointer(0, 0)[idx_face_x_L];
                         const double& u_R = velocity_intercell->getPointer(0, 0)[idx_face_x_R];
-                        
+
                         S[idx_cell_nghost] += dt*Q[ei][idx_cell_wghost]*(u_R - u_L)/dx[0];
                     }
                 }
@@ -325,45 +320,55 @@ ConvectiveFluxReconstructorFirstOrderHLLC::computeConvectiveFluxAndSourceOnPatch
             F_face_x.push_back(convective_flux->getPointer(0, ei));
             F_face_y.push_back(convective_flux->getPointer(1, ei));
         }
-        
+
+
         /*
-         * Register the patch and data context.
+         * Register primitive variables
          */
-        
-        //d_flow_model->registerPatchWithDataContext(patch, data_context);
+        std::unordered_map<std::string, hier::IntVector> num_subghosts_of_data;
+        num_subghosts_of_data.insert(std::pair<std::string, hier::IntVector>("PRIMITIVE_VARIABLES", d_num_conv_ghosts));
+        d_flow_model->registerDerivedCellVariable(num_subghosts_of_data);
+        d_flow_model->computeGlobalDerivedCellData();
         
         /*
-         * Get the pointers to the conservative variables.
+         * Get the pointers to the conservative/primitive variables.
          * The numbers of ghost cells and the dimensions of the ghost cell boxes are also determined.
          */
         
         std::vector<boost::shared_ptr<pdat::CellData<double> > > conservative_variables =
             d_flow_model->getGlobalCellDataConservativeVariables();
+
+        std::vector<boost::shared_ptr<pdat::CellData<double> > > primitive_variables =
+                d_flow_model->getGlobalCellDataPrimitiveVariables();
         
-        std::vector<hier::IntVector> num_subghosts_conservative_var;
-        num_subghosts_conservative_var.reserve(d_num_eqn);
+        std::vector<hier::IntVector> num_subghosts_primitive_var;
+        num_subghosts_primitive_var.reserve(d_num_eqn);
         
-        std::vector<hier::IntVector> subghostcell_dims_conservative_var;
-        subghostcell_dims_conservative_var.reserve(d_num_eqn);
+        std::vector<hier::IntVector> subghostcell_dims_primitive_var;
+        subghostcell_dims_primitive_var.reserve(d_num_eqn);
         
         std::vector<double*> Q;
         Q.reserve(d_num_eqn);
+
+        std::vector<double*> V;
+        V.reserve(d_num_eqn);
         
         int count_eqn = 0;
         
-        for (int vi = 0; vi < static_cast<int>(conservative_variables.size()); vi++)
+        for (int vi = 0; vi < static_cast<int>(primitive_variables.size()); vi++)
         {
-            int depth = conservative_variables[vi]->getDepth();
+            int depth = primitive_variables[vi]->getDepth();
             
             for (int di = 0; di < depth; di++)
             {
-                // If the last element of the conservative variable vector is not in the system of equations, ignore it.
+                // If the last element of the primitive variable vector is not in the system of equations, ignore it.
                 if (count_eqn >= d_num_eqn)
                     break;
                 
+                V.push_back(primitive_variables[vi]->getPointer(di));
                 Q.push_back(conservative_variables[vi]->getPointer(di));
-                num_subghosts_conservative_var.push_back(conservative_variables[vi]->getGhostCellWidth());
-                subghostcell_dims_conservative_var.push_back(conservative_variables[vi]->getGhostBox().numberCells());
+                num_subghosts_primitive_var.push_back(primitive_variables[vi]->getGhostCellWidth());
+                subghostcell_dims_primitive_var.push_back(primitive_variables[vi]->getGhostBox().numberCells());
                 
                 count_eqn++;
             }
@@ -373,34 +378,38 @@ ConvectiveFluxReconstructorFirstOrderHLLC::computeConvectiveFluxAndSourceOnPatch
          * Declare temporary data containers for computing the fluxes at cell edges.
          */
         
-        std::vector<boost::shared_ptr<pdat::SideData<double> > > conservative_variables_minus;
-        std::vector<boost::shared_ptr<pdat::SideData<double> > > conservative_variables_plus;
-        
-        conservative_variables_minus.reserve(d_num_eqn);
-        conservative_variables_plus.reserve(d_num_eqn);
+        std::vector<boost::shared_ptr<pdat::SideData<double> > > primitive_variables_minus;
+        std::vector<boost::shared_ptr<pdat::SideData<double> > > primitive_variables_plus;
+
+        primitive_variables_minus.reserve(d_num_eqn);
+        primitive_variables_plus.reserve(d_num_eqn);
         
         for (int ei = 0; ei < d_num_eqn; ei++)
         {
-            conservative_variables_minus.push_back(boost::make_shared<pdat::SideData<double> >(
+            primitive_variables_minus.push_back(boost::make_shared<pdat::SideData<double> >(
                 interior_box, 1, hier::IntVector::getZero(d_dim)));
-            
-            conservative_variables_plus.push_back(boost::make_shared<pdat::SideData<double> >(
+
+            primitive_variables_plus.push_back(boost::make_shared<pdat::SideData<double> >(
                 interior_box, 1, hier::IntVector::getZero(d_dim)));
         }
         
-        std::vector<double*> Q_minus;
-        std::vector<double*> Q_plus;
-        Q_minus.resize(d_num_eqn);
-        Q_plus.resize(d_num_eqn);
+        std::vector<double*> V_minus;
+        std::vector<double*> V_plus;
+        V_minus.resize(d_num_eqn);
+        V_plus.resize(d_num_eqn);
         
         /*
          * Initialize temporary data containers for computing the flux in the x-direction.
          */
+        for (int vi = 0; vi < static_cast<int>(primitive_variables.size()); vi++)
+        {
+            mirrorGhostCell(primitive_variables[vi], cell_status, DIRECTION::X_DIRECTION);
+        }
         
         for (int ei = 0; ei < d_num_eqn; ei++)
         {
-            Q_minus[ei] = conservative_variables_minus[ei]->getPointer(0);
-            Q_plus[ei] = conservative_variables_plus[ei]->getPointer(0);
+            V_minus[ei] = primitive_variables_minus[ei]->getPointer(0);
+            V_plus[ei] = primitive_variables_plus[ei]->getPointer(0);
         }
         
         for (int ei = 0; ei < d_num_eqn; ei++)
@@ -413,40 +422,26 @@ ConvectiveFluxReconstructorFirstOrderHLLC::computeConvectiveFluxAndSourceOnPatch
                     const int idx_face_x = i +
                         j*(interior_dims[0] + 1);
                     
-                    const int idx_L = (i - 1 + num_subghosts_conservative_var[ei][0]) +
-                        (j + num_subghosts_conservative_var[ei][1])*
-                            subghostcell_dims_conservative_var[ei][0];
+                    const int idx_L = (i - 1 + num_subghosts_primitive_var[ei][0]) +
+                        (j + num_subghosts_primitive_var[ei][1])*
+                            subghostcell_dims_primitive_var[ei][0];
+
+                    const int idx_LL = (i - 2 + num_subghosts_primitive_var[ei][0]) +
+                                      (j + num_subghosts_primitive_var[ei][1])*
+                                      subghostcell_dims_primitive_var[ei][0];
                     
-                    const int idx_R = (i + num_subghosts_conservative_var[ei][0]) +
-                        (j + num_subghosts_conservative_var[ei][1])*
-                            subghostcell_dims_conservative_var[ei][0];
+                    const int idx_R = (i + num_subghosts_primitive_var[ei][0]) +
+                        (j + num_subghosts_primitive_var[ei][1])*
+                            subghostcell_dims_primitive_var[ei][0];
 
-                    Q_minus[ei][idx_face_x] = Q[ei][idx_L];
-                    Q_plus[ei][idx_face_x] = Q[ei][idx_R];
+                    const int idx_RR = (i + 1 + num_subghosts_primitive_var[ei][0]) +
+                                      (j + num_subghosts_primitive_var[ei][1])*
+                                      subghostcell_dims_primitive_var[ei][0];
+                    //todo limiter reconstruction
+                    V_minus[ei][idx_face_x] = V[ei][idx_L];
+                    V_plus[ei][idx_face_x] = V[ei][idx_R];
 
-                    /*
-                     * Modify flow states near the wall, to impose transmission condition,
-                     * weakly impose the transmission condition.
-                     */
 
-                    if(cell_status_data[idx_L] < 0.5){
-//                        if(Q[ei][idx_L] != 0 && Q[ei][idx_L] != 1 && Q[ei][idx_L] != 2.5)
-//                            std::cout <<" ei L" << ei << " " << Q[ei][idx_L] << std::endl;
-                        if(ei == 1)
-                            Q_minus[ei][idx_face_x] = -Q_plus[ei][idx_face_x];
-                        else
-                            Q_minus[ei][idx_face_x] = Q_plus[ei][idx_face_x];
-
-                    } else if(cell_status_data[idx_R] < 0.5)
-                    {
-//                        if(Q[ei][idx_R] != 0 && Q[ei][idx_R] != 1 && Q[ei][idx_R] != 2.5)
-//                        std::cout <<" ei R" << ei << " " << Q[ei][idx_R] << std::endl;
-                        if(ei == 1)
-                            Q_plus[ei][idx_face_x] = -Q_minus[ei][idx_face_x];
-                        else
-                            Q_plus[ei][idx_face_x]  = Q_minus[ei][idx_face_x];
-
-                    }
                 }
             }
         }
@@ -457,20 +452,20 @@ ConvectiveFluxReconstructorFirstOrderHLLC::computeConvectiveFluxAndSourceOnPatch
         
         if (d_has_advective_eqn_form)
         {
-            d_riemann_solver->computeConvectiveFluxAndVelocityFromConservativeVariables(
+            d_riemann_solver->computeConvectiveFluxAndVelocityFromPrimitiveVariables(
                 convective_flux,
                 velocity_intercell,
-                conservative_variables_minus,
-                conservative_variables_plus,
+                primitive_variables_minus,
+                primitive_variables_plus,
                 DIRECTION::X_DIRECTION,
                 RIEMANN_SOLVER::HLLC);
         }
         else
         {
-            d_riemann_solver->computeConvectiveFluxFromConservativeVariables(
+            d_riemann_solver->computeConvectiveFluxFromPrimitiveVariables(
                 convective_flux,
-                conservative_variables_minus,
-                conservative_variables_plus,
+                primitive_variables_minus,
+                primitive_variables_plus,
                 DIRECTION::X_DIRECTION,
                 RIEMANN_SOLVER::HLLC);
         }
@@ -485,7 +480,7 @@ ConvectiveFluxReconstructorFirstOrderHLLC::computeConvectiveFluxAndSourceOnPatch
                     // Compute the linear index.
                     const int idx_face_x = i +
                         j*(interior_dims[0] + 1);
-                    
+
                     F_face_x[ei][idx_face_x] *= dt;
                 }
             }
@@ -494,11 +489,15 @@ ConvectiveFluxReconstructorFirstOrderHLLC::computeConvectiveFluxAndSourceOnPatch
         /*
          * Initialize temporary data containers for computing the flux in the y-direction.
          */
-        
+        for (int vi = 0; vi < static_cast<int>(primitive_variables.size()); vi++)
+        {
+            mirrorGhostCell(primitive_variables[vi], cell_status, DIRECTION::Y_DIRECTION);
+        }
+
         for (int ei = 0; ei < d_num_eqn; ei++)
         {
-            Q_minus[ei] = conservative_variables_minus[ei]->getPointer(1);
-            Q_plus[ei] = conservative_variables_plus[ei]->getPointer(1);
+            V_minus[ei] = primitive_variables_minus[ei]->getPointer(1);
+            V_plus[ei] = primitive_variables_plus[ei]->getPointer(1);
         }
         
         for (int ei = 0; ei < d_num_eqn; ei++)
@@ -511,39 +510,24 @@ ConvectiveFluxReconstructorFirstOrderHLLC::computeConvectiveFluxAndSourceOnPatch
                     const int idx_face_y = i +
                         j*interior_dims[0];
                     
-                    const int idx_B = (i + num_subghosts_conservative_var[ei][0]) +
-                        (j - 1 + num_subghosts_conservative_var[ei][1])*
-                            subghostcell_dims_conservative_var[ei][0];
+                    const int idx_B = (i + num_subghosts_primitive_var[ei][0]) +
+                        (j - 1 + num_subghosts_primitive_var[ei][1])*
+                            subghostcell_dims_primitive_var[ei][0];
+
+                    const int idx_BB = (i + num_subghosts_primitive_var[ei][0]) +
+                                      (j - 2 + num_subghosts_primitive_var[ei][1])*
+                                      subghostcell_dims_primitive_var[ei][0];
                     
-                    const int idx_T = (i + num_subghosts_conservative_var[ei][0]) +
-                        (j + num_subghosts_conservative_var[ei][1])*
-                            subghostcell_dims_conservative_var[ei][0];
-                    
-                    Q_minus[ei][idx_face_y] = Q[ei][idx_B];
-                    Q_plus[ei][idx_face_y] = Q[ei][idx_T];
+                    const int idx_T = (i + num_subghosts_primitive_var[ei][0]) +
+                        (j + num_subghosts_primitive_var[ei][1])*
+                            subghostcell_dims_primitive_var[ei][0];
 
-                    /*
-                     * Modify flow states near the wall, to impose transmission condition,
-                     * weakly impose the transmission condition.
-                     */
-                    if(cell_status_data[idx_B] < 0.5){
-                        if(ei == 2)
-                            Q_minus[ei][idx_face_y] = -Q_plus[ei][idx_face_y];
-                        else
-                            Q_minus[ei][idx_face_y] = Q_plus[ei][idx_face_y];
-
-                        //std::cout << "B(i,j)=( " <<i << " , " << j << " ) " << "(x,yc) " << x_lo[0] + (i + 0.5)*dx[0]  <<  " , " <<  x_lo[1] + j*dx[1]  << " ei " << ei << std::endl;
-
-                    } else if(cell_status_data[idx_T] < 0.5)
-                    {
-                        if(ei == 2)
-                            Q_plus[ei][idx_face_y] = -Q_minus[ei][idx_face_y];
-                        else
-                            Q_plus[ei][idx_face_y]  = Q_minus[ei][idx_face_y];
-
-                        //std::cout << "T(i,j)=( " <<i << " , " << j << " ) " << "(x,yc) " << x_lo[0] + (i + 0.5)*dx[0]  <<  " , " <<  x_lo[1] + j*dx[1]  << " ei " << ei << std::endl;
-
-                    }
+                    const int idx_TT = (i + num_subghosts_primitive_var[ei][0]) +
+                                      (j + 1 + num_subghosts_primitive_var[ei][1])*
+                                      subghostcell_dims_primitive_var[ei][0];
+                    //todo limiter
+                    V_minus[ei][idx_face_y] = V[ei][idx_B];
+                    V_plus[ei][idx_face_y] = V[ei][idx_T];
                 }
             }
         }
@@ -554,20 +538,20 @@ ConvectiveFluxReconstructorFirstOrderHLLC::computeConvectiveFluxAndSourceOnPatch
         
         if (d_has_advective_eqn_form)
         {
-            d_riemann_solver->computeConvectiveFluxAndVelocityFromConservativeVariables(
+            d_riemann_solver->computeConvectiveFluxAndVelocityFromPrimitiveVariables(
                 convective_flux,
                 velocity_intercell,
-                conservative_variables_minus,
-                conservative_variables_plus,
+                primitive_variables_minus,
+                primitive_variables_plus,
                 DIRECTION::Y_DIRECTION,
                 RIEMANN_SOLVER::HLLC);
         }
         else
         {
-            d_riemann_solver->computeConvectiveFluxFromConservativeVariables(
+            d_riemann_solver->computeConvectiveFluxFromPrimitiveVariables(
                 convective_flux,
-                conservative_variables_minus,
-                conservative_variables_plus,
+                primitive_variables_minus,
+                primitive_variables_plus,
                 DIRECTION::Y_DIRECTION,
                 RIEMANN_SOLVER::HLLC);
         }
@@ -605,8 +589,8 @@ ConvectiveFluxReconstructorFirstOrderHLLC::computeConvectiveFluxAndSourceOnPatch
                         for (int i = 0; i < interior_dims[0]; i++)
                         {
                             // Compute the linear indices.
-                            const int idx_cell_wghost = (i + num_subghosts_conservative_var[ei][0]) +
-                                (j + num_subghosts_conservative_var[ei][1])*subghostcell_dims_conservative_var[ei][0];
+                            const int idx_cell_wghost = (i + num_subghosts_primitive_var[ei][0]) +
+                                (j + num_subghosts_primitive_var[ei][1])*subghostcell_dims_primitive_var[ei][0];
                             
                             const int idx_cell_nghost = i + j*interior_dims[0];
                             
@@ -634,12 +618,7 @@ ConvectiveFluxReconstructorFirstOrderHLLC::computeConvectiveFluxAndSourceOnPatch
                 }
             }
         }
-        
-        /*
-         * Unregister the patch in the flow model.
-         */
-        
-        //d_flow_model->unregisterPatch();
+
         
     } // if (d_dim == tbox::Dimension(2))
     else if (d_dim == tbox::Dimension(3))
