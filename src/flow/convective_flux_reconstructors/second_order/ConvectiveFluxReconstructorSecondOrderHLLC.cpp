@@ -17,7 +17,7 @@ ConvectiveFluxReconstructorSecondOrderHLLC::ConvectiveFluxReconstructorSecondOrd
             flow_model,
             convective_flux_reconstructor_db)
 {
-    d_num_conv_ghosts = hier::IntVector::getOne(d_dim);
+    d_num_conv_ghosts = hier::IntVector::getOne(d_dim)*2;
     
     d_eqn_form = d_flow_model->getEquationsForm();
     d_has_advective_eqn_form = false;
@@ -437,9 +437,9 @@ ConvectiveFluxReconstructorSecondOrderHLLC::computeConvectiveFluxAndSourceOnPatc
                     const int idx_RR = (i + 1 + num_subghosts_primitive_var[ei][0]) +
                                       (j + num_subghosts_primitive_var[ei][1])*
                                       subghostcell_dims_primitive_var[ei][0];
-                    //todo limiter reconstruction
-                    V_minus[ei][idx_face_x] = V[ei][idx_L];
-                    V_plus[ei][idx_face_x] = V[ei][idx_R];
+                    //limiter reconstruction
+                    limiterReconstruction(V[ei][idx_LL], V[ei][idx_L], V[ei][idx_R], V[ei][idx_RR],
+                                          V_minus[ei][idx_face_x], V_plus[ei][idx_face_x]);
 
 
                 }
@@ -525,9 +525,9 @@ ConvectiveFluxReconstructorSecondOrderHLLC::computeConvectiveFluxAndSourceOnPatc
                     const int idx_TT = (i + num_subghosts_primitive_var[ei][0]) +
                                       (j + 1 + num_subghosts_primitive_var[ei][1])*
                                       subghostcell_dims_primitive_var[ei][0];
-                    //todo limiter
-                    V_minus[ei][idx_face_y] = V[ei][idx_B];
-                    V_plus[ei][idx_face_y] = V[ei][idx_T];
+                    //limiter reconstruction
+                    limiterReconstruction(V[ei][idx_BB], V[ei][idx_B], V[ei][idx_T], V[ei][idx_TT],
+                                          V_minus[ei][idx_face_y], V_plus[ei][idx_face_y]);
                 }
             }
         }
@@ -1050,4 +1050,25 @@ ConvectiveFluxReconstructorSecondOrderHLLC::computeConvectiveFluxAndSourceOnPatc
         
     } // if (d_dim == tbox::Dimension(3))
     d_flow_model->unregisterPatch();
+}
+
+/*
+ * Put the characteristics of the convective flux reconstruction class
+ * into the restart database.
+ */
+void
+ConvectiveFluxReconstructorSecondOrderHLLC::limiterReconstruction
+    (const double v_ll, const double v_l, const double v_r, const double v_rr,
+     double & v_l_rec, double & v_r_rec)
+{
+    double eps = 1.e-15;
+    double ind_l = (v_r - v_l)/(v_l - v_ll + eps);
+    double ind_r = (v_r - v_l)/(v_rr - v_r + eps);
+
+    double phi_l = ind_l > 0. ? 2*ind_l/(ind_l + 1.): 0.;
+    double phi_r = ind_r > 0. ? 2*ind_r/(ind_r + 1.): 0.;
+
+    v_l_rec = v_l + 0.5*phi_l*(v_l - v_ll);
+    v_r_rec = v_r - 0.5*phi_r*(v_rr - v_r);
+
 }

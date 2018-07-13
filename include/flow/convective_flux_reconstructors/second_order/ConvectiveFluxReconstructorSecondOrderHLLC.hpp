@@ -51,7 +51,8 @@ class ConvectiveFluxReconstructorSecondOrderHLLC: public ConvectiveFluxReconstru
          */
         boost::shared_ptr<FlowModelRiemannSolver> d_riemann_solver;
 
-        //void Limiter(const double v_ll, const double v_l, const double v_r, const double v_rrdouble & v_min, double & v_plus)
+        void limiterReconstruction(const double v_ll, const double v_l, const double v_r, const double v_rr,
+                                   double & v_l_rec, double & v_r_rec);
         
 };
 
