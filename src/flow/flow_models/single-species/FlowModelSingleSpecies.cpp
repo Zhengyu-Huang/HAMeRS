@@ -1774,15 +1774,16 @@ FlowModelSingleSpecies::computeGlobalSideDataProjectionVariablesForPrimitiveVari
                         rho_average[idx_face_x] = double(1)/double(2)*(rho[idx_L] + rho[idx_R]);
                         c_average[idx_face_x] = double(1)/double(2)*(c[idx_sound_speed_L] + c[idx_sound_speed_R]);
 
-                        if(cell_status_data[idx_L] < 0.5)
-                        {
-                            rho_average[idx_face_x] = rho[idx_R];
-                            c_average[idx_face_x]   = c[idx_sound_speed_R];
-                        } else if(cell_status_data[idx_R] < 0.5)
-                        {
-                            rho_average[idx_face_x] = rho[idx_L];
-                            c_average[idx_face_x]   = c[idx_sound_speed_L];
-                        }
+                        // todo modify average value at the interface
+//                        if(cell_status_data[idx_L] < 0.5)
+//                        {
+//                            rho_average[idx_face_x] = rho[idx_R];
+//                            c_average[idx_face_x]   = c[idx_sound_speed_R];
+//                        } else if(cell_status_data[idx_R] < 0.5)
+//                        {
+//                            rho_average[idx_face_x] = rho[idx_L];
+//                            c_average[idx_face_x]   = c[idx_sound_speed_L];
+//                        }
                     }
                 }
                 
@@ -1819,18 +1820,18 @@ FlowModelSingleSpecies::computeGlobalSideDataProjectionVariablesForPrimitiveVari
                         
                         rho_average[idx_face_y] = double(1)/double(2)*(rho[idx_B] + rho[idx_T]);
                         c_average[idx_face_y] = double(1)/double(2)*(c[idx_sound_speed_B] + c[idx_sound_speed_T]);
-
-                        if(cell_status_data[idx_B] < 0.5)
-                        {
-                            rho_average[idx_face_y] = rho[idx_T];
-                            c_average[idx_face_y]   = c[idx_sound_speed_T];
-
-                        } else if(cell_status_data[idx_T] < 0.5)
-                        {
-                            rho_average[idx_face_y] = rho[idx_B];
-                            c_average[idx_face_y]   = c[idx_sound_speed_B];
-
-                        }
+                        //todo modify average value at the interface
+//                        if(cell_status_data[idx_B] < 0.5)
+//                        {
+//                            rho_average[idx_face_y] = rho[idx_T];
+//                            c_average[idx_face_y]   = c[idx_sound_speed_T];
+//
+//                        } else if(cell_status_data[idx_T] < 0.5)
+//                        {
+//                            rho_average[idx_face_y] = rho[idx_B];
+//                            c_average[idx_face_y]   = c[idx_sound_speed_B];
+//
+//                        }
                     }
                 }
                 
@@ -2365,10 +2366,10 @@ FlowModelSingleSpecies::computeGlobalSideDataCharacteristicVariablesFromPrimitiv
         /*
          * populate ghost nodes in x direction by mirroring
          */
-        for (int vi = 0; vi < static_cast<int>(primitive_variables.size()); vi++)
-        {
-            mirrorGhostCell(primitive_variables[vi], cell_status, DIRECTION::X_DIRECTION);
-        }
+//        for (int vi = 0; vi < static_cast<int>(primitive_variables.size()); vi++)
+//        {
+//            mirrorGhostCell(primitive_variables[vi], cell_status, DIRECTION::X_DIRECTION);
+//        }
         
         rho_average = projection_variables[0]->getPointer(0);
         c_average = projection_variables[1]->getPointer(0);
@@ -2415,10 +2416,10 @@ FlowModelSingleSpecies::computeGlobalSideDataCharacteristicVariablesFromPrimitiv
         /*
          * populate ghost nodes in x direction by mirroring
          */
-        for (int vi = 0; vi < static_cast<int>(primitive_variables.size()); vi++)
-        {
-            mirrorGhostCell(primitive_variables[vi], cell_status, DIRECTION::Y_DIRECTION);
-        }
+//        for (int vi = 0; vi < static_cast<int>(primitive_variables.size()); vi++)
+//        {
+//            mirrorGhostCell(primitive_variables[vi], cell_status, DIRECTION::Y_DIRECTION);
+//        }
         
         rho_average = projection_variables[0]->getPointer(1);
         c_average = projection_variables[1]->getPointer(1);

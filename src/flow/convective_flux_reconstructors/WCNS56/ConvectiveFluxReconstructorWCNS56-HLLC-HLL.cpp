@@ -567,9 +567,9 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
         d_flow_model->computeGlobalDerivedCellData();
 
         /*
-         * Get the cell status
+         * Get the cell status todo
          */
-        boost::shared_ptr<pdat::CellData<double> > cell_status = d_flow_model->getGlobalCellStatus();
+        // boost::shared_ptr<pdat::CellData<double> > cell_status = d_flow_model->getGlobalCellStatus();
         
         /*
          * Get the pointers to the velocity and convective flux cell data inside the flow model.
@@ -662,8 +662,8 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
             new DerivativeFirstOrder("first order derivative in y-direction", d_dim, DIRECTION::Y_DIRECTION, 1));
 
         //todo: modify these derivatives
+        // mirrorGhostCell(velocity, cell_status, DIRECTION::X_DIRECTION);
 
-        mirrorGhostCell(velocity, cell_status, DIRECTION::X_DIRECTION);
         // Compute dudx.
         derivative_first_order_x->computeDerivative(
             velocity_derivatives,
@@ -679,7 +679,10 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                 dx[0],
                 2,
                 1);
-        mirrorGhostCell(velocity, cell_status, DIRECTION::Y_DIRECTION);
+
+        //todo: modify these derivatives
+        //mirrorGhostCell(velocity, cell_status, DIRECTION::Y_DIRECTION);
+
         // Compute dudy.
         derivative_first_order_y->computeDerivative(
             velocity_derivatives,
