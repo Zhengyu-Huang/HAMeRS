@@ -18,7 +18,6 @@ int isOutsidePorousWall1(int dim, double x, double y, double z)
     *           4 solid in y and z directions, each of size 6;
     * 3 2 6 2 6 2 6 2 3
     */
-    return 1;
     double x0 = 0.0, r_hole = 1./32;
     if(fabs(x - x0) > r_hole) return 1;
     if(dim == 2){
@@ -71,7 +70,6 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
        const boost::shared_ptr<pdat::CellData<double> > &cell_status,
        const DIRECTION::TYPE d_direction)
 {
-    return;
     const tbox::Dimension d_dim = cell_status->getDim();
     const hier::IntVector  interior_dims = cell_status->getBox().numberCells();
 
