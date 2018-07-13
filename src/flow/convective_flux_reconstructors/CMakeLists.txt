@@ -4,6 +4,7 @@ set(convective_flux_reconstructors_source_files
     ConvectiveFluxReconstructorManager.cpp
     ./first_order/ConvectiveFluxReconstructorFirstOrderLLF.cpp
     ./first_order/ConvectiveFluxReconstructorFirstOrderHLLC.cpp
+    ./second_order/ConvectiveFluxReconstructorSecondOrderHLLC.cpp
     ./WCNS56/ConvectiveFluxReconstructorWCNS56-HLLC-HLL.cpp
     ./WCNS56/ConvectiveFluxReconstructorWCNS5-JS-HLLC-HLL.cpp
     ./WCNS56/ConvectiveFluxReconstructorWCNS5-Z-HLLC-HLL.cpp

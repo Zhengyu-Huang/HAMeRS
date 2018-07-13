@@ -288,6 +288,11 @@ class FlowModelSingleSpecies: public FlowModel
             const std::string& variable_name,
             int depth_id,
             double simulation_time) const;
+
+        /*
+         * Clean Inactive Cell Variables in the patch. Q contains conservative variables
+         */
+        void cleanInactiveNodes(std::vector<double*> &conservative_variables);
         
         /*
          * Register the plotting quantities.

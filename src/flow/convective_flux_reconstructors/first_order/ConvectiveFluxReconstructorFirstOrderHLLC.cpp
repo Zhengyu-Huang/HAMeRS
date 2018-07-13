@@ -98,7 +98,6 @@ ConvectiveFluxReconstructorFirstOrderHLLC::computeConvectiveFluxAndSourceOnPatch
             patch.getPatchGeometry()));
     
     const double* const dx = patch_geom->getDx();
-    const double* const x_lo = patch_geom->getXLower();
 
     /*
      * Compute the cell status.
@@ -107,14 +106,6 @@ ConvectiveFluxReconstructorFirstOrderHLLC::computeConvectiveFluxAndSourceOnPatch
     boost::shared_ptr<pdat::CellData<double> > cell_status
             = d_flow_model->getGlobalCellStatus();
     double* cell_status_data = cell_status->getPointer(0);
-
-    boost::shared_ptr<pdat::CellData<double> > cell_status2;
-    cell_status2.reset(
-            new pdat::CellData<double>(interior_box, 1, d_num_conv_ghosts));
-
-    computeCellStatus(cell_status2, x_lo,  dx);
-    double* cell_status2_data = cell_status2->getPointer(0);
-
     
     // Get the side data of convective flux.
     boost::shared_ptr<pdat::SideData<double> > convective_flux(
@@ -437,10 +428,7 @@ ConvectiveFluxReconstructorFirstOrderHLLC::computeConvectiveFluxAndSourceOnPatch
                      * Modify flow states near the wall, to impose transmission condition,
                      * weakly impose the transmission condition.
                      */
-                    if(fabs(cell_status2_data[idx_L] - cell_status_data[idx_L]) > 1.0e-6)
-                        std::cout << cell_status2_data[idx_L] << " status2 L status " <<cell_status_data[idx_L] << std::endl;
-                    if(fabs(cell_status2_data[idx_R] - cell_status_data[idx_R]) > 1.0e-6)
-                        std::cout << cell_status2_data[idx_R] << " status2 R status " <<cell_status_data[idx_R] << std::endl;
+
                     if(cell_status_data[idx_L] < 0.5){
                         if(ei == 1)
                             Q_minus[ei][idx_face_x] = -Q_plus[ei][idx_face_x];

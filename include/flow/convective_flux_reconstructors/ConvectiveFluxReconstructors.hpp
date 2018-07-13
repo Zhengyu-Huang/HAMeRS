@@ -3,6 +3,7 @@
 
 #include "flow/convective_flux_reconstructors/first_order/ConvectiveFluxReconstructorFirstOrderLLF.hpp"
 #include "flow/convective_flux_reconstructors/first_order/ConvectiveFluxReconstructorFirstOrderHLLC.hpp"
+#include "flow/convective_flux_reconstructors/second_order/ConvectiveFluxReconstructorSecondOrderHLLC.hpp"
 #include "flow/convective_flux_reconstructors/WCNS56/ConvectiveFluxReconstructorWCNS5-JS-HLLC-HLL.hpp"
 #include "flow/convective_flux_reconstructors/WCNS56/ConvectiveFluxReconstructorWCNS5-Z-HLLC-HLL.hpp"
 #include "flow/convective_flux_reconstructors/WCNS56/ConvectiveFluxReconstructorWCNS6-CU-M2-HLLC-HLL.hpp"
@@ -16,6 +17,7 @@ namespace CONVECTIVE_FLUX_RECONSTRUCTOR
 {
     enum TYPE { FIRST_ORDER_LLF,
                 FIRST_ORDER_HLLC,
+                SECOND_ORDER_HLLC,
                 WCNS5_JS_HLLC_HLL,
                 WCNS5_Z_HLLC_HLL,
                 WCNS6_CU_M2_HLLC_HLL,
@@ -35,6 +37,7 @@ inline std::ostream& operator<<(std::ostream& os, const CONVECTIVE_FLUX_RECONSTR
 #define INSERT_ELEMENT(p) strings[p] = #p
         INSERT_ELEMENT(CONVECTIVE_FLUX_RECONSTRUCTOR::FIRST_ORDER_LLF);
         INSERT_ELEMENT(CONVECTIVE_FLUX_RECONSTRUCTOR::FIRST_ORDER_HLLC);
+        INSERT_ELEMENT(CONVECTIVE_FLUX_RECONSTRUCTOR::SECOND_ORDER_HLLC);
         INSERT_ELEMENT(CONVECTIVE_FLUX_RECONSTRUCTOR::WCNS5_JS_HLLC_HLL);
         INSERT_ELEMENT(CONVECTIVE_FLUX_RECONSTRUCTOR::WCNS5_Z_HLLC_HLL);
         INSERT_ELEMENT(CONVECTIVE_FLUX_RECONSTRUCTOR::WCNS6_CU_M2_HLLC_HLL);

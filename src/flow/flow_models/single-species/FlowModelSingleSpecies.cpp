@@ -8919,3 +8919,46 @@ FlowModelSingleSpecies::computeGlobalCellDataMaxDiffusivityWithPressureAndTemper
             << std::endl);
     }
 }
+
+
+
+/*
+ * Clean Inactive Cell Variables in the patch. Q contains conservative variables
+ */
+void FlowModelSingleSpecies::cleanInactiveNodes(std::vector<double*> &Q)
+{
+    // Get the cell data of the registered cell status.
+    boost::shared_ptr<pdat::CellData<double> > cell_status(
+            BOOST_CAST<pdat::CellData<double>, hier::PatchData>(
+                    d_patch->getPatchData(s_cell_status, getDataContext())));
+
+    double* cell_status_data = cell_status->getPointer(0);
+    const tbox::Dimension d_dim = cell_status->getDim();
+    const hier::IntVector  interior_dims = cell_status->getBox().numberCells();
+
+    const hier::IntVector d_num_conv_ghosts = cell_status->getGhostCellWidth();
+
+    if (d_dim == tbox::Dimension(1)) {}
+    else if (d_dim == tbox::Dimension(2)) {
+/*
+ * Compute the status of cells, including ghost cells
+ */
+//        for (int i = 0; i < interior_dims[0] + 2*d_num_conv_ghosts[0]; i++)
+//            for (int j = 0; j < interior_dims[1] + 2*d_num_conv_ghosts[1]; j++) {
+          for (int i = d_num_conv_ghosts[0]; i < interior_dims[0] + d_num_conv_ghosts[0]; i++)
+            for (int j = d_num_conv_ghosts[1]; j < interior_dims[1] + d_num_conv_ghosts[1]; j++) {
+                const int idx = i + j * (interior_dims[0] + 2 * d_num_conv_ghosts[0]);
+                if(cell_status_data[idx] < 0.5){
+                    Q[0][idx] = 1.0; // rho = 1.0
+                    Q[1][idx] = 0.0; // u = 0.0
+                    Q[2][idx] = 0.0; // v = 0.0
+                    Q[3][idx] = 2.5; // p = 1.0
+                }
+
+            }
+
+
+    } else if (d_dim == tbox::Dimension(3)) {}
+
+
+}

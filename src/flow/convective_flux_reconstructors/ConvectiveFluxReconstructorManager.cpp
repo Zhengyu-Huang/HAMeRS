@@ -34,6 +34,18 @@ ConvectiveFluxReconstructorManager::ConvectiveFluxReconstructorManager(
             flow_model,
             convective_flux_reconstructor_db));
     }
+    else if (convective_flux_reconstructor_str == "SECOND_ORDER_HLLC")
+    {
+        d_convective_flux_reconstructor_type = CONVECTIVE_FLUX_RECONSTRUCTOR::SECOND_ORDER_HLLC;
+
+        d_conv_flux_reconstructor.reset(new ConvectiveFluxReconstructorSecondOrderHLLC(
+                "d_convective_flux_reconstructor",
+                dim,
+                grid_geometry,
+                flow_model->getNumberOfEquations(),
+                flow_model,
+                convective_flux_reconstructor_db));
+    }
     else if (convective_flux_reconstructor_str == "WCNS5_JS_HLLC_HLL")
     {
         d_convective_flux_reconstructor_type = CONVECTIVE_FLUX_RECONSTRUCTOR::WCNS5_JS_HLLC_HLL;

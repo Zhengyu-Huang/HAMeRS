@@ -473,7 +473,12 @@ class FlowModel:
             const std::string& variable_name,
             int depth_id,
             double simulation_time) const = 0;
-        
+        /*
+         * Clean Inactive Cell Variables in the patch. Q contains conservative variables
+         */
+        virtual void
+        cleanInactiveNodes(std::vector<double*> &conservative_variables){};
+
         /*
          * Register the plotting quantities.
          */

@@ -1556,6 +1556,15 @@ Euler::advanceSingleStepOnPatch(
             d_flow_model->unregisterPatch();
         }
     }
+
+
+    /*
+     * Clean the data in the wall (ghost cells)
+     */
+    d_flow_model->registerPatchWithDataContext(patch, getDataContext());
+    d_flow_model->cleanInactiveNodes(Q);
+    d_flow_model->unregisterPatch();
+
     
     t_advance_step->stop();
 }
