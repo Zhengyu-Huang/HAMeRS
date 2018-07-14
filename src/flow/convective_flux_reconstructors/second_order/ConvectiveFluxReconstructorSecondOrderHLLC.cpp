@@ -2,6 +2,9 @@
 
 #include "SAMRAI/geom/CartesianPatchGeometry.h"
 #include "util/basic_geometry/WallTreatment.hpp"
+
+#include <limits>
+
 ConvectiveFluxReconstructorSecondOrderHLLC::ConvectiveFluxReconstructorSecondOrderHLLC(
     const std::string& object_name,
     const tbox::Dimension& dim,
@@ -1061,12 +1064,20 @@ ConvectiveFluxReconstructorSecondOrderHLLC::limiterReconstruction
     (const double v_ll, const double v_l, const double v_r, const double v_rr,
      double & v_l_rec, double & v_r_rec)
 {
+    double sigma = std::numeric_limits<double>::infinity();
+    if(fabs(v_l - v_r) > sigma*fabs(v_l + v_r)/2.0) {
+        v_l_rec = v_l;
+        v_r_rec = v_r;
+        return;
+    }
+
     double eps = 1.e-15;
     double ind_l = (v_r - v_l)/(v_l - v_ll + eps);
     double ind_r = (v_r - v_l)/(v_rr - v_r + eps);
 
     double phi_l = ind_l > 0. ? 2*ind_l/(ind_l + 1.): 0.;
     double phi_r = ind_r > 0. ? 2*ind_r/(ind_r + 1.): 0.;
+
 
     v_l_rec = v_l + 0.5*phi_l*(v_l - v_ll);
     v_r_rec = v_r - 0.5*phi_r*(v_rr - v_r);

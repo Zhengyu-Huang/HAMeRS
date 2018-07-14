@@ -18,6 +18,7 @@
 #include "SAMRAI/tbox/Timer.h"
 #include "SAMRAI/tbox/TimerManager.h"
 #include "SAMRAI/tbox/Utilities.h"
+#include "util/basic_geometry/WallTreatment.hpp"
 
 #include <cfloat>
 #include <cmath>
@@ -566,7 +567,23 @@ NavierStokes::initializeDataOnPatch(
     t_init->start();
     
     d_flow_model->registerPatchWithDataContext(patch, getDataContext());
-    
+
+    // Get the grid spacing.
+    const boost::shared_ptr<geom::CartesianPatchGeometry> patch_geom(
+            BOOST_CAST<geom::CartesianPatchGeometry, hier::PatchGeometry>(
+                    patch.getPatchGeometry()));
+
+    const double* const dx = patch_geom->getDx();
+    const double* const x_lo = patch_geom->getXLower();
+
+    //initialize cell status
+    boost::shared_ptr<pdat::CellData<double> > cell_status
+            = d_flow_model->getGlobalCellStatus();
+
+    double* cell_status_data = cell_status->getPointer(0);
+    computeCellStatus(cell_status, x_lo,  dx);
+
+
     std::vector<boost::shared_ptr<pdat::CellData<double> > > conservative_var_data =
         d_flow_model->getGlobalCellDataConservativeVariables();
     
@@ -822,7 +839,7 @@ NavierStokes::computeStableDtOnPatch(
                 const double spectral_radius_diffusive = 2.0*fmax(
                     max_D[idx]/(dx_0*dx_0),
                     max_D[idx]/(dx_1*dx_1));
-                
+
                 stable_spectral_radius = fmax(stable_spectral_radius, spectral_radius_diffusive);
             }
         }
@@ -2270,7 +2287,15 @@ NavierStokes::advanceSingleStepOnPatch(
             d_flow_model->unregisterPatch();
         }
     }
-    
+
+    /*
+     * Clean the data in the wall (ghost cells)
+     */
+    d_flow_model->registerPatchWithDataContext(patch, getDataContext());
+    d_flow_model->cleanInactiveNodes(Q);
+    d_flow_model->unregisterPatch();
+
+
     t_advance_step->stop();
 }
 
