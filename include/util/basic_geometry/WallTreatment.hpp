@@ -8,6 +8,8 @@
 #include "SAMRAI/pdat/CellData.h"
 #include "SAMRAI/tbox/Dimension.h"
 
+#include "SAMRAI/geom/CartesianGridGeometry.h"
+#include "SAMRAI/geom/CartesianPatchGeometry.h"
 
 #include "util/Directions.hpp"
 
@@ -18,17 +20,35 @@
 
 using namespace SAMRAI;
 
+
+/*
+* WALL TREATMENT CONDITIONS
+*   SYMMETRY    - s_g = s_i
+*   NO_SLIP_VEL - v_g = -v_i
+*   SLIP_VEL    - v_g n = -v_i n
+*/
+enum WALL_TREATMENT_CONDITION {
+    WALL_NO_SLIP = 0,
+    WALL_SLIP = 1
+};
+
 int
-isOutsidePorousWall1(int dim, double x, double y, double z = 0.0);
-
+        isOutsidePorousWall1(int dim, double x, double y, double z = 0.0);
 
 
 void
-computeCellStatus(boost::shared_ptr<pdat::CellData<double> > &cell_status,
-                  const double* x_lo,  const double* dx);
+        initializeCellStatus(hier::Patch& patch,
+                             boost::shared_ptr <pdat::CellData<double>> &cell_status);
 
 void
-mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
-                const boost::shared_ptr<pdat::CellData<double> > &cell_status,
-                const DIRECTION::TYPE d_direction);
+        mirrorGhostCell(boost::shared_ptr <pdat::CellData<double>> &variables,
+                        const boost::shared_ptr <pdat::CellData<double>> &cell_status,
+                        const DIRECTION::TYPE d_direction,
+                        const WALL_TREATMENT_CONDITION d_condition = WALL_SLIP);
+
+void
+populateGhostCellsHelper(std::vector<boost::shared_ptr<pdat::CellData<double> > > &conservative_variables,
+                         const boost::shared_ptr<pdat::CellData<double> > &cell_status,
+                         const WALL_TREATMENT_CONDITION d_condition);
+
 #endif /* WALL_TREATMENT_CONDITIONS_HPP */

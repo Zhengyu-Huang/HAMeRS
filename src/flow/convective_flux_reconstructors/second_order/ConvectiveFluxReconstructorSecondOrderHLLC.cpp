@@ -402,7 +402,7 @@ ConvectiveFluxReconstructorSecondOrderHLLC::computeConvectiveFluxAndSourceOnPatc
         V_plus.resize(d_num_eqn);
         
         /*
-         * Initialize temporary data containers for computing the flux in the x-direction.
+         * mirroring ghost cell data for computing the flux in the x-direction.
          */
         for (int vi = 0; vi < static_cast<int>(primitive_variables.size()); vi++)
         {

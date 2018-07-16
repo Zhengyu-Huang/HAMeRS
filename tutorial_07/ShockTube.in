@@ -149,7 +149,7 @@ Main
 
 CartesianGeometry
 {
-    domain_boxes = [(0, 0), (255, 63)] // Lower and upper indices of compuational domain
+    domain_boxes = [(0, 0), (511, 127)] // Lower and upper indices of compuational domain
     x_lo         = -1.0, 0.0             // Lower end of computational domain
     x_up         =  3.0, 1.0             // Upper end of computational domain
 
@@ -170,7 +170,7 @@ ExtendedTagAndInitialize
 PatchHierarchy
 {
     // Maximum number of levels in hierarchy
-    max_levels = 2
+    max_levels = 1
 
     ratio_to_coarser
     {

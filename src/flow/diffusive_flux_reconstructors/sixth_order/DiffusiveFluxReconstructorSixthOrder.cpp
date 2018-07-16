@@ -1,7 +1,7 @@
 #include "flow/diffusive_flux_reconstructors/sixth_order/DiffusiveFluxReconstructorSixthOrder.hpp"
 
 #include "SAMRAI/geom/CartesianPatchGeometry.h"
-
+#include "util/basic_geometry/WallTreatment.hpp"
 #include <map>
 
 DiffusiveFluxReconstructorSixthOrder::DiffusiveFluxReconstructorSixthOrder(
@@ -97,7 +97,16 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
     
     // Initialize the data of diffusive flux to zero.
     diffusive_flux->fillAll(double(0));
-    
+
+    /*
+     * Compute the cell status.
+     */
+    d_flow_model->registerPatchWithDataContext(patch, data_context);
+    boost::shared_ptr<pdat::CellData<double> > cell_status
+            = d_flow_model->getGlobalCellStatus();
+
+
+
     if (d_dim == tbox::Dimension(1))
     {
         /*
@@ -108,11 +117,11 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
         
         const int num_diff_ghosts_0 = d_num_diff_ghosts[0];
         
-        /*
-         * Register the patch and derived cell variables in the flow model and compute the corresponding cell data.
-         */
-        
-        d_flow_model->registerPatchWithDataContext(patch, data_context);
+//        /*
+//         * Register the patch and derived cell variables in the flow model and compute the corresponding cell data.
+//         */
+//
+//        d_flow_model->registerPatchWithDataContext(patch, data_context);
         
         d_flow_model->registerDiffusiveFlux(d_num_diff_ghosts);
         
@@ -231,11 +240,11 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
         diffusivities_component_idx_x.clear();
         derivative_x.clear();
         
-        /*
-         * Unregister the patch and data of all registered derived cell variables in the flow model.
-         */
-        
-        d_flow_model->unregisterPatch();
+//        /*
+//         * Unregister the patch and data of all registered derived cell variables in the flow model.
+//         */
+//
+//        d_flow_model->unregisterPatch();
         
     } // if (d_dim == tbox::Dimension(1))
     else if (d_dim == tbox::Dimension(2))
@@ -252,11 +261,11 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
         
         const int diff_ghostcell_dim_0 = diff_ghostcell_dims[0];
         
-        /*
-         * Register the patch and derived cell variables in the flow model and compute the corresponding cell data.
-         */
-        
-        d_flow_model->registerPatchWithDataContext(patch, data_context);
+//        /*
+//         * Register the patch and derived cell variables in the flow model and compute the corresponding cell data.
+//         */
+//
+//        d_flow_model->registerPatchWithDataContext(patch, data_context);
         
         d_flow_model->registerDiffusiveFlux(d_num_diff_ghosts);
         
@@ -300,7 +309,15 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
             var_component_idx_y,
             DIRECTION::X_DIRECTION,
             DIRECTION::Y_DIRECTION);
-        
+
+
+        /*
+         * mirror ghost cell data for computing flux in the x-direction.
+         */
+//        boost::shared_ptr<pdat::CellData<double> > velocity =
+//                d_flow_model->getGlobalCellData("VELOCITY");
+//        mirrorGhostCell(velocity, cell_status, DIRECTION::X_DIRECTION);
+
         // Get the diffusivities in the diffusive flux.
         d_flow_model->getDiffusiveFluxDiffusivities(
             diffusivities_data_x,
@@ -322,6 +339,14 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
         TBOX_ASSERT(static_cast<int>(diffusivities_data_y.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(diffusivities_component_idx_x.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(diffusivities_component_idx_y.size()) == d_num_eqn);
+
+        /*
+         * mirror ghost cell data for computing the direvative in the x-direction.
+         */
+
+//        for (int ei = 0; ei < static_cast<int>(var_data_x.size()); ei++)
+//            for (int vi = 0; vi < static_cast<int>(var_data_x[ei].size()); vi++)
+//                mirrorGhostCell(var_data_x[ei][vi], cell_status, DIRECTION::X_DIRECTION);
         
         /*
          * Compute the derivatives in x-direction for diffusive flux in x-direction.
@@ -333,6 +358,15 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
             derivative_x_computed,
             var_data_x,
             var_component_idx_x);
+
+
+        /*
+        * mirror ghost cell data for computing the direvative in the y-direction.
+        */
+
+//        for (int ei = 0; ei < static_cast<int>(var_data_y.size()); ei++)
+//            for (int vi = 0; vi < static_cast<int>(var_data_y[ei].size()); vi++)
+//                mirrorGhostCell(var_data_y[ei][vi], cell_status, DIRECTION::Y_DIRECTION);
         
         /*
          * Compute the derivatives in y-direction for diffusive flux in x-direction.
@@ -527,6 +561,12 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
             var_component_idx_y,
             DIRECTION::Y_DIRECTION,
             DIRECTION::Y_DIRECTION);
+
+
+        /*
+         * mirror ghost cell data for computing flux in the y-direction.
+         */
+//        mirrorGhostCell(velocity, cell_status, DIRECTION::Y_DIRECTION);
         
         // Get the diffusivities in the diffusive flux.
         d_flow_model->getDiffusiveFluxDiffusivities(
@@ -738,11 +778,11 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
         derivative_x.clear();
         derivative_y.clear();
         
-        /*
-         * Unregister the patch and data of all registered derived cell variables in the flow model.
-         */
-        
-        d_flow_model->unregisterPatch();
+//        /*
+//         * Unregister the patch and data of all registered derived cell variables in the flow model.
+//         */
+//
+//        d_flow_model->unregisterPatch();
         
     } // if (d_dim == tbox::Dimension(2))
     else if (d_dim == tbox::Dimension(3))
@@ -762,11 +802,11 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
         const int diff_ghostcell_dim_0 = diff_ghostcell_dims[0];
         const int diff_ghostcell_dim_1 = diff_ghostcell_dims[1];
         
-        /*
-         * Register the patch and derived cell variables in the flow model and compute the corresponding cell data.
-         */
-        
-        d_flow_model->registerPatchWithDataContext(patch, data_context);
+//        /*
+//         * Register the patch and derived cell variables in the flow model and compute the corresponding cell data.
+//         */
+//
+//        d_flow_model->registerPatchWithDataContext(patch, data_context);
         
         d_flow_model->registerDiffusiveFlux(d_num_diff_ghosts);
         
@@ -1970,13 +2010,19 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
         derivative_y.clear();
         derivative_z.clear();
         
-        /*
-         * Unregister the patch and data of all registered derived cell variables in the flow model.
-         */
-        
-        d_flow_model->unregisterPatch();
+//        /*
+//         * Unregister the patch and data of all registered derived cell variables in the flow model.
+//         */
+//
+//        d_flow_model->unregisterPatch();
         
     } // if (d_dim == tbox::Dimension(3))
+
+    /*
+     * Unregister the patch and data of all registered derived cell variables in the flow model.
+     */
+
+     d_flow_model->unregisterPatch();
 }
 
 
