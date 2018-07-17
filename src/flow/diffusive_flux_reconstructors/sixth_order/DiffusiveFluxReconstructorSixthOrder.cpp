@@ -102,8 +102,20 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
      * Compute the cell status.
      */
     d_flow_model->registerPatchWithDataContext(patch, data_context);
+
     boost::shared_ptr<pdat::CellData<double> > cell_status
             = d_flow_model->getGlobalCellStatus();
+
+    d_flow_model->registerDiffusiveFlux(d_num_diff_ghosts);
+
+    d_flow_model->computeGlobalDerivedCellData();
+
+
+    boost::shared_ptr<pdat::CellData<double> > velocity =
+            d_flow_model->getGlobalCellData("VELOCITY");
+
+    boost::shared_ptr<pdat::CellData<double> > temperature =
+            d_flow_model->getGlobalCellData("TEMPERATURE");
 
 
 
@@ -116,16 +128,6 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
         const int interior_dim_0 = interior_dims[0];
         
         const int num_diff_ghosts_0 = d_num_diff_ghosts[0];
-        
-//        /*
-//         * Register the patch and derived cell variables in the flow model and compute the corresponding cell data.
-//         */
-//
-//        d_flow_model->registerPatchWithDataContext(patch, data_context);
-        
-        d_flow_model->registerDiffusiveFlux(d_num_diff_ghosts);
-        
-        d_flow_model->computeGlobalDerivedCellData();
         
         /*
          * Delcare containers for computing fluxes in different directions.
@@ -239,12 +241,7 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
         var_component_idx_x.clear();
         diffusivities_component_idx_x.clear();
         derivative_x.clear();
-        
-//        /*
-//         * Unregister the patch and data of all registered derived cell variables in the flow model.
-//         */
-//
-//        d_flow_model->unregisterPatch();
+
         
     } // if (d_dim == tbox::Dimension(1))
     else if (d_dim == tbox::Dimension(2))
@@ -260,16 +257,6 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
         const int num_diff_ghosts_1 = d_num_diff_ghosts[1];
         
         const int diff_ghostcell_dim_0 = diff_ghostcell_dims[0];
-        
-//        /*
-//         * Register the patch and derived cell variables in the flow model and compute the corresponding cell data.
-//         */
-//
-//        d_flow_model->registerPatchWithDataContext(patch, data_context);
-        
-        d_flow_model->registerDiffusiveFlux(d_num_diff_ghosts);
-        
-        d_flow_model->computeGlobalDerivedCellData();
         
         /*
          * Delcare containers for computing fluxes in different directions.
@@ -314,8 +301,7 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
         /*
          * mirror ghost cell data for computing flux in the x-direction.
          */
-        boost::shared_ptr<pdat::CellData<double> > velocity =
-                d_flow_model->getGlobalCellData("VELOCITY");
+
         mirrorGhostCell(velocity, cell_status, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
 
         // Get the diffusivities in the diffusive flux.
@@ -450,10 +436,10 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
                         const int idx_node_RRR = (i + 2 + num_diff_ghosts_0) +
                             (j + num_diff_ghosts_1)*diff_ghostcell_dim_0;
                         
-                        F_face_x[idx_face_x] += dt*mu[idx_diffusivity]*(
-                            double(37)/double(60)*(dudx[idx_node_L] + dudx[idx_node_R]) +
-                            double(-2)/double(15)*(dudx[idx_node_LL] + dudx[idx_node_RR]) +
-                            double(1)/double(60)*(dudx[idx_node_LLL] + dudx[idx_node_RRR]));
+                        F_face_x[idx_face_x] += dt*(
+                            double(37)/double(60)*(mu[idx_node_L]*dudx[idx_node_L] + mu[idx_node_R]*dudx[idx_node_R]) +
+                            double(-2)/double(15)*(mu[idx_node_LL]*dudx[idx_node_LL] + mu[idx_node_RR]*dudx[idx_node_RR]) +
+                            double(1)/double(60)*(mu[idx_node_LLL]*dudx[idx_node_LLL] + mu[idx_node_RRR]*dudx[idx_node_RRR]));
                     }
                 }
             }
@@ -520,11 +506,11 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
                         
                         const int idx_node_RRR = i + 2 + num_diff_ghosts_0 +
                             (j + num_diff_ghosts_1)*diff_ghostcell_dim_0;
-                        std::cout << idx_diffusivity << " " << idx_node_L << " " << idx_node_R<<std::endl;
-                        F_face_x[idx_face_x] += dt*mu[idx_diffusivity]*(
-                            double(37)/double(60)*(dudy[idx_node_L] + dudy[idx_node_R]) +
-                            double(-2)/double(15)*(dudy[idx_node_LL] + dudy[idx_node_RR]) +
-                            double(1)/double(60)*(dudy[idx_node_LLL] + dudy[idx_node_RRR]));
+
+                        F_face_x[idx_face_x] += dt*(
+                            double(37)/double(60)*(mu[idx_node_L]*dudy[idx_node_L] + mu[idx_node_R]*dudy[idx_node_R]) +
+                            double(-2)/double(15)*(mu[idx_node_LL]*dudy[idx_node_LL] + mu[idx_node_RR]*dudy[idx_node_RR]) +
+                            double(1)/double(60)*(mu[idx_node_LLL]*dudy[idx_node_LLL] + mu[idx_node_RRR]*dudy[idx_node_RRR]));
                     }
                 }
             }
@@ -589,6 +575,14 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
         TBOX_ASSERT(static_cast<int>(diffusivities_data_y.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(diffusivities_component_idx_x.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(diffusivities_component_idx_y.size()) == d_num_eqn);
+
+        /*
+        * mirror ghost cell data for computing the direvative in the x-direction.
+        */
+
+        for (int ei = 0; ei < static_cast<int>(var_data_x.size()); ei++)
+            for (int vi = 0; vi < static_cast<int>(var_data_x[ei].size()); vi++)
+                mirrorGhostCell(var_data_x[ei][vi], cell_status, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
         
         /*
          * Compute the derivatives in x-direction for diffusive flux in y-direction.
@@ -600,6 +594,15 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
             derivative_x_computed,
             var_data_x,
             var_component_idx_x);
+
+
+        /*
+        * mirror ghost cell data for computing the direvative in the x-direction.
+        */
+
+        for (int ei = 0; ei < static_cast<int>(var_data_y.size()); ei++)
+            for (int vi = 0; vi < static_cast<int>(var_data_y[ei].size()); vi++)
+                mirrorGhostCell(var_data_y[ei][vi], cell_status, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
         
         /*
          * Compute the derivatives in y-direction for diffusive flux in y-direction.
@@ -683,10 +686,10 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
                         const int idx_node_TTT = (i + num_diff_ghosts_0) +
                             (j + 2 + num_diff_ghosts_1)*diff_ghostcell_dim_0;
 
-                        F_face_y[idx_face_y] += dt*mu[idx_diffusivity]*(
-                            double(37)/double(60)*(dudx[idx_node_B] + dudx[idx_node_T]) +
-                            double(-2)/double(15)*(dudx[idx_node_BB] + dudx[idx_node_TT]) +
-                            double(1)/double(60)*(dudx[idx_node_BBB] + dudx[idx_node_TTT]));
+                        F_face_y[idx_face_y] += dt*(
+                            double(37)/double(60)*(mu[idx_node_B]*dudx[idx_node_B] +  mu[idx_node_T]*dudx[idx_node_T]) +
+                            double(-2)/double(15)*(mu[idx_node_BB]*dudx[idx_node_BB] + mu[idx_node_TT]*dudx[idx_node_TT]) +
+                            double(1)/double(60)*(mu[idx_node_BBB]*dudx[idx_node_BBB] + mu[idx_node_TTT]*dudx[idx_node_TTT]));
                     }
                 }
             }
@@ -754,10 +757,10 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
                         const int idx_node_TTT = (i + num_diff_ghosts_0) +
                             (j + 2 + num_diff_ghosts_1)*diff_ghostcell_dim_0;
                         
-                        F_face_y[idx_face_y] += dt*mu[idx_diffusivity]*(
-                            double(37)/double(60)*(dudy[idx_node_B] + dudy[idx_node_T]) +
-                            double(-2)/double(15)*(dudy[idx_node_BB] + dudy[idx_node_TT]) +
-                            double(1)/double(60)*(dudy[idx_node_BBB] + dudy[idx_node_TTT]));
+                        F_face_y[idx_face_y] += dt*(
+                            double(37)/double(60)*(mu[idx_node_B]*dudy[idx_node_B] + mu[idx_node_T]*dudy[idx_node_T]) +
+                            double(-2)/double(15)*(mu[idx_node_BB]*dudy[idx_node_BB] + mu[idx_node_TT]*dudy[idx_node_TT]) +
+                            double(1)/double(60)*(mu[idx_node_BBB]*dudy[idx_node_BBB] + mu[idx_node_TTT]*dudy[idx_node_TTT]));
                     }
                 }
             }
@@ -801,16 +804,6 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
         
         const int diff_ghostcell_dim_0 = diff_ghostcell_dims[0];
         const int diff_ghostcell_dim_1 = diff_ghostcell_dims[1];
-        
-//        /*
-//         * Register the patch and derived cell variables in the flow model and compute the corresponding cell data.
-//         */
-//
-//        d_flow_model->registerPatchWithDataContext(patch, data_context);
-        
-        d_flow_model->registerDiffusiveFlux(d_num_diff_ghosts);
-        
-        d_flow_model->computeGlobalDerivedCellData();
         
         /*
          * Delcare containers for computing fluxes in different directions.
