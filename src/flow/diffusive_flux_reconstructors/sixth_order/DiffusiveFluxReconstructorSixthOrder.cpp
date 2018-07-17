@@ -314,9 +314,9 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
         /*
          * mirror ghost cell data for computing flux in the x-direction.
          */
-//        boost::shared_ptr<pdat::CellData<double> > velocity =
-//                d_flow_model->getGlobalCellData("VELOCITY");
-//        mirrorGhostCell(velocity, cell_status, DIRECTION::X_DIRECTION);
+        boost::shared_ptr<pdat::CellData<double> > velocity =
+                d_flow_model->getGlobalCellData("VELOCITY");
+        mirrorGhostCell(velocity, cell_status, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
 
         // Get the diffusivities in the diffusive flux.
         d_flow_model->getDiffusiveFluxDiffusivities(
@@ -344,9 +344,9 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
          * mirror ghost cell data for computing the direvative in the x-direction.
          */
 
-//        for (int ei = 0; ei < static_cast<int>(var_data_x.size()); ei++)
-//            for (int vi = 0; vi < static_cast<int>(var_data_x[ei].size()); vi++)
-//                mirrorGhostCell(var_data_x[ei][vi], cell_status, DIRECTION::X_DIRECTION);
+        for (int ei = 0; ei < static_cast<int>(var_data_x.size()); ei++)
+            for (int vi = 0; vi < static_cast<int>(var_data_x[ei].size()); vi++)
+                mirrorGhostCell(var_data_x[ei][vi], cell_status, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
         
         /*
          * Compute the derivatives in x-direction for diffusive flux in x-direction.
@@ -364,9 +364,9 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
         * mirror ghost cell data for computing the direvative in the y-direction.
         */
 
-//        for (int ei = 0; ei < static_cast<int>(var_data_y.size()); ei++)
-//            for (int vi = 0; vi < static_cast<int>(var_data_y[ei].size()); vi++)
-//                mirrorGhostCell(var_data_y[ei][vi], cell_status, DIRECTION::Y_DIRECTION);
+        for (int ei = 0; ei < static_cast<int>(var_data_y.size()); ei++)
+            for (int vi = 0; vi < static_cast<int>(var_data_y[ei].size()); vi++)
+                mirrorGhostCell(var_data_y[ei][vi], cell_status, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
         
         /*
          * Compute the derivatives in y-direction for diffusive flux in x-direction.
@@ -520,7 +520,7 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
                         
                         const int idx_node_RRR = i + 2 + num_diff_ghosts_0 +
                             (j + num_diff_ghosts_1)*diff_ghostcell_dim_0;
-                        
+                        std::cout << idx_diffusivity << " " << idx_node_L << " " << idx_node_R<<std::endl;
                         F_face_x[idx_face_x] += dt*mu[idx_diffusivity]*(
                             double(37)/double(60)*(dudy[idx_node_L] + dudy[idx_node_R]) +
                             double(-2)/double(15)*(dudy[idx_node_LL] + dudy[idx_node_RR]) +
@@ -566,7 +566,7 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
         /*
          * mirror ghost cell data for computing flux in the y-direction.
          */
-//        mirrorGhostCell(velocity, cell_status, DIRECTION::Y_DIRECTION);
+        mirrorGhostCell(velocity, cell_status, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
         
         // Get the diffusivities in the diffusive flux.
         d_flow_model->getDiffusiveFluxDiffusivities(
@@ -682,7 +682,7 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
                         
                         const int idx_node_TTT = (i + num_diff_ghosts_0) +
                             (j + 2 + num_diff_ghosts_1)*diff_ghostcell_dim_0;
-                        
+
                         F_face_y[idx_face_y] += dt*mu[idx_diffusivity]*(
                             double(37)/double(60)*(dudx[idx_node_B] + dudx[idx_node_T]) +
                             double(-2)/double(15)*(dudx[idx_node_BB] + dudx[idx_node_TT]) +

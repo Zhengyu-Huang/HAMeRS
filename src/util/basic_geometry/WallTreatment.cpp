@@ -92,18 +92,9 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
     const tbox::Dimension d_dim = cell_status->getDim();
     const hier::IntVector  interior_dims = cell_status->getBox().numberCells();
 
-    const hier::IntVector d_num_conv_ghosts = cell_status->getGhostCellWidth();
+    const hier::IntVector d_num_status_ghosts = cell_status->getGhostCellWidth();
 
-
-    const tbox::Dimension d_dim2 = variables->getDim();
-    const hier::IntVector  interior_dims2 = variables->getBox().numberCells();
-
-    const hier::IntVector d_num_conv_ghosts2 = variables->getGhostCellWidth();
-
-    if(d_dim != d_dim2 || d_num_conv_ghosts != d_num_conv_ghosts2 || interior_dims != interior_dims2) {
-        std::cout << " ghost " << d_num_conv_ghosts << " " << d_num_conv_ghosts2 << std::endl;
-        std::cout << " interior " << interior_dims << " " << interior_dims2 << std::endl;
-    }
+    const hier::IntVector d_num_var_ghosts = variables->getGhostCellWidth();
 
 
 
@@ -125,36 +116,34 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
         if (d_dim == tbox::Dimension(1)) {}
         else if (d_dim == tbox::Dimension(2)) {
             //loop y direction
-            for (int j = 0; j < interior_dims[1] + 2 * d_num_conv_ghosts[1]; j++) {
+            for (int j = 0; j < interior_dims[1] + 2 * d_num_var_ghosts[1]; j++) {
                 ghost_count = std::numeric_limits<int>::min();
                 //loop x direction
-                for (int i = 0; i < interior_dims[0] + 2 * d_num_conv_ghosts[0]; i++) {
+                for (int i = 0; i < interior_dims[0] + 2 * d_num_var_ghosts[0]; i++) {
 
-                    const int idx = i + j * (interior_dims[0] + 2 * d_num_conv_ghosts[0]);
-                    if (cell_status_data[idx] < 0.5) {
+                    const int idx = i + j * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
+                    const int idx_status = (i - d_num_var_ghosts[0] + d_num_status_ghosts[0]) + (j - d_num_var_ghosts[1] + d_num_status_ghosts[1])* (interior_dims[0] + 2 * d_num_status_ghosts[0]);
+                    if (cell_status_data[idx_status] < 0.5) {
                         ghost_count++;
                     } else {
                         ghost_count = 0;
                     }
-                    if (ghost_count >= 1 && ghost_count <= d_num_conv_ghosts[d_direction] && (i - 2 * ghost_count + 1) >=0 ) {
+                    if (ghost_count >= 1 && ghost_count <= d_num_var_ghosts[d_direction] && (i - 2 * ghost_count + 1) >=0 ) {
                         const int idx_mirr =
-                                (i - 2 * ghost_count + 1) + j * (interior_dims[0] + 2 * d_num_conv_ghosts[0]);
+                                (i - 2 * ghost_count + 1) + j * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
 
-
-//                        if(depth == 1)
-//                            V[0][idx] = V[0][idx_mirr];
-//                        else if (depth > 1 && d_condition == WALL_SLIP) {
-//                            V[0][idx] = -V[0][idx_mirr];
-//                            V[1][idx] = V[1][idx_mirr];
-//                        }
-//                        else if (depth > 1 && d_condition == WALL_NO_SLIP) {
-//                            V[0][idx] = -V[0][idx_mirr];
-//                            V[1][idx] = -V[1][idx_mirr];
-//                        }
 
                         if(depth == 1)
-                            //std::cout << V[0][idx] << std::endl;
-                            V[0][idx] = 1.0;
+                            V[0][idx] = V[0][idx_mirr];
+                        else if (depth > 1 && d_condition == WALL_SLIP) {
+                            V[0][idx] = -V[0][idx_mirr];
+                            V[1][idx] = V[1][idx_mirr];
+                        }
+                        else if (depth > 1 && d_condition == WALL_NO_SLIP) {
+                            V[0][idx] = -V[0][idx_mirr];
+                            V[1][idx] = -V[1][idx_mirr];
+                        }
+
 
 
                     }
@@ -162,27 +151,28 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
 
                 ghost_count = std::numeric_limits<int>::min();
                 //loop x direction inversely
-                for (int i = interior_dims[0] + 2 * d_num_conv_ghosts[0] - 1; i >= 0; i--) {
+                for (int i = interior_dims[0] + 2 * d_num_var_ghosts[0] - 1; i >= 0; i--) {
 
-                    const int idx = i + j * (interior_dims[0] + 2 * d_num_conv_ghosts[0]);
-                    if (cell_status_data[idx] < 0.5) {
+                    const int idx = i + j * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
+                    const int idx_status = (i - d_num_var_ghosts[0] + d_num_status_ghosts[0]) + (j - d_num_var_ghosts[1] + d_num_status_ghosts[1])* (interior_dims[0] + 2 * d_num_status_ghosts[0]);
+                    if (cell_status_data[idx_status] < 0.5) {
                         ghost_count++;
                     } else {
                         ghost_count = 0;
                     }
-                    if (ghost_count >= 1 && ghost_count <= d_num_conv_ghosts[d_direction] && (i + 2 * ghost_count - 1) <= interior_dims[0] + 2 * d_num_conv_ghosts[0] - 1) {
+                    if (ghost_count >= 1 && ghost_count <= d_num_var_ghosts[d_direction] && (i + 2 * ghost_count - 1) <= interior_dims[0] + 2 * d_num_var_ghosts[0] - 1) {
                         const int idx_mirr =
-                                (i + 2 * ghost_count - 1) + j * (interior_dims[0] + 2 * d_num_conv_ghosts[0]);
-//                        if(depth == 1)
-//                            V[0][idx] = V[0][idx_mirr];
-//                        else if (depth > 1 && d_condition == WALL_SLIP) {
-//                            V[0][idx] = -V[0][idx_mirr];
-//                            V[1][idx] = V[1][idx_mirr];
-//                        }
-//                        else if (depth > 1 && d_condition == WALL_NO_SLIP) {
-//                            V[0][idx] = -V[0][idx_mirr];
-//                            V[1][idx] = -V[1][idx_mirr];
-//                        }
+                                (i + 2 * ghost_count - 1) + j * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
+                        if(depth == 1)
+                            V[0][idx] = V[0][idx_mirr];
+                        else if (depth > 1 && d_condition == WALL_SLIP) {
+                            V[0][idx] = -V[0][idx_mirr];
+                            V[1][idx] = V[1][idx_mirr];
+                        }
+                        else if (depth > 1 && d_condition == WALL_NO_SLIP) {
+                            V[0][idx] = -V[0][idx_mirr];
+                            V[1][idx] = -V[1][idx_mirr];
+                        }
 
                     }
 
@@ -195,56 +185,58 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
         if (d_dim == tbox::Dimension(1)) {}
         else if (d_dim == tbox::Dimension(2)) {
             //loop x direction
-            for (int i = 0; i < interior_dims[0] + 2 * d_num_conv_ghosts[0]; i++) {
+            for (int i = 0; i < interior_dims[0] + 2 * d_num_var_ghosts[0]; i++) {
 
                 ghost_count = std::numeric_limits<int>::min();
                 //loop y direction
-                for (int j = 0; j < interior_dims[1] + 2 * d_num_conv_ghosts[1]; j++) {
+                for (int j = 0; j < interior_dims[1] + 2 * d_num_var_ghosts[1]; j++) {
 
-                    const int idx = i + j * (interior_dims[0] + 2 * d_num_conv_ghosts[0]);
-                    if (cell_status_data[idx] < 0.5) {
+                    const int idx = i + j * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
+                    const int idx_status = (i - d_num_var_ghosts[0] + d_num_status_ghosts[0]) + (j - d_num_var_ghosts[1] + d_num_status_ghosts[1])* (interior_dims[0] + 2 * d_num_status_ghosts[0]);
+                    if (cell_status_data[idx_status] < 0.5) {
                         ghost_count++;
                     } else {
                         ghost_count = 0;
                     }
-                    if (ghost_count >= 1 && ghost_count <= d_num_conv_ghosts[d_direction] && j - 2 * ghost_count + 1 >=0) {
+                    if (ghost_count >= 1 && ghost_count <= d_num_var_ghosts[d_direction] && j - 2 * ghost_count + 1 >=0) {
                         const int idx_mirr =
-                                i + (j - 2 * ghost_count + 1) * (interior_dims[0] + 2 * d_num_conv_ghosts[0]);
-//                        if(depth == 1)
-//                            V[0][idx] = V[0][idx_mirr];
-//                        else if (depth > 1 && d_condition == WALL_SLIP) {
-//                            V[0][idx] = -V[0][idx_mirr];
-//                            V[1][idx] = V[1][idx_mirr];
-//                        }
-//                        else if (depth > 1 && d_condition == WALL_NO_SLIP) {
-//                            V[0][idx] = -V[0][idx_mirr];
-//                            V[1][idx] = -V[1][idx_mirr];
-//                        }
+                                i + (j - 2 * ghost_count + 1) * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
+                        if(depth == 1)
+                            V[0][idx] = V[0][idx_mirr];
+                        else if (depth > 1 && d_condition == WALL_SLIP) {
+                            V[0][idx] = -V[0][idx_mirr];
+                            V[1][idx] = V[1][idx_mirr];
+                        }
+                        else if (depth > 1 && d_condition == WALL_NO_SLIP) {
+                            V[0][idx] = -V[0][idx_mirr];
+                            V[1][idx] = -V[1][idx_mirr];
+                        }
                     }
                 }
                 ghost_count = std::numeric_limits<int>::min();
                 //loop y direction inversely
-                for (int j = interior_dims[1] + 2 * d_num_conv_ghosts[1] - 1; j >= 0; j--) {
+                for (int j = interior_dims[1] + 2 * d_num_var_ghosts[1] - 1; j >= 0; j--) {
 
-                    const int idx = i + j * (interior_dims[0] + 2 * d_num_conv_ghosts[0]);
-                    if (cell_status_data[idx] < 0.5) {
+                    const int idx = i + j * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
+                    const int idx_status = (i - d_num_var_ghosts[0] + d_num_status_ghosts[0]) + (j - d_num_var_ghosts[1] + d_num_status_ghosts[1])* (interior_dims[0] + 2 * d_num_status_ghosts[0]);
+                    if (cell_status_data[idx_status] < 0.5) {
                         ghost_count++;
                     } else {
                         ghost_count = 0;
                     }
-                    if (ghost_count >= 1 && ghost_count <= d_num_conv_ghosts[d_direction] && j + 2 * ghost_count - 1 <= interior_dims[1] + 2 * d_num_conv_ghosts[1] - 1) {
+                    if (ghost_count >= 1 && ghost_count <= d_num_var_ghosts[d_direction] && j + 2 * ghost_count - 1 <= interior_dims[1] + 2 * d_num_var_ghosts[1] - 1) {
                         const int idx_mirr =
-                                i + (j + 2 * ghost_count - 1) * (interior_dims[0] + 2 * d_num_conv_ghosts[0]);
-//                        if(depth == 1)
-//                            V[0][idx] = V[0][idx_mirr];
-//                        else if (depth > 1 && d_condition == WALL_SLIP) {
-//                            V[0][idx] = V[0][idx_mirr];
-//                            V[1][idx] = -V[1][idx_mirr];
-//                        }
-//                        else if (depth > 1 && d_condition == WALL_NO_SLIP) {
-//                            V[0][idx] = -V[0][idx_mirr];
-//                            V[1][idx] = -V[1][idx_mirr];
-//                        }
+                                i + (j + 2 * ghost_count - 1) * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
+                        if(depth == 1)
+                            V[0][idx] = V[0][idx_mirr];
+                        else if (depth > 1 && d_condition == WALL_SLIP) {
+                            V[0][idx] = V[0][idx_mirr];
+                            V[1][idx] = -V[1][idx_mirr];
+                        }
+                        else if (depth > 1 && d_condition == WALL_NO_SLIP) {
+                            V[0][idx] = -V[0][idx_mirr];
+                            V[1][idx] = -V[1][idx_mirr];
+                        }
 
                     }
 
