@@ -231,7 +231,7 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                         ghost_count = 0;
                     }
                     if (ghost_count >= 1 && ghost_count <= d_num_var_ghosts[d_direction] && j - 2 * ghost_count + 1 >=0) {
-                        
+
                         const int idx_mirr =
                                 i + (j - 2 * ghost_count + 1) * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
                         if(depth == 1)
