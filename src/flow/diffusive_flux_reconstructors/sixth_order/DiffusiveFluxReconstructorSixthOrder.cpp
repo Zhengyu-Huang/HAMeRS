@@ -333,6 +333,9 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
         for (int ei = 0; ei < static_cast<int>(var_data_x.size()); ei++)
             for (int vi = 0; vi < static_cast<int>(var_data_x[ei].size()); vi++)
                 mirrorGhostCell(var_data_x[ei][vi], cell_status, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
+//        mirrorGhostCell(velocity, cell_status, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
+//        mirrorGhostCell(temperature, cell_status, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
+
         
         /*
          * Compute the derivatives in x-direction for diffusive flux in x-direction.
@@ -353,6 +356,9 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
         for (int ei = 0; ei < static_cast<int>(var_data_y.size()); ei++)
             for (int vi = 0; vi < static_cast<int>(var_data_y[ei].size()); vi++)
                 mirrorGhostCell(var_data_y[ei][vi], cell_status, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
+
+//        mirrorGhostCell(velocity, cell_status, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
+//        mirrorGhostCell(temperature, cell_status, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
         
         /*
          * Compute the derivatives in y-direction for diffusive flux in x-direction.
@@ -583,6 +589,9 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
         for (int ei = 0; ei < static_cast<int>(var_data_x.size()); ei++)
             for (int vi = 0; vi < static_cast<int>(var_data_x[ei].size()); vi++)
                 mirrorGhostCell(var_data_x[ei][vi], cell_status, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
+
+//        mirrorGhostCell(velocity, cell_status, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
+//        mirrorGhostCell(temperature, cell_status, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
         
         /*
          * Compute the derivatives in x-direction for diffusive flux in y-direction.
@@ -603,6 +612,8 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
         for (int ei = 0; ei < static_cast<int>(var_data_y.size()); ei++)
             for (int vi = 0; vi < static_cast<int>(var_data_y[ei].size()); vi++)
                 mirrorGhostCell(var_data_y[ei][vi], cell_status, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
+//        mirrorGhostCell(velocity, cell_status, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
+//        mirrorGhostCell(temperature, cell_status, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
         
         /*
          * Compute the derivatives in y-direction for diffusive flux in y-direction.

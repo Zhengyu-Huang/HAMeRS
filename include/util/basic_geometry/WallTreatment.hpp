@@ -35,6 +35,9 @@ enum WALL_TREATMENT_CONDITION {
 int
         isOutsidePorousWall1(int dim, double x, double y, double z = 0.0);
 
+int
+        isOutsidePorousWall2(int dim, double x, double y, double z = 0.0);
+
 
 void
         initializeCellStatus(hier::Patch& patch,

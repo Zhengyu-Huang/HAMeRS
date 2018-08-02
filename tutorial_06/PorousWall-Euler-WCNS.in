@@ -25,7 +25,7 @@ Euler
     }
 
     // Convective flux reconstructor to use
-    convective_flux_reconstructor = "WCNS6_LD_HLLC_HLL"
+    convective_flux_reconstructor = "WCNS6_SJ_HLLC_HLL"
     Convective_flux_reconstructor{}
 
     Boundary_data
