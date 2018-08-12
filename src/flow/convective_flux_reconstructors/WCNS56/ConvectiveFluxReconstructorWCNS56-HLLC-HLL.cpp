@@ -583,6 +583,12 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
         convective_flux_node[0] = d_flow_model->getGlobalCellData("CONVECTIVE_FLUX_X");
         convective_flux_node[1] = d_flow_model->getGlobalCellData("CONVECTIVE_FLUX_Y");
 
+        //mirroring the convective flux
+        mirrorGhostCell(convective_flux_node[0], cell_status, DIRECTION::X_DIRECTION, WALL_SLIP);
+        mirrorGhostCell(convective_flux_node[1], cell_status, DIRECTION::Y_DIRECTION, WALL_SLIP);
+
+
+
         hier::IntVector num_subghosts_velocity = velocity->getGhostCellWidth();
         hier::IntVector subghostcell_dims_velocity = velocity->getGhostBox().numberCells();
 
