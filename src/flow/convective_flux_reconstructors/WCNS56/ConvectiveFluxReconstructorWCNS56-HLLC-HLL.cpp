@@ -579,13 +579,22 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
         boost::shared_ptr<pdat::CellData<double> > velocity =
             d_flow_model->getGlobalCellData("VELOCITY");
 
+        std::vector<boost::shared_ptr<pdat::CellData<double> > > convective_flux_node(2);
+        convective_flux_node[0] = d_flow_model->getGlobalCellData("CONVECTIVE_FLUX_X");
+        convective_flux_node[1] = d_flow_model->getGlobalCellData("CONVECTIVE_FLUX_Y");
+
         hier::IntVector num_subghosts_velocity = velocity->getGhostCellWidth();
         hier::IntVector subghostcell_dims_velocity = velocity->getGhostBox().numberCells();
+
+        hier::IntVector num_subghosts_convective_flux_x = convective_flux_node[0]->getGhostCellWidth();
+        hier::IntVector subghostcell_dims_convective_flux_x = convective_flux_node[0]->getGhostBox().numberCells();
+
+        hier::IntVector num_subghosts_convective_flux_y = convective_flux_node[1]->getGhostCellWidth();
+        hier::IntVector subghostcell_dims_convective_flux_y = convective_flux_node[1]->getGhostBox().numberCells();
 
         const int num_subghosts_0_velocity = num_subghosts_velocity[0];
         const int num_subghosts_1_velocity = num_subghosts_velocity[1];
         const int subghostcell_dim_0_velocity = subghostcell_dims_velocity[0];
-
 
         const int num_subghosts_0_convective_flux_x = num_subghosts_convective_flux_x[0];
         const int num_subghosts_1_convective_flux_x = num_subghosts_convective_flux_x[1];
@@ -601,6 +610,16 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
         double* Omega = vorticity_magnitude->getPointer(0);
         double* s_x   = shock_sensor->getPointer(0);
         double* s_y   = shock_sensor->getPointer(1);
+
+        std::vector<double*> F_node_x;
+        std::vector<double*> F_node_y;
+        F_node_x.reserve(d_num_eqn);
+        F_node_y.reserve(d_num_eqn);
+        for (int ei = 0; ei < d_num_eqn; ei++)
+        {
+            F_node_x.push_back(convective_flux_node[0]->getPointer(ei));
+            F_node_y.push_back(convective_flux_node[1]->getPointer(ei));
+        }
         
         std::vector<double*> F_midpoint_x;
         std::vector<double*> F_midpoint_y;
@@ -886,30 +905,6 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                         m - 3, static_cast<DIRECTION::TYPE>(d_direction));
             }
         }
-
-
-
-
-        std::vector<boost::shared_ptr<pdat::CellData<double> > > convective_flux_node(2);
-        convective_flux_node[0] = d_flow_model->getGlobalCellData("CONVECTIVE_FLUX_X");
-        convective_flux_node[1] = d_flow_model->getGlobalCellData("CONVECTIVE_FLUX_Y");
-
-        hier::IntVector num_subghosts_convective_flux_x = convective_flux_node[0]->getGhostCellWidth();
-        hier::IntVector subghostcell_dims_convective_flux_x = convective_flux_node[0]->getGhostBox().numberCells();
-
-        hier::IntVector num_subghosts_convective_flux_y = convective_flux_node[1]->getGhostCellWidth();
-        hier::IntVector subghostcell_dims_convective_flux_y = convective_flux_node[1]->getGhostBox().numberCells();
-
-        std::vector<double*> F_node_x;
-        std::vector<double*> F_node_y;
-        F_node_x.reserve(d_num_eqn);
-        F_node_y.reserve(d_num_eqn);
-        for (int ei = 0; ei < d_num_eqn; ei++)
-        {
-            F_node_x.push_back(convective_flux_node[0]->getPointer(ei));
-            F_node_y.push_back(convective_flux_node[1]->getPointer(ei));
-        }
-
 
 
 
