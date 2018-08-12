@@ -347,7 +347,7 @@ class FlowModel:
          */
         virtual void
         computeGlobalSideDataProjectionVariablesForPrimitiveVariables(
-            std::vector<boost::shared_ptr<pdat::SideData<double> > >& projection_variables) = 0;
+            std::vector<boost::shared_ptr<pdat::SideData<double> > >& projection_variables, const DIRECTION::TYPE d_direction =  DIRECTION::ALL_DIRECTION) = 0;
         
         /*
          * Compute global side data of characteristic variables from conservative variables.
@@ -367,7 +367,7 @@ class FlowModel:
             std::vector<boost::shared_ptr<pdat::SideData<double> > >& characteristic_variables,
             std::vector<boost::shared_ptr<pdat::CellData<double> > >& primitive_variables,
             const std::vector<boost::shared_ptr<pdat::SideData<double> > >& projection_variables,
-            const int& idx_offset) = 0;
+            const int& idx_offset, const DIRECTION::TYPE d_direction =  DIRECTION::ALL_DIRECTION) = 0;
         
         /*
          * Compute global side data of conservative variables from characteristic variables.

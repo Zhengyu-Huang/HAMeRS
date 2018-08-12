@@ -185,7 +185,7 @@ class FlowModelFourEqnConservative: public FlowModel
          */
         void
         computeGlobalSideDataProjectionVariablesForPrimitiveVariables(
-            std::vector<boost::shared_ptr<pdat::SideData<double> > >& projection_variables);
+            std::vector<boost::shared_ptr<pdat::SideData<double> > >& projection_variables, const DIRECTION::TYPE d_direction =  DIRECTION::ALL_DIRECTION);
         
         /*
          * Compute global side data of characteristic variables from conservative variables.
@@ -205,7 +205,7 @@ class FlowModelFourEqnConservative: public FlowModel
             std::vector<boost::shared_ptr<pdat::SideData<double> > >& characteristic_variables,
             std::vector<boost::shared_ptr<pdat::CellData<double> > >& primitive_variables,
             const std::vector<boost::shared_ptr<pdat::SideData<double> > >& projection_variables,
-            const int& idx_offset);
+            const int& idx_offset, const DIRECTION::TYPE d_direction =  DIRECTION::ALL_DIRECTION);
         
         /*
          * Compute global side data of conservative variables from characteristic variables.

@@ -1608,7 +1608,7 @@ FlowModelFiveEqnAllaire::computeGlobalSideDataProjectionVariablesForConservative
  */
 void
 FlowModelFiveEqnAllaire::computeGlobalSideDataProjectionVariablesForPrimitiveVariables(
-    std::vector<boost::shared_ptr<pdat::SideData<double> > >& projection_variables)
+    std::vector<boost::shared_ptr<pdat::SideData<double> > >& projection_variables, const DIRECTION::TYPE d_direction)
 {
     // Create empty box.
     const hier::Box empty_box(d_dim);
@@ -2334,7 +2334,7 @@ FlowModelFiveEqnAllaire::computeGlobalSideDataCharacteristicVariablesFromPrimiti
     std::vector<boost::shared_ptr<pdat::SideData<double> > >& characteristic_variables,
     std::vector<boost::shared_ptr<pdat::CellData<double> > >& primitive_variables,
     const std::vector<boost::shared_ptr<pdat::SideData<double> > >& projection_variables,
-    const int& idx_offset)
+    const int& idx_offset, const DIRECTION::TYPE d_direction)
 {
     /*
      * Get the numbers of ghost cells of the variables.

@@ -1563,7 +1563,7 @@ FlowModelSingleSpecies::computeGlobalSideDataProjectionVariablesForConservativeV
  */
 void
 FlowModelSingleSpecies::computeGlobalSideDataProjectionVariablesForPrimitiveVariables(
-    std::vector<boost::shared_ptr<pdat::SideData<double> > >& projection_variables)
+    std::vector<boost::shared_ptr<pdat::SideData<double> > >& projection_variables, const DIRECTION::TYPE d_direction)
 {
     // Create empty box.
     const hier::Box empty_box(d_dim);
@@ -1640,7 +1640,7 @@ FlowModelSingleSpecies::computeGlobalSideDataProjectionVariablesForPrimitiveVari
     
     // Get the pointers to the cell data of density and sound speed.
     double* rho = data_density->getPointer(0);
-    if (!d_data_sound_speed)
+    if (!d_data_sound_speed || d_direction != DIRECTION::ALL_DIRECTION)
     {
         computeGlobalCellDataSoundSpeedWithPressure(empty_box);
     }
@@ -1658,6 +1658,8 @@ FlowModelSingleSpecies::computeGlobalSideDataProjectionVariablesForPrimitiveVari
       */
     boost::shared_ptr<pdat::CellData<double> > cell_status = getGlobalCellStatus();
     double* cell_status_data = cell_status->getPointer(0);
+    const hier::IntVector num_ghosts_cell_status = cell_status->getGhostCellWidth();
+    const hier::IntVector ghostcell_dims_cell_status = cell_status->getGhostBox().numberCells();
     
     if (d_dim == tbox::Dimension(1))
     {
@@ -1742,96 +1744,109 @@ FlowModelSingleSpecies::computeGlobalSideDataProjectionVariablesForPrimitiveVari
                 /*
                  * Compute the projection variables in the x-direction.
                  */
-                
-                rho_average = projection_variables[0]->getPointer(0);
-                c_average = projection_variables[1]->getPointer(0);
-                
-                for (int j = 0; j < interior_dim_1; j++)
-                {
-#ifdef HAMERS_ENABLE_SIMD
-                    #pragma omp simd
-#endif
-                    for (int i = -num_ghosts_0_projection_var;
-                         i < interior_dim_0 + 1 + num_ghosts_0_projection_var;
-                         i++)
-                    {
-                        // Compute the linear indices.
-                        const int idx_face_x = (i + num_ghosts_0_projection_var) +
-                            (j + num_ghosts_1_projection_var)*(ghostcell_dim_0_projection_var + 1);
-                        
-                        const int idx_L = (i - 1 + num_ghosts_0) +
-                            (j + num_ghosts_1)*ghostcell_dim_0;
-                        
-                        const int idx_R = (i + num_ghosts_0) +
-                            (j + num_ghosts_1)*ghostcell_dim_0;
-                        
-                        const int idx_sound_speed_L = (i - 1 + num_subghosts_0_sound_speed) +
-                            (j + num_subghosts_1_sound_speed)*subghostcell_dim_0_sound_speed;
-                        
-                        const int idx_sound_speed_R = (i + num_subghosts_0_sound_speed) +
-                            (j + num_subghosts_1_sound_speed)*subghostcell_dim_0_sound_speed;
-                        
-                        rho_average[idx_face_x] = double(1)/double(2)*(rho[idx_L] + rho[idx_R]);
-                        c_average[idx_face_x] = double(1)/double(2)*(c[idx_sound_speed_L] + c[idx_sound_speed_R]);
+                if(d_direction ==  DIRECTION::X_DIRECTION || d_direction ==  DIRECTION::ALL_DIRECTION) {
+                    rho_average = projection_variables[0]->getPointer(0);
+                    c_average = projection_variables[1]->getPointer(0);
 
-                        // todo modify average value at the interface
-//                        if(cell_status_data[idx_L] < 0.5)
-//                        {
-//                            rho_average[idx_face_x] = rho[idx_R];
-//                            c_average[idx_face_x]   = c[idx_sound_speed_R];
-//                        } else if(cell_status_data[idx_R] < 0.5)
-//                        {
-//                            rho_average[idx_face_x] = rho[idx_L];
-//                            c_average[idx_face_x]   = c[idx_sound_speed_L];
-//                        }
+                    for (int j = 0; j < interior_dim_1; j++) {
+#ifdef HAMERS_ENABLE_SIMD
+#pragma omp simd
+#endif
+                        for (int i = -num_ghosts_0_projection_var;
+                             i < interior_dim_0 + 1 + num_ghosts_0_projection_var;
+                             i++) {
+                            // Compute the linear indices.
+                            const int idx_face_x = (i + num_ghosts_0_projection_var) +
+                                                   (j + num_ghosts_1_projection_var) *
+                                                   (ghostcell_dim_0_projection_var + 1);
+
+                            const int idx_L = (i - 1 + num_ghosts_0) +
+                                              (j + num_ghosts_1) * ghostcell_dim_0;
+
+                            const int idx_R = (i + num_ghosts_0) +
+                                              (j + num_ghosts_1) * ghostcell_dim_0;
+
+                            const int idx_sound_speed_L = (i - 1 + num_subghosts_0_sound_speed) +
+                                                          (j + num_subghosts_1_sound_speed) *
+                                                          subghostcell_dim_0_sound_speed;
+
+                            const int idx_sound_speed_R = (i + num_subghosts_0_sound_speed) +
+                                                          (j + num_subghosts_1_sound_speed) *
+                                                          subghostcell_dim_0_sound_speed;
+
+                            rho_average[idx_face_x] = double(1) / double(2) * (rho[idx_L] + rho[idx_R]);
+                            c_average[idx_face_x] =
+                                    double(1) / double(2) * (c[idx_sound_speed_L] + c[idx_sound_speed_R]);
+                            //todo modify average value at the interface
+                        if((cell_status_data[idx_L] < 0.5 && cell_status_data[idx_R] > 0.5)||
+                                (cell_status_data[idx_L] > 0.5 && cell_status_data[idx_R] < 0.5))
+                        {
+                            if(fabs(rho[idx_L] - rho[idx_R]) > 1e-8 || fabs(c[idx_sound_speed_L] - c[idx_sound_speed_R]) > 1e-8) {
+                                std::cout<< "num_ghosts_0_projection_var "   << num_ghosts_0_projection_var << std::endl;
+                                std::cout<< "num_subghosts_0_sound_speed "   << num_subghosts_0_sound_speed << std::endl;
+                                std::cout<< "num_ghosts_0 "   << num_ghosts_0 << std::endl;
+                                std::cout<< "num_ghosts_cell_status[0] "   << num_ghosts_cell_status[0] << std::endl;
+                                std::cout<< rho[idx_L] << " " <<  rho[idx_R]<< " " << c[idx_sound_speed_L] << " " <<  c[idx_sound_speed_R] << std::endl;
+                                std::cout<< "LR wrong!!!" << std::endl;
+                                exit(1);
+                            }
+
+                        }
+                        }
                     }
                 }
                 
                 /*
                  * Compute the projection variables in the y-direction.
                  */
-                rho_average = projection_variables[0]->getPointer(1);
-                c_average = projection_variables[1]->getPointer(1);
-                
-                for (int j = -num_ghosts_1_projection_var;
-                     j < interior_dim_1 + 1 + num_ghosts_1_projection_var;
-                     j++)
-                {
+                if(d_direction ==  DIRECTION::Y_DIRECTION || d_direction ==  DIRECTION::ALL_DIRECTION) {
+                    rho_average = projection_variables[0]->getPointer(1);
+                    c_average = projection_variables[1]->getPointer(1);
+
+                    for (int j = -num_ghosts_1_projection_var;
+                         j < interior_dim_1 + 1 + num_ghosts_1_projection_var;
+                         j++) {
 #ifdef HAMERS_ENABLE_SIMD
-                    #pragma omp simd
+#pragma omp simd
 #endif
-                    for (int i = 0; i < interior_dim_0; i++)
-                    {
-                        // Compute the linear indices.
-                        const int idx_face_y = (i + num_ghosts_0_projection_var) +
-                            (j + num_ghosts_1_projection_var)*ghostcell_dim_0_projection_var;
-                        
-                        const int idx_B = (i + num_ghosts_0) +
-                            (j - 1 + num_ghosts_1)*ghostcell_dim_0;
-                        
-                        const int idx_T = (i + num_ghosts_0) +
-                            (j + num_ghosts_1)*ghostcell_dim_0;
-                        
-                        const int idx_sound_speed_B = (i + num_subghosts_0_sound_speed) +
-                            (j - 1 + num_subghosts_1_sound_speed)*subghostcell_dim_0_sound_speed;
-                        
-                        const int idx_sound_speed_T = (i + num_subghosts_0_sound_speed) +
-                            (j + num_subghosts_1_sound_speed)*subghostcell_dim_0_sound_speed;
-                        
-                        rho_average[idx_face_y] = double(1)/double(2)*(rho[idx_B] + rho[idx_T]);
-                        c_average[idx_face_y] = double(1)/double(2)*(c[idx_sound_speed_B] + c[idx_sound_speed_T]);
-                        //todo modify average value at the interface
-//                        if(cell_status_data[idx_B] < 0.5)
-//                        {
-//                            rho_average[idx_face_y] = rho[idx_T];
-//                            c_average[idx_face_y]   = c[idx_sound_speed_T];
-//
-//                        } else if(cell_status_data[idx_T] < 0.5)
-//                        {
-//                            rho_average[idx_face_y] = rho[idx_B];
-//                            c_average[idx_face_y]   = c[idx_sound_speed_B];
-//
-//                        }
+                        for (int i = 0; i < interior_dim_0; i++) {
+                            // Compute the linear indices.
+                            const int idx_face_y = (i + num_ghosts_0_projection_var) +
+                                                   (j + num_ghosts_1_projection_var) * ghostcell_dim_0_projection_var;
+
+                            const int idx_B = (i + num_ghosts_0) +
+                                              (j - 1 + num_ghosts_1) * ghostcell_dim_0;
+
+                            const int idx_T = (i + num_ghosts_0) +
+                                              (j + num_ghosts_1) * ghostcell_dim_0;
+
+                            const int idx_sound_speed_B = (i + num_subghosts_0_sound_speed) +
+                                                          (j - 1 + num_subghosts_1_sound_speed) *
+                                                          subghostcell_dim_0_sound_speed;
+
+                            const int idx_sound_speed_T = (i + num_subghosts_0_sound_speed) +
+                                                          (j + num_subghosts_1_sound_speed) *
+                                                          subghostcell_dim_0_sound_speed;
+
+                            rho_average[idx_face_y] = double(1) / double(2) * (rho[idx_B] + rho[idx_T]);
+                            c_average[idx_face_y] =
+                                    double(1) / double(2) * (c[idx_sound_speed_B] + c[idx_sound_speed_T]);
+                            //todo modify average value at the interface
+                            if((cell_status_data[idx_B] < 0.5 && cell_status_data[idx_T] > 0.5)||
+                               (cell_status_data[idx_B] > 0.5 && cell_status_data[idx_T] < 0.5))
+                            {
+                                if(fabs(rho[idx_B] - rho[idx_T]) > 1e-8 || fabs(c[idx_sound_speed_B] - c[idx_sound_speed_T]) > 1e-8) {
+                                    std::cout<< "num_ghosts_0_projection_var "   << num_ghosts_0_projection_var << std::endl;
+                                    std::cout<< "num_subghosts_0_sound_speed "   << num_subghosts_0_sound_speed << std::endl;
+                                    std::cout<< "num_ghosts_0 "   << num_ghosts_0 << std::endl;
+                                    std::cout<< "num_ghosts_cell_status[0] "   << num_ghosts_cell_status[0] << std::endl;
+                                    std::cout<< rho[idx_B] << " " <<  rho[idx_T]<< " " << c[idx_sound_speed_B] << " " <<  c[idx_sound_speed_T] << std::endl;
+                                    std::cout<< "BT wrong!!!" << std::endl;
+                                    exit(1);
+                                }
+
+                            }
+                        }
                     }
                 }
                 
@@ -2092,7 +2107,7 @@ FlowModelSingleSpecies::computeGlobalSideDataCharacteristicVariablesFromPrimitiv
     std::vector<boost::shared_ptr<pdat::SideData<double> > >& characteristic_variables,
     std::vector<boost::shared_ptr<pdat::CellData<double> > >& primitive_variables,
     const std::vector<boost::shared_ptr<pdat::SideData<double> > >& projection_variables,
-    const int& idx_offset)
+    const int& idx_offset, const DIRECTION::TYPE d_direction)
 {
     /*
      * Get the numbers of ghost cells of the variables.
@@ -2357,103 +2372,94 @@ FlowModelSingleSpecies::computeGlobalSideDataCharacteristicVariablesFromPrimitiv
         /*
          * Compute the characteristic variables in the x-direction.
          */
-        
-        for (int ei = 0; ei < d_num_eqn; ei++)
-        {
-            W[ei] = characteristic_variables[ei]->getPointer(0);
-        }
-
-        /*
-         * populate ghost nodes in x direction by mirroring
-         */
-//        for (int vi = 0; vi < static_cast<int>(primitive_variables.size()); vi++)
-//        {
-//            mirrorGhostCell(primitive_variables[vi], cell_status, DIRECTION::X_DIRECTION);
-//        }
-        
-        rho_average = projection_variables[0]->getPointer(0);
-        c_average = projection_variables[1]->getPointer(0);
-        
-        for (int j = 0; j < interior_dim_1; j++)
-        {
-#ifdef HAMERS_ENABLE_SIMD
-            #pragma omp simd
-#endif
-            for (int i = -num_ghosts_0_characteristic_var;
-                 i < interior_dim_0 + 1 + num_ghosts_0_characteristic_var;
-                 i++)
+        if(d_direction ==  DIRECTION::X_DIRECTION || d_direction ==  DIRECTION::ALL_DIRECTION) {
+            for (int ei = 0; ei < d_num_eqn; ei++)
             {
-                // Compute the linear indices.
-                const int idx_face = (i + num_ghosts_0_characteristic_var) +
-                    (j + num_ghosts_1_characteristic_var)*(ghostcell_dim_0_characteristic_var + 1);
-                
-                const int idx_rho = (i + idx_offset_rho + num_ghosts_0_rho) +
-                    (j + num_ghosts_1_rho)*ghostcell_dim_0_rho;
-                
-                const int idx_vel = (i + idx_offset_vel + num_ghosts_0_vel) +
-                    (j + num_ghosts_1_vel)*ghostcell_dim_0_vel;
-                
-                const int idx_p = (i + idx_offset_p + num_ghosts_0_p) +
-                    (j + num_ghosts_1_p)*ghostcell_dim_0_p;
-                
-                W[0][idx_face] = -double(1)/double(2)*rho_average[idx_face]*c_average[idx_face]*V[1][idx_vel] +
-                    double(1)/double(2)*V[3][idx_p];
-                W[1][idx_face] = V[0][idx_rho] - double(1)/(c_average[idx_face]*c_average[idx_face])*V[3][idx_p];
-                W[2][idx_face] = V[2][idx_vel];
-                W[3][idx_face] = double(1)/double(2)*rho_average[idx_face]*c_average[idx_face]*V[1][idx_vel] +
-                    double(1)/double(2)*V[3][idx_p];
+                W[ei] = characteristic_variables[ei]->getPointer(0);
+            }
+
+            rho_average = projection_variables[0]->getPointer(0);
+            c_average = projection_variables[1]->getPointer(0);
+
+            for (int j = 0; j < interior_dim_1; j++)
+            {
+    #ifdef HAMERS_ENABLE_SIMD
+                #pragma omp simd
+    #endif
+                for (int i = -num_ghosts_0_characteristic_var;
+                     i < interior_dim_0 + 1 + num_ghosts_0_characteristic_var;
+                     i++)
+                {
+                    // Compute the linear indices.
+                    const int idx_face = (i + num_ghosts_0_characteristic_var) +
+                        (j + num_ghosts_1_characteristic_var)*(ghostcell_dim_0_characteristic_var + 1);
+
+                    const int idx_rho = (i + idx_offset_rho + num_ghosts_0_rho) +
+                        (j + num_ghosts_1_rho)*ghostcell_dim_0_rho;
+
+                    const int idx_vel = (i + idx_offset_vel + num_ghosts_0_vel) +
+                        (j + num_ghosts_1_vel)*ghostcell_dim_0_vel;
+
+                    const int idx_p = (i + idx_offset_p + num_ghosts_0_p) +
+                        (j + num_ghosts_1_p)*ghostcell_dim_0_p;
+
+                    W[0][idx_face] = -double(1)/double(2)*rho_average[idx_face]*c_average[idx_face]*V[1][idx_vel] +
+                        double(1)/double(2)*V[3][idx_p];
+                    W[1][idx_face] = V[0][idx_rho] - double(1)/(c_average[idx_face]*c_average[idx_face])*V[3][idx_p];
+                    W[2][idx_face] = V[2][idx_vel];
+                    W[3][idx_face] = double(1)/double(2)*rho_average[idx_face]*c_average[idx_face]*V[1][idx_vel] +
+                        double(1)/double(2)*V[3][idx_p];
+                }
             }
         }
+
+
         
         /*
          * Compute the characteristic variables in the y-direction.
          */
-        
-        for (int ei = 0; ei < d_num_eqn; ei++)
-        {
-            W[ei] = characteristic_variables[ei]->getPointer(1);
-        }
-        /*
-         * populate ghost nodes in x direction by mirroring
-         */
-//        for (int vi = 0; vi < static_cast<int>(primitive_variables.size()); vi++)
-//        {
-//            mirrorGhostCell(primitive_variables[vi], cell_status, DIRECTION::Y_DIRECTION);
-//        }
-        
-        rho_average = projection_variables[0]->getPointer(1);
-        c_average = projection_variables[1]->getPointer(1);
-        
-        for (int j = -num_ghosts_1_characteristic_var;
-             j < interior_dim_1 + 1 + num_ghosts_1_characteristic_var;
-             j++)
-        {
-#ifdef HAMERS_ENABLE_SIMD
-            #pragma omp simd
-#endif
-            for (int i = 0; i < interior_dim_0; i++)
+        if(d_direction ==  DIRECTION::Y_DIRECTION || d_direction ==  DIRECTION::ALL_DIRECTION) {
+            for (int ei = 0; ei < d_num_eqn; ei++)
             {
-                // Compute the linear indices.
-                const int idx_face = (i + num_ghosts_0_characteristic_var) +
-                    (j + num_ghosts_1_characteristic_var)*ghostcell_dim_0_characteristic_var;
-                
-                const int idx_rho = (i + num_ghosts_0_rho) +
-                    (j + idx_offset_rho + num_ghosts_1_rho)*ghostcell_dim_0_rho;
-                
-                const int idx_vel = (i + num_ghosts_0_vel) +
-                    (j + idx_offset_vel + num_ghosts_1_vel)*ghostcell_dim_0_vel;
-                
-                const int idx_p = (i + num_ghosts_0_p) +
-                    (j + idx_offset_p + num_ghosts_1_p)*ghostcell_dim_0_p;
-                
-                W[0][idx_face] = -double(1)/double(2)*rho_average[idx_face]*c_average[idx_face]*V[2][idx_vel] +
-                    double(1)/double(2)*V[3][idx_p];
-                W[1][idx_face] = V[0][idx_rho] - double(1)/(c_average[idx_face]*c_average[idx_face])*V[3][idx_p];
-                W[2][idx_face] = V[1][idx_vel];
-                W[3][idx_face] = double(1)/double(2)*rho_average[idx_face]*c_average[idx_face]*V[2][idx_vel] +
-                    double(1)/double(2)*V[3][idx_p];
+                W[ei] = characteristic_variables[ei]->getPointer(1);
+            }
+
+
+            rho_average = projection_variables[0]->getPointer(1);
+            c_average = projection_variables[1]->getPointer(1);
+
+            for (int j = -num_ghosts_1_characteristic_var;
+                 j < interior_dim_1 + 1 + num_ghosts_1_characteristic_var;
+                 j++)
+            {
+    #ifdef HAMERS_ENABLE_SIMD
+                #pragma omp simd
+    #endif
+                for (int i = 0; i < interior_dim_0; i++)
+                {
+                    // Compute the linear indices.
+                    const int idx_face = (i + num_ghosts_0_characteristic_var) +
+                        (j + num_ghosts_1_characteristic_var)*ghostcell_dim_0_characteristic_var;
+
+                    const int idx_rho = (i + num_ghosts_0_rho) +
+                        (j + idx_offset_rho + num_ghosts_1_rho)*ghostcell_dim_0_rho;
+
+                    const int idx_vel = (i + num_ghosts_0_vel) +
+                        (j + idx_offset_vel + num_ghosts_1_vel)*ghostcell_dim_0_vel;
+
+                    const int idx_p = (i + num_ghosts_0_p) +
+                        (j + idx_offset_p + num_ghosts_1_p)*ghostcell_dim_0_p;
+
+                    W[0][idx_face] = -double(1)/double(2)*rho_average[idx_face]*c_average[idx_face]*V[2][idx_vel] +
+                        double(1)/double(2)*V[3][idx_p];
+                    W[1][idx_face] = V[0][idx_rho] - double(1)/(c_average[idx_face]*c_average[idx_face])*V[3][idx_p];
+                    W[2][idx_face] = V[1][idx_vel];
+                    W[3][idx_face] = double(1)/double(2)*rho_average[idx_face]*c_average[idx_face]*V[2][idx_vel] +
+                        double(1)/double(2)*V[3][idx_p];
+                }
             }
         }
+
     }
     else if (d_dim == tbox::Dimension(3))
     {

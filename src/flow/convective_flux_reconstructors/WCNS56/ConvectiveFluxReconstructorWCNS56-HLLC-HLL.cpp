@@ -569,7 +569,7 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
         /*
          * Get the cell status todo
          */
-        // boost::shared_ptr<pdat::CellData<double> > cell_status = d_flow_model->getGlobalCellStatus();
+        boost::shared_ptr<pdat::CellData<double> > cell_status = d_flow_model->getGlobalCellStatus();
         
         /*
          * Get the pointers to the velocity and convective flux cell data inside the flow model.
@@ -578,33 +578,36 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
         
         boost::shared_ptr<pdat::CellData<double> > velocity =
             d_flow_model->getGlobalCellData("VELOCITY");
-        
-        std::vector<boost::shared_ptr<pdat::CellData<double> > > convective_flux_node(2);
-        convective_flux_node[0] = d_flow_model->getGlobalCellData("CONVECTIVE_FLUX_X");
-        convective_flux_node[1] = d_flow_model->getGlobalCellData("CONVECTIVE_FLUX_Y");
-        
+
         hier::IntVector num_subghosts_velocity = velocity->getGhostCellWidth();
         hier::IntVector subghostcell_dims_velocity = velocity->getGhostBox().numberCells();
-        
-        hier::IntVector num_subghosts_convective_flux_x = convective_flux_node[0]->getGhostCellWidth();
-        hier::IntVector subghostcell_dims_convective_flux_x = convective_flux_node[0]->getGhostBox().numberCells();
-        
-        hier::IntVector num_subghosts_convective_flux_y = convective_flux_node[1]->getGhostCellWidth();
-        hier::IntVector subghostcell_dims_convective_flux_y = convective_flux_node[1]->getGhostBox().numberCells();
-        
+
         const int num_subghosts_0_velocity = num_subghosts_velocity[0];
         const int num_subghosts_1_velocity = num_subghosts_velocity[1];
         const int subghostcell_dim_0_velocity = subghostcell_dims_velocity[0];
-        
+
+
+
+        std::vector<boost::shared_ptr<pdat::CellData<double> > > convective_flux_node(2);
+        convective_flux_node[0] = d_flow_model->getGlobalCellData("CONVECTIVE_FLUX_X");
+        convective_flux_node[1] = d_flow_model->getGlobalCellData("CONVECTIVE_FLUX_Y");
+
+        hier::IntVector num_subghosts_convective_flux_x = convective_flux_node[0]->getGhostCellWidth();
+        hier::IntVector subghostcell_dims_convective_flux_x = convective_flux_node[0]->getGhostBox().numberCells();
+
+        hier::IntVector num_subghosts_convective_flux_y = convective_flux_node[1]->getGhostCellWidth();
+        hier::IntVector subghostcell_dims_convective_flux_y = convective_flux_node[1]->getGhostBox().numberCells();
+
+
+
         const int num_subghosts_0_convective_flux_x = num_subghosts_convective_flux_x[0];
         const int num_subghosts_1_convective_flux_x = num_subghosts_convective_flux_x[1];
         const int subghostcell_dim_0_convective_flux_x = subghostcell_dims_convective_flux_x[0];
-        
+
         const int num_subghosts_0_convective_flux_y = num_subghosts_convective_flux_y[0];
         const int num_subghosts_1_convective_flux_y = num_subghosts_convective_flux_y[1];
         const int subghostcell_dim_0_convective_flux_y = subghostcell_dims_convective_flux_y[0];
 
-        //todo where are these from, just place holder ???
         double* u     = velocity->getPointer(0);
         double* v     = velocity->getPointer(1);
         double* theta = dilatation->getPointer(0);
@@ -616,7 +619,6 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
         std::vector<double*> F_node_y;
         F_node_x.reserve(d_num_eqn);
         F_node_y.reserve(d_num_eqn);
-        //todo convective_flux_node  are Fx and Fy  ???
         for (int ei = 0; ei < d_num_eqn; ei++)
         {
             F_node_x.push_back(convective_flux_node[0]->getPointer(ei));
@@ -661,8 +663,8 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
         boost::shared_ptr<DerivativeFirstOrder> derivative_first_order_y(
             new DerivativeFirstOrder("first order derivative in y-direction", d_dim, DIRECTION::Y_DIRECTION, 1));
 
-        //todo: modify these derivatives
-        // mirrorGhostCell(velocity, cell_status, DIRECTION::X_DIRECTION);
+        //mirroring velocity in x direction to compute x-derivative
+        mirrorGhostCell(velocity, cell_status, DIRECTION::X_DIRECTION, WALL_SLIP);
 
         // Compute dudx.
         derivative_first_order_x->computeDerivative(
@@ -680,8 +682,8 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                 2,
                 1);
 
-        //todo: modify these derivatives
-        //mirrorGhostCell(velocity, cell_status, DIRECTION::Y_DIRECTION);
+        //mirroring velocity in y direction to compute y-derivative
+        mirrorGhostCell(velocity, cell_status, DIRECTION::Y_DIRECTION, WALL_SLIP);
 
         // Compute dudy.
         derivative_first_order_y->computeDerivative(
@@ -880,24 +882,35 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
         
         /*
          * Compute global side data of the projection variables for transformation between
-         * primitive variables and characteristic variables.
+         * primitive variables and characteristic variables, for each direction sequentially.
          */
 
-        d_flow_model->computeGlobalSideDataProjectionVariablesForPrimitiveVariables(
-            projection_variables);
-        
-        /*
-         * Transform primitive variables to characteristic variables.
-         */
-        
-        for (int m = 0; m < 6; m++)
-        {   //todo need change
-            d_flow_model->computeGlobalSideDataCharacteristicVariablesFromPrimitiveVariables(
-                characteristic_variables[m],
-                primitive_variables,
-                projection_variables,
-                m - 3);
+        for (int d_direction = 0; d_direction != 2; d_direction++ ) {
+            /*
+             * populate ghost nodes in x direction by mirroring
+             */
+            for (int vi = 0; vi < static_cast<int>(primitive_variables.size()); vi++) {
+                mirrorGhostCell(primitive_variables[vi], cell_status, static_cast<DIRECTION::TYPE>(d_direction), WALL_SLIP);
+            }
+
+
+            d_flow_model->computeGlobalSideDataProjectionVariablesForPrimitiveVariables(
+                    projection_variables, static_cast<DIRECTION::TYPE>(d_direction));
+
+            /*
+             * Transform primitive variables to characteristic variables.
+             */
+
+            for (int m = 0; m < 6; m++) {
+                d_flow_model->computeGlobalSideDataCharacteristicVariablesFromPrimitiveVariables(
+                        characteristic_variables[m],
+                        primitive_variables,
+                        projection_variables,
+                        m - 3, static_cast<DIRECTION::TYPE>(d_direction));
+            }
         }
+
+
         
         /*
          * Peform WENO interpolation.
@@ -984,7 +997,8 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                         (j + num_subghosts_1_primitive_var)*subghostcell_dim_0_primitive_var;
                     
                     if (flag_minus[idx_midpoint_x] == 0 || flag_plus[idx_midpoint_x] == 0)
-                    {
+                    {   //todo if this happens to the near wall cells, it needs to be mirrored
+                        std::cout <<"negative pressure or density" << std::endl;
                         V_minus[ei][idx_midpoint_x] = V[ei][idx_cell_L];
                         V_plus[ei][idx_midpoint_x] = V[ei][idx_cell_R];
                     }
@@ -1030,7 +1044,8 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                         (j + num_subghosts_1_primitive_var)*subghostcell_dim_0_primitive_var;
                     
                     if (flag_minus[idx_midpoint_y] == 0 || flag_plus[idx_midpoint_y] == 0)
-                    {
+                    {   //todo if this happens to the near wall cells, it needs to be mirrored
+                        std::cout <<"negative pressure or density" << std::endl;
                         V_minus[ei][idx_midpoint_y] = V[ei][idx_cell_B];
                         V_plus[ei][idx_midpoint_y] = V[ei][idx_cell_T];
                     }
@@ -1240,6 +1255,12 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                         double(3)/double(10)*(F_node_x[ei][idx_node_R] +
                             F_node_x[ei][idx_node_L]) +
                         double(23)/double(15)*F_midpoint_x[ei][idx_midpoint_x]);
+
+                    if(j == 0 && (i == 55 || i == 56)) {
+                        std::cout << "ei is " << ei << " i is " << i << " F_face_x " << F_face_x[idx_face_x] << std::endl;
+                        std::cout <<F_midpoint_x[ei][idx_midpoint_x_R] << " " << F_midpoint_x[ei][idx_midpoint_x_L] << " "
+                                  << F_node_x[ei][idx_node_R] << " " << F_node_x[ei][idx_node_L] <<" "<< F_midpoint_x[ei][idx_midpoint_x] << std::endl;
+                    }
                 }
             }
         }
@@ -1284,6 +1305,10 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                         double(3)/double(10)*(F_node_y[ei][idx_node_T] +
                             F_node_y[ei][idx_node_B]) +
                         double(23)/double(15)*F_midpoint_y[ei][idx_midpoint_y]);
+
+                    if(j == 0 && (i == 55 || i == 56)) {
+                        std::cout << "ei is " << ei << " i is " << i << " F_face_y " << F_face_y[idx_face_y] << std::endl;
+                    }
                 }
             }
         }

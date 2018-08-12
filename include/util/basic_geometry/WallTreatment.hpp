@@ -38,6 +38,8 @@ int
 int
         isOutsidePorousWall2(int dim, double x, double y, double z = 0.0);
 
+int
+        isOutsidePorousWall3(int dim, double x, double y, double z = 0.0);
 
 void
         initializeCellStatus(hier::Patch& patch,

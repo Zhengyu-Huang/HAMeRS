@@ -66,6 +66,25 @@ int isOutsidePorousWall2(int dim, double x, double y, double z)
 }
 
 
+/* This is simple debugging setup
+ * This function decide point (x, y, z) is in the wall or not
+ * return 0 if the point is in the wall
+ * return 1 if the point is outside
+ * the mesh size is 1/(8N).
+ *
+ */
+int isOutsidePorousWall3(int dim, double x, double y, double z)
+{
+    /*
+     * The porous wall is centered at x0.
+     * The computational domain is at least is 8 by 8 by 8
+     * A solid wall at x = 0
+     */
+    double x0 = 0.0, r_hole = 1./8;
+    if(fabs(x - x0) > r_hole) return 1;
+    else return 0;
+}
+
 
 void
 initializeCellStatus(hier::Patch& patch,
@@ -164,7 +183,6 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                         const int idx_mirr =
                                 (i - 2 * ghost_count + 1) + j * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
 
-
                         if(depth == 1)
                             V[0][idx] = V[0][idx_mirr];
                         else if (depth > 1 && d_condition == WALL_SLIP) {
@@ -174,6 +192,12 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                         else if (depth > 1 && d_condition == WALL_NO_SLIP) {
                             V[0][idx] = -V[0][idx_mirr];
                             V[1][idx] = -V[1][idx_mirr];
+                            if(fabs(V[0][idx_mirr]) + fabs(V[1][idx_mirr]) > 1e-8) {
+                                std::cout << "X1 i is " << i << " j is " << j << " ghost is " << ghost_count
+                                          << "i_m " << i - 2 * ghost_count + 1 << " j_m " << j
+                                          << " u " << V[0][idx_mirr] << " v " << V[1][idx_mirr] << std::endl;
+                                exit(1);
+                            }
                         }
 
 
@@ -204,6 +228,11 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                         else if (depth > 1 && d_condition == WALL_NO_SLIP) {
                             V[0][idx] = -V[0][idx_mirr];
                             V[1][idx] = -V[1][idx_mirr];
+                            if(fabs(V[0][idx_mirr]) + fabs(V[1][idx_mirr]) > 1e-8) {
+                                std::cout << "X2 i is " << i << " j is " << j << " ghost is " << ghost_count
+                                          << " u " << V[0][idx_mirr] << " v " << V[1][idx_mirr] << std::endl;
+                                exit(1);
+                            }
                         }
 
                     }
@@ -243,6 +272,8 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                         else if (depth > 1 && d_condition == WALL_NO_SLIP) {
                             V[0][idx] = -V[0][idx_mirr];
                             V[1][idx] = -V[1][idx_mirr];
+                            if(fabs(V[0][idx_mirr]) + fabs(V[1][idx_mirr]) > 1e-8)
+                                std::cout << "Y1 i is " << i << " j is " << j << " ghost is " << ghost_count << std::endl;
                         }
                     }
                 }
@@ -270,6 +301,8 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                         else if (depth > 1 && d_condition == WALL_NO_SLIP) {
                             V[0][idx] = -V[0][idx_mirr];
                             V[1][idx] = -V[1][idx_mirr];
+                            if(fabs(V[0][idx_mirr]) + fabs(V[1][idx_mirr]) > 1e-8)
+                                std::cout << "Y2 i is " << i << " j is " << j << " ghost is " << ghost_count << std::endl;
                         }
 
                     }
@@ -282,21 +315,21 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
 
 //    std::cout << " dim: " << interior_dims[0]    << " " << interior_dims[1] << " ghost " <<
 //                             d_num_var_ghosts[0] << " " << d_num_var_ghosts[1] << std::endl;
-    for (int i = 0; i < interior_dims[0] + 2 * d_num_var_ghosts[0]; i++) {
-        //loop x direction
-        for (int j = 0; j < interior_dims[1] + 2 * d_num_var_ghosts[1]; j++) {
-            //loop y direction
-            int idx = i + j * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
-            int idx_ = i + (interior_dims[1] + 2 * d_num_var_ghosts[1]- j - 1) * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
-            for(int d = 0; d < depth; d++) {
-                if (fabs(V[0][idx] - V[0][idx_]) > 1e-10) {
-                    std::cout << "error (i,j) " << i <<" " << j << " d " << d << " " << (interior_dims[1] + 2 * d_num_var_ghosts[1]- j - 1)
-                              << " d_drection "<< d_direction << " " << " value " << V[0][idx]  << " " << V[0][idx_]<< std::endl;
-                    exit(1);
-                }
-            }
-        }
-    }
+//    for (int i = 0; i < interior_dims[0] + 2 * d_num_var_ghosts[0]; i++) {
+//        //loop x direction
+//        for (int j = 0; j < interior_dims[1] + 2 * d_num_var_ghosts[1]; j++) {
+//            //loop y direction
+//            int idx = i + j * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
+//            int idx_ = i + (interior_dims[1] + 2 * d_num_var_ghosts[1]- j - 1) * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
+//            for(int d = 0; d < depth; d++) {
+//                if (fabs(V[0][idx] - V[0][idx_]) > 1e-10) {
+//                    std::cout << "error (i,j) " << i <<" " << j << " d " << d << " " << (interior_dims[1] + 2 * d_num_var_ghosts[1]- j - 1)
+//                              << " d_drection "<< d_direction << " " << " value " << V[0][idx]  << " " << V[0][idx_]<< std::endl;
+//                    exit(1);
+//                }
+//            }
+//        }
+//    }
 
 
 
