@@ -1309,7 +1309,9 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                         double(23)/double(15)*F_midpoint_y[ei][idx_midpoint_y]);
 
                     if(j == 0 && (i == 55 || i == 56)) {
-                        std::cout << "ei is " << ei << " i is " << i << " F_face_y " << F_face_y[idx_face_y] << std::endl;
+                        std::cout << "ei2 is " << ei << " i is " << i << " F_face_y " << F_face_y[idx_face_y] << std::endl;
+                        std::cout <<F_midpoint_x[ei][idx_midpoint_x_R] << " " << F_midpoint_x[ei][idx_midpoint_x_L] << " "
+                                  << F_node_x[ei][idx_node_R] << " " << F_node_x[ei][idx_node_L] <<" "<< F_midpoint_x[ei][idx_midpoint_x] << std::endl;
                     }
                 }
             }
