@@ -305,7 +305,6 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
         /*
          * mirror ghost cell data for computing flux in the x-direction.
          */
-        std::cout << " First WALL_NO_SLIP " << std::endl;
         mirrorGhostCell(velocity, cell_status, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
 
         // Get the diffusivities in the diffusive flux.
@@ -338,7 +337,6 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
 //            for (int vi = 0; vi < static_cast<int>(var_data_x[ei].size()); vi++)
 //                mirrorGhostCell(var_data_x[ei][vi], cell_status, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
 
-        std::cout << " Second WALL_NO_SLIP " << std::endl;
         mirrorGhostCell(velocity, cell_status, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
         mirrorGhostCell(temperature, cell_status, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
 
@@ -363,8 +361,8 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
 //            for (int vi = 0; vi < static_cast<int>(var_data_y[ei].size()); vi++)
 //                mirrorGhostCell(var_data_y[ei][vi], cell_status, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
 
-//        mirrorGhostCell(velocity, cell_status, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
-//        mirrorGhostCell(temperature, cell_status, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
+        mirrorGhostCell(velocity, cell_status, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
+        mirrorGhostCell(temperature, cell_status, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
         
         /*
          * Compute the derivatives in y-direction for diffusive flux in x-direction.
@@ -669,8 +667,8 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
 //            for (int vi = 0; vi < static_cast<int>(var_data_x[ei].size()); vi++)
 //                mirrorGhostCell(var_data_x[ei][vi], cell_status, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
 
-        mirrorGhostCell(velocity, cell_status, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
-        mirrorGhostCell(temperature, cell_status, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
+        mirrorGhostCell(velocity, cell_status, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
+        mirrorGhostCell(temperature, cell_status, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
         
         /*
          * Compute the derivatives in x-direction for diffusive flux in y-direction.
@@ -691,8 +689,8 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
 //        for (int ei = 0; ei < static_cast<int>(var_data_y.size()); ei++)
 //            for (int vi = 0; vi < static_cast<int>(var_data_y[ei].size()); vi++)
 //                mirrorGhostCell(var_data_y[ei][vi], cell_status, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
-//        mirrorGhostCell(velocity, cell_status, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
-//        mirrorGhostCell(temperature, cell_status, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
+        mirrorGhostCell(velocity, cell_status, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
+        mirrorGhostCell(temperature, cell_status, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
         
         /*
          * Compute the derivatives in y-direction for diffusive flux in y-direction.
@@ -795,6 +793,9 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
                                     std::cout << mu[idx_node_B] << " " << mu[idx_node_T] << " " << mu[idx_node_BB] << " "
                                               << mu[idx_node_TT] << " " << mu[idx_node_BBB] << " " << mu[idx_node_TTT]
                                               << std::endl;
+                                    std::cout << dudx[idx_node_B] << " " << dudx[idx_node_T] << " " << dudx[idx_node_BB] << " "
+                                          << dudx[idx_node_TT] << " " << dudx[idx_node_BBB] << " " << dudx[idx_node_TTT]
+                                          << std::endl;
                                     std::cout << "dudx2 mu wrong!!!" << std::endl;
                                     exit(1);
                                 }
