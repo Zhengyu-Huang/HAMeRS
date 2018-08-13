@@ -4898,7 +4898,8 @@ FlowModelSingleSpecies::getDiffusiveFluxDiffusivities(
     std::vector<std::vector<boost::shared_ptr<pdat::CellData<double> > > >& diffusivities_data,
     std::vector<std::vector<int> >& diffusivities_component_idx,
     const DIRECTION::TYPE& flux_direction,
-    const DIRECTION::TYPE& derivative_direction)
+    const DIRECTION::TYPE& derivative_direction,
+    const bool recompute)
 {
     // Create empty box.
     const hier::Box empty_box(d_dim);
@@ -4917,7 +4918,7 @@ FlowModelSingleSpecies::getDiffusiveFluxDiffusivities(
     diffusivities_data.resize(d_num_eqn);
     diffusivities_component_idx.resize(d_num_eqn);
     
-    if (!d_data_diffusivities)
+    if (!d_data_diffusivities || recompute)
     {
         if (!d_data_velocity)
         {
@@ -5039,7 +5040,7 @@ FlowModelSingleSpecies::getDiffusiveFluxDiffusivities(
             }
         }
         else if (d_dim == tbox::Dimension(2))
-        {
+	  {   
             d_data_diffusivities.reset(new pdat::CellData<double>(
                 d_interior_box, 10, d_num_subghosts_diffusivities));
             
@@ -5090,6 +5091,10 @@ FlowModelSingleSpecies::getDiffusiveFluxDiffusivities(
                     D_07[idx_diffusivities] = -u[idx_velocity]*mu[idx_diffusivities];
                     D_08[idx_diffusivities] = -v[idx_velocity]*mu[idx_diffusivities];
                     D_09[idx_diffusivities] = -kappa[idx_diffusivities];
+
+		    // if(i  == 60 && j  == 24) std::cout << "FFFFFF " << " " << (i + d_num_subghosts_velocity[0]) << " " <<  (j + d_num_subghosts_velocity[1]) << " " << d_subghostcell_dims_velocity[0]   << " " << u[idx_velocity]<< " " << idx_diffusivities << " "<< mu[idx_diffusivities] << "  " <<u[(i + d_num_subghosts_velocity[0]) +(j + d_num_subghosts_velocity[1] - 1)*d_subghostcell_dims_velocity[0]] << "  "<<mu[(i + d_num_subghosts_velocity[0]) +(j + d_num_subghosts_velocity[1] - 1)*d_subghostcell_dims_velocity[0]]  << std::endl;
+
+
                 }
             }
         }

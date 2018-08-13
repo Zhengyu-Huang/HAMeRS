@@ -7385,7 +7385,8 @@ FlowModelFiveEqnAllaire::getDiffusiveFluxDiffusivities(
     std::vector<std::vector<boost::shared_ptr<pdat::CellData<double> > > >& diffusivities_data,
     std::vector<std::vector<int> >& diffusivities_component_idx,
     const DIRECTION::TYPE& flux_direction,
-    const DIRECTION::TYPE& derivative_direction)
+    const DIRECTION::TYPE& derivative_direction,
+    const bool recompute)
 {
     // Create empty box.
     const hier::Box empty_box(d_dim);

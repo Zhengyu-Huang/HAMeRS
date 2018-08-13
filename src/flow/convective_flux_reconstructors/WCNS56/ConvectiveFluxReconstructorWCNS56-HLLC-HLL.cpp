@@ -1000,7 +1000,7 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                     
                     if (flag_minus[idx_midpoint_x] == 0 || flag_plus[idx_midpoint_x] == 0)
                     {   //todo if this happens to the near wall cells, it needs to be mirrored
-                        std::cout <<"negative pressure or density" << std::endl;
+                        //std::cout <<"negative pressure or density" << std::endl;
                         V_minus[ei][idx_midpoint_x] = V[ei][idx_cell_L];
                         V_plus[ei][idx_midpoint_x] = V[ei][idx_cell_R];
                     }
@@ -1047,7 +1047,7 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                     
                     if (flag_minus[idx_midpoint_y] == 0 || flag_plus[idx_midpoint_y] == 0)
                     {   //todo if this happens to the near wall cells, it needs to be mirrored
-                        std::cout <<"negative pressure or density" << std::endl;
+                        //std::cout <<"negative pressure or density" << std::endl;
                         V_minus[ei][idx_midpoint_y] = V[ei][idx_cell_B];
                         V_plus[ei][idx_midpoint_y] = V[ei][idx_cell_T];
                     }

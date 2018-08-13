@@ -372,20 +372,26 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
 }
 
 void
-mirrorGhostCellDerivative(std::vector<double*> &du, const hier::IntVector & d_num_var_ghosts,
+mirrorGhostCellDerivative(std::vector<boost::shared_ptr<pdat::CellData<double> > > du_x,
                 const boost::shared_ptr<pdat::CellData<double> > &cell_status,
                 const DIRECTION::TYPE d_direction)
 {
-    int depth = du.size();
+    int depth = du_x.size();
 
     const tbox::Dimension d_dim = cell_status->getDim();
     const hier::IntVector  interior_dims = cell_status->getBox().numberCells();
 
     const hier::IntVector d_num_status_ghosts = cell_status->getGhostCellWidth();
 
-    const hier::IntVector d_num_var_ghosts = variables->getGhostCellWidth();
-
     double* cell_status_data = cell_status->getPointer(0);
+
+    const hier::IntVector d_num_var_ghosts = du_x[0]->getGhostCellWidth();
+
+    std::vector<double*> V;
+    V.reserve(depth);
+    for (int di = 0; di < depth; di++) {
+        V.push_back(du_x[di]->getPointer(0));
+    }
 
     int ghost_count;//Set to -inf to start get rid of these block that never use in current computation
     if (d_direction == DIRECTION::X_DIRECTION) {
@@ -408,14 +414,13 @@ mirrorGhostCellDerivative(std::vector<double*> &du, const hier::IntVector & d_nu
                         const int idx_mirr =
                                 (i - 2 * ghost_count + 1) + j * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
 
-                        if(depth == 6)
-                        {   // du/dx, dv/dx, dT/dx,  du/dy, dv/dy, dT/dy
-                            du[0][idx] =  du[0][idx_mirr];
-                            du[1][idx] =  du[1][idx_mirr];
-                            du[2][idx] = -du[2][idx_mirr];
-                            du[3][idx] = -du[3][idx_mirr];
-                            du[4][idx] = -du[4][idx_mirr];
-                            du[5][idx] =  du[5][idx_mirr];
+                        if(depth == 5)
+                        {   // du/dx, dv/dx, dT/dx,  du/dy, dv/dy
+                            V[0][idx] =  V[0][idx_mirr];
+                            V[1][idx] =  V[1][idx_mirr];
+                            V[2][idx] = -V[2][idx_mirr];
+                            V[3][idx] = -V[3][idx_mirr];
+                            V[4][idx] = -V[4][idx_mirr];
                         }
 
 
@@ -438,14 +443,13 @@ mirrorGhostCellDerivative(std::vector<double*> &du, const hier::IntVector & d_nu
                         const int idx_mirr =
                                 (i + 2 * ghost_count - 1) + j * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
 
-                        if(depth == 6)
-                        {   // du/dx, dv/dx, dT/dx,  du/dy, dv/dy, dT/dy
-                            du[0][idx] =  du[0][idx_mirr];
-                            du[1][idx] =  du[1][idx_mirr];
-                            du[2][idx] = -du[2][idx_mirr];
-                            du[3][idx] = -du[3][idx_mirr];
-                            du[4][idx] = -du[4][idx_mirr];
-                            du[5][idx] =  du[5][idx_mirr];
+                        if(depth == 5)
+                        {   // du/dx, dv/dx, dT/dx,  du/dy, dv/dy
+                            V[0][idx] =  V[0][idx_mirr];
+                            V[1][idx] =  V[1][idx_mirr];
+                            V[2][idx] = -V[2][idx_mirr];
+                            V[3][idx] = -V[3][idx_mirr];
+                            V[4][idx] = -V[4][idx_mirr];
                         }
 
                     }
@@ -474,14 +478,16 @@ mirrorGhostCellDerivative(std::vector<double*> &du, const hier::IntVector & d_nu
                     }
                     if (ghost_count >= 1 && ghost_count <= d_num_var_ghosts[d_direction] && j - 2 * ghost_count + 1 >=0) {
 
-                        if(depth == 6)
-                        {   // du/dx, dv/dx, dT/dx,  du/dy, dv/dy, dT/dy
-                            du[0][idx] = -du[0][idx_mirr];
-                            du[1][idx] = -du[1][idx_mirr];
-                            du[2][idx] =  du[2][idx_mirr];
-                            du[3][idx] =  du[3][idx_mirr];
-                            du[4][idx] =  du[4][idx_mirr];
-                            du[5][idx] = -du[5][idx_mirr];
+                        const int idx_mirr =
+                                i + (j - 2 * ghost_count + 1) * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
+
+                        if(depth == 5)
+                        {   // du/dx, dv/dx,  du/dy, dv/dy, dT/dy
+                            V[0][idx] = -V[0][idx_mirr];
+                            V[1][idx] = -V[1][idx_mirr];
+                            V[2][idx] =  V[2][idx_mirr];
+                            V[3][idx] =  V[3][idx_mirr];
+                            V[4][idx] = -V[4][idx_mirr];
                         }
                     }
                 }
@@ -501,14 +507,13 @@ mirrorGhostCellDerivative(std::vector<double*> &du, const hier::IntVector & d_nu
                         const int idx_mirr =
                                 i + (j + 2 * ghost_count - 1) * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
 
-                        if(depth == 6)
-                        {   // du/dx, dv/dx, dT/dx,  du/dy, dv/dy, dT/dy
-                            du[0][idx] = -du[0][idx_mirr];
-                            du[1][idx] = -du[1][idx_mirr];
-                            du[2][idx] =  du[2][idx_mirr];
-                            du[3][idx] =  du[3][idx_mirr];
-                            du[4][idx] =  du[4][idx_mirr];
-                            du[5][idx] = -du[5][idx_mirr];
+                        if(depth == 5)
+                        {   // du/dx, dv/dx,  du/dy, dv/dy, dT/dy
+                            V[0][idx] = -V[0][idx_mirr];
+                            V[1][idx] = -V[1][idx_mirr];
+                            V[2][idx] =  V[2][idx_mirr];
+                            V[3][idx] =  V[3][idx_mirr];
+                            V[4][idx] = -V[4][idx_mirr];
                         }
 
                     }

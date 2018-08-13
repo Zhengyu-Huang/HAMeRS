@@ -57,7 +57,7 @@ populateGhostCellsHelper(std::vector<boost::shared_ptr<pdat::CellData<double> > 
                          const WALL_TREATMENT_CONDITION d_condition);
 
 void
-mirrorGhostCellDerivative(std::vector<double*> &du, const hier::IntVector & d_num_var_ghosts,
+mirrorGhostCellDerivative(std::vector<boost::shared_ptr<pdat::CellData<double> > > du_x,
                           const boost::shared_ptr<pdat::CellData<double> > &cell_status,
                           const DIRECTION::TYPE d_direction);
 

@@ -449,6 +449,7 @@ ConvectiveFluxReconstructorSecondOrderHLLC::computeConvectiveFluxAndSourceOnPatc
             }
         }
         
+        
         /*
          * Compute flux in the x-direction.
          */
