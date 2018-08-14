@@ -238,7 +238,8 @@ class FlowModelSingleSpecies: public FlowModel
         void
         checkGlobalSideDataPrimitiveVariablesBounded(
             boost::shared_ptr<pdat::SideData<int> >& bounded_flag,
-            const std::vector<boost::shared_ptr<pdat::SideData<double> > >& primitive_variables);
+            const std::vector<boost::shared_ptr<pdat::SideData<double> > >& primitive_variables,
+            const DIRECTION::TYPE d_direction =  DIRECTION::ALL_DIRECTION);
         
         /*
          * Convert vector of pointers of conservative cell data to vectors of pointers of primitive cell data.

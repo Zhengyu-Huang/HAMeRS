@@ -3540,7 +3540,8 @@ FlowModelSingleSpecies::checkGlobalSideDataConservativeVariablesBounded(
 void
 FlowModelSingleSpecies::checkGlobalSideDataPrimitiveVariablesBounded(
     boost::shared_ptr<pdat::SideData<int> >& bounded_flag,
-    const std::vector<boost::shared_ptr<pdat::SideData<double> > >& primitive_variables)
+    const std::vector<boost::shared_ptr<pdat::SideData<double> > >& primitive_variables,
+    const DIRECTION::TYPE d_direction)
 {
     /*
      * Get the numbers of ghost cells of the variables.
@@ -3690,89 +3691,92 @@ FlowModelSingleSpecies::checkGlobalSideDataPrimitiveVariablesBounded(
         /*
          * Check if primitive variables in the x-direction are bounded.
          */
+        if(d_direction == DIRECTION::X_DIRECTION || d_direction == DIRECTION::ALL_DIRECTION){
+            are_bounded = bounded_flag->getPointer(0);
         
-        are_bounded = bounded_flag->getPointer(0);
-        
-        for (int ei = 0; ei < d_num_eqn; ei++)
-        {
-            V[ei] = primitive_variables[ei]->getPointer(0);
-        }
-        
-        // Check if density and pressure are bounded.
-        for (int j = 0; j < interior_dim_1; j++)
-        {
-#ifdef HAMERS_ENABLE_SIMD
-            #pragma omp simd
-#endif
-            for (int i = -num_ghosts_0_primitive_var;
-                 i < interior_dim_0 + 1 + num_ghosts_0_primitive_var;
-                 i++)
+            for (int ei = 0; ei < d_num_eqn; ei++)
             {
-                // Compute the linear index.
-                const int idx_face = (i + num_ghosts_0_primitive_var) +
-                    (j + num_ghosts_1_primitive_var)*(ghostcell_dim_0_primitive_var + 1);
+                V[ei] = primitive_variables[ei]->getPointer(0);
+            }
+        
+            // Check if density and pressure are bounded.
+            for (int j = 0; j < interior_dim_1; j++)
+            {
+#ifdef HAMERS_ENABLE_SIMD
+                #pragma omp simd
+#endif
+                for (int i = -num_ghosts_0_primitive_var;
+                    i < interior_dim_0 + 1 + num_ghosts_0_primitive_var;
+                    i++)
+                {
+                    // Compute the linear index.
+                    const int idx_face = (i + num_ghosts_0_primitive_var) +
+                        (j + num_ghosts_1_primitive_var)*(ghostcell_dim_0_primitive_var + 1);
                 
-                if (V[0][idx_face] > double(0))
-                {
-                    are_bounded[idx_face] &= 1;
-                }
-                else
-                {
-                    are_bounded[idx_face] &= 0;
-                }
+                    if (V[0][idx_face] > double(0))
+                    {
+                        are_bounded[idx_face] &= 1;
+                    }
+                    else
+                    {
+                       are_bounded[idx_face] &= 0;
+                    }
                 
-                if (V[d_num_eqn - 1][idx_face] > double(0))
-                {
-                    are_bounded[idx_face] &= 1;
-                }
-                else
-                {
-                    are_bounded[idx_face] &= 0;
+                    if (V[d_num_eqn - 1][idx_face] > double(0))
+                    {
+                        are_bounded[idx_face] &= 1;
+                    }
+                    else
+                    {
+                        are_bounded[idx_face] &= 0;
+                    }
                 }
             }
-        }
+	}
         
         /*
          * Check if primitive variables in the y-direction are bounded.
          */
+        if(d_direction == DIRECTION::Y_DIRECTION || d_direction == DIRECTION::ALL_DIRECTION){
         
-        are_bounded = bounded_flag->getPointer(1);
+            are_bounded = bounded_flag->getPointer(1);
         
-        for (int ei = 0; ei < d_num_eqn; ei++)
-        {
-            V[ei] = primitive_variables[ei]->getPointer(1);
-        }
-        
-        // Check if density and pressure are bounded.
-        for (int j = -num_ghosts_1_primitive_var;
-             j < interior_dim_1 + 1 + num_ghosts_1_primitive_var;
-             j++)
-        {
-#ifdef HAMERS_ENABLE_SIMD
-            #pragma omp simd
-#endif
-            for (int i = 0; i < interior_dim_0; i++)
+            for (int ei = 0; ei < d_num_eqn; ei++)
             {
-                // Compute the linear index.
-                const int idx_face = (i + num_ghosts_0_primitive_var) +
-                    (j + num_ghosts_1_primitive_var)*ghostcell_dim_0_primitive_var;
+                V[ei] = primitive_variables[ei]->getPointer(1);
+            }
+        
+            // Check if density and pressure are bounded.
+            for (int j = -num_ghosts_1_primitive_var;
+                 j < interior_dim_1 + 1 + num_ghosts_1_primitive_var;
+                 j++)
+            {
+#ifdef HAMERS_ENABLE_SIMD
+                #pragma omp simd
+#endif
+                for (int i = 0; i < interior_dim_0; i++)
+                {
+                    // Compute the linear index.
+                    const int idx_face = (i + num_ghosts_0_primitive_var) +
+                        (j + num_ghosts_1_primitive_var)*ghostcell_dim_0_primitive_var;
                 
-                if (V[0][idx_face] > double(0))
-                {
-                    are_bounded[idx_face] &= 1;
-                }
-                else
-                {
-                    are_bounded[idx_face] &= 0;
-                }
+                    if (V[0][idx_face] > double(0))
+                    {
+                        are_bounded[idx_face] &= 1;
+                    }
+                    else
+                    {
+                        are_bounded[idx_face] &= 0;
+                    }
                 
-                if (V[d_num_eqn - 1][idx_face] > double(0))
-                {
-                    are_bounded[idx_face] &= 1;
-                }
-                else
-                {
-                    are_bounded[idx_face] &= 0;
+                    if (V[d_num_eqn - 1][idx_face] > double(0))
+                    {
+                        are_bounded[idx_face] &= 1;
+                    }
+                    else
+                    {
+                        are_bounded[idx_face] &= 0;
+                    }
                 }
             }
         }

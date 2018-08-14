@@ -4541,7 +4541,8 @@ FlowModelFourEqnConservative::checkGlobalSideDataConservativeVariablesBounded(
 void
 FlowModelFourEqnConservative::checkGlobalSideDataPrimitiveVariablesBounded(
     boost::shared_ptr<pdat::SideData<int> >& bounded_flag,
-    const std::vector<boost::shared_ptr<pdat::SideData<double> > >& primitive_variables)
+    const std::vector<boost::shared_ptr<pdat::SideData<double> > >& primitive_variables,
+    const DIRECTION::TYPE d_direction)
 {
     /*
      * Get the numbers of ghost cells of the variables.

@@ -330,14 +330,12 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
         TBOX_ASSERT(static_cast<int>(diffusivities_component_idx_y.size()) == d_num_eqn);
 
         /*
-         * mirror ghost cell data for computing the direvative in the x-direction. todo because compute flux in x direction
+         * mirror ghost cell data for computing the direvative in the x-direction.
          */
-
 
         mirrorGhostCell(velocity, cell_status, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
         mirrorGhostCell(temperature, cell_status, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
 
-        
         /*
          * Compute the derivatives in x-direction for diffusive flux in x-direction.
          */
@@ -353,8 +351,6 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
         /*
         * mirror ghost cell data for computing the direvative in the y-direction.
         */
-
-//   DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
 
         mirrorGhostCell(velocity, cell_status, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
         mirrorGhostCell(temperature, cell_status, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
@@ -372,6 +368,9 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
 
 
         {
+           /*
+            * Mirror the derivatives in x-direction to compute flux in the x direction.
+            */
             std::vector<boost::shared_ptr<pdat::CellData<double> > > du_x;
             du_x.reserve(5); //du/dx, dv/dx, dT/dx, du/dy, dv/dy,
             int ei = d_num_eqn - 1;
@@ -685,10 +684,6 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
         * mirror ghost cell data for computing the direvative in the x-direction.
         */
 
-//        for (int ei = 0; ei < static_cast<int>(var_data_x.size()); ei++)
-//            for (int vi = 0; vi < static_cast<int>(var_data_x[ei].size()); vi++)
-//                mirrorGhostCell(var_data_x[ei][vi], cell_status, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
-
         mirrorGhostCell(velocity, cell_status, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
         mirrorGhostCell(temperature, cell_status, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
         
@@ -708,9 +703,6 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
         * mirror ghost cell data for computing the direvative in the x-direction.
         */
 
-//        for (int ei = 0; ei < static_cast<int>(var_data_y.size()); ei++)
-//            for (int vi = 0; vi < static_cast<int>(var_data_y[ei].size()); vi++)
-//                mirrorGhostCell(var_data_y[ei][vi], cell_status, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
         mirrorGhostCell(velocity, cell_status, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
         mirrorGhostCell(temperature, cell_status, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
         

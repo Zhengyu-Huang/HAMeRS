@@ -400,6 +400,18 @@ ConvectiveFluxReconstructorSecondOrderHLLC::computeConvectiveFluxAndSourceOnPatc
         std::vector<double*> V_plus;
         V_minus.resize(d_num_eqn);
         V_plus.resize(d_num_eqn);
+
+        boost::shared_ptr<pdat::SideData<int> > bounded_flag_minus;
+        boost::shared_ptr<pdat::SideData<int> > bounded_flag_plus;
+
+        bounded_flag_minus.reset(
+                new pdat::SideData<int>(interior_box, 1, hier::IntVector::getZero(d_dim)));
+
+        bounded_flag_plus.reset(
+                new pdat::SideData<int>(interior_box, 1, hier::IntVector::getZero(d_dim)));
+
+        int* flag_minus = nullptr;
+        int* flag_plus = nullptr;
         
         /*
          * mirroring ghost cell data for computing the flux in the x-direction.
@@ -448,7 +460,60 @@ ConvectiveFluxReconstructorSecondOrderHLLC::computeConvectiveFluxAndSourceOnPatc
                 }
             }
         }
-        
+
+        /*
+         * Check whether the interpolated side primitive variables are within the bounds.
+         */
+
+        d_flow_model->checkGlobalSideDataPrimitiveVariablesBounded(
+                bounded_flag_minus,
+                primitive_variables_minus,
+                DIRECTION::X_DIRECTION);
+
+        d_flow_model->checkGlobalSideDataPrimitiveVariablesBounded(
+                bounded_flag_plus,
+                primitive_variables_plus,
+                DIRECTION::X_DIRECTION);
+
+        /*
+         * Use first order interpolation if interpolated side primitive variables in x-direction
+         * are out of bounds.
+         */
+
+        flag_minus = bounded_flag_minus->getPointer(0);
+        flag_plus = bounded_flag_plus->getPointer(0);
+
+        for (int ei = 0; ei < d_num_eqn; ei++)
+        {
+            const int num_subghosts_0_primitive_var = num_subghosts_primitive_var[ei][0];
+            const int num_subghosts_1_primitive_var = num_subghosts_primitive_var[ei][1];
+            const int subghostcell_dim_0_primitive_var = subghostcell_dims_primitive_var[ei][0];
+
+            for (int j = 0; j < interior_dims[1]; j++)
+            {
+#ifdef HAMERS_ENABLE_SIMD
+#pragma omp simd
+#endif
+                for (int i = 0; i < interior_dims[0] + 1; i++)
+                {
+                    // Compute the linear indices.
+                    const int idx_midpoint_x = i + j*(interior_dims[0] + 1);
+
+                    const int idx_cell_L = (i - 1 + num_subghosts_0_primitive_var) +
+                                           (j + num_subghosts_1_primitive_var)*subghostcell_dim_0_primitive_var;
+
+                    const int idx_cell_R = (i + num_subghosts_0_primitive_var) +
+                                           (j + num_subghosts_1_primitive_var)*subghostcell_dim_0_primitive_var;
+
+                    if (flag_minus[idx_midpoint_x] == 0 || flag_plus[idx_midpoint_x] == 0)
+                    {
+                        //std::cout <<"negative pressure or density" << std::endl;
+                        V_minus[ei][idx_midpoint_x] = V[ei][idx_cell_L];
+                        V_plus[ei][idx_midpoint_x] = V[ei][idx_cell_R];
+                    }
+                }
+            }
+        }
         
         /*
          * Compute flux in the x-direction.
@@ -532,6 +597,61 @@ ConvectiveFluxReconstructorSecondOrderHLLC::computeConvectiveFluxAndSourceOnPatc
                     //limiter reconstruction
                     limiterReconstruction(V[ei][idx_BB], V[ei][idx_B], V[ei][idx_T], V[ei][idx_TT],
                                           V_minus[ei][idx_face_y], V_plus[ei][idx_face_y]);
+                }
+            }
+        }
+
+        /*
+         * Check whether the interpolated side primitive variables are within the bounds.
+         */
+
+        d_flow_model->checkGlobalSideDataPrimitiveVariablesBounded(
+                bounded_flag_minus,
+                primitive_variables_minus,
+                DIRECTION::Y_DIRECTION);
+
+        d_flow_model->checkGlobalSideDataPrimitiveVariablesBounded(
+                bounded_flag_plus,
+                primitive_variables_plus,
+                DIRECTION::Y_DIRECTION);
+
+
+        /*
+         * Use first order interpolation if interpolated side primitive variables in y-direction
+         * are out of bounds.
+         */
+
+        flag_minus = bounded_flag_minus->getPointer(1);
+        flag_plus = bounded_flag_plus->getPointer(1);
+
+        for (int ei = 0; ei < d_num_eqn; ei++)
+        {
+            const int num_subghosts_0_primitive_var = num_subghosts_primitive_var[ei][0];
+            const int num_subghosts_1_primitive_var = num_subghosts_primitive_var[ei][1];
+            const int subghostcell_dim_0_primitive_var = subghostcell_dims_primitive_var[ei][0];
+
+            for (int j = 0; j < interior_dims[1] + 1; j++)
+            {
+#ifdef HAMERS_ENABLE_SIMD
+#pragma omp simd
+#endif
+                for (int i = 0; i < interior_dims[0]; i++)
+                {
+                    // Compute the linear indices.
+                    const int idx_midpoint_y = i + j*interior_dims[0];
+
+                    const int idx_cell_B = (i + num_subghosts_0_primitive_var) +
+                                           (j - 1 + num_subghosts_1_primitive_var)*subghostcell_dim_0_primitive_var;
+
+                    const int idx_cell_T = (i + num_subghosts_0_primitive_var) +
+                                           (j + num_subghosts_1_primitive_var)*subghostcell_dim_0_primitive_var;
+
+                    if (flag_minus[idx_midpoint_y] == 0 || flag_plus[idx_midpoint_y] == 0)
+                    {
+                        //std::cout <<"negative pressure or density" << std::endl;
+                        V_minus[ei][idx_midpoint_y] = V[ei][idx_cell_B];
+                        V_plus[ei][idx_midpoint_y] = V[ei][idx_cell_T];
+                    }
                 }
             }
         }
