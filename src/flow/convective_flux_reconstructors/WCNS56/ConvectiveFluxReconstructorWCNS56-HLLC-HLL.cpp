@@ -974,6 +974,13 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
         
         flag_minus = bounded_flag_minus->getPointer(0);
         flag_plus = bounded_flag_plus->getPointer(0);
+
+        /*
+         * populate ghost nodes in x direction by mirroring
+         */
+        for (int vi = 0; vi < static_cast<int>(primitive_variables.size()); vi++) {
+            mirrorGhostCell(primitive_variables[vi], cell_status, DIRECTION::X_DIRECTION, WALL_SLIP);
+        }
         
         for (int ei = 0; ei < d_num_eqn; ei++)
         {
@@ -999,8 +1006,7 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                         (j + num_subghosts_1_primitive_var)*subghostcell_dim_0_primitive_var;
                     
                     if (flag_minus[idx_midpoint_x] == 0 || flag_plus[idx_midpoint_x] == 0)
-                    {   //todo if this happens to the near wall cells, it needs to be mirrored
-                        //std::cout <<"negative pressure or density" << std::endl;
+                    {
                         V_minus[ei][idx_midpoint_x] = V[ei][idx_cell_L];
                         V_plus[ei][idx_midpoint_x] = V[ei][idx_cell_R];
                     }
@@ -1021,6 +1027,13 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
         
         flag_minus = bounded_flag_minus->getPointer(1);
         flag_plus = bounded_flag_plus->getPointer(1);
+
+        /*
+         * populate ghost nodes in y direction by mirroring
+         */
+        for (int vi = 0; vi < static_cast<int>(primitive_variables.size()); vi++) {
+            mirrorGhostCell(primitive_variables[vi], cell_status, DIRECTION::Y_DIRECTION, WALL_SLIP);
+        }
         
         for (int ei = 0; ei < d_num_eqn; ei++)
         {
@@ -1046,8 +1059,7 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                         (j + num_subghosts_1_primitive_var)*subghostcell_dim_0_primitive_var;
                     
                     if (flag_minus[idx_midpoint_y] == 0 || flag_plus[idx_midpoint_y] == 0)
-                    {   //todo if this happens to the near wall cells, it needs to be mirrored
-                        //std::cout <<"negative pressure or density" << std::endl;
+                    {   
                         V_minus[ei][idx_midpoint_y] = V[ei][idx_cell_B];
                         V_plus[ei][idx_midpoint_y] = V[ei][idx_cell_T];
                     }

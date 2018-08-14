@@ -3712,7 +3712,7 @@ FlowModelSingleSpecies::checkGlobalSideDataPrimitiveVariablesBounded(
                     // Compute the linear index.
                     const int idx_face = (i + num_ghosts_0_primitive_var) +
                         (j + num_ghosts_1_primitive_var)*(ghostcell_dim_0_primitive_var + 1);
-                
+                    
                     if (V[0][idx_face] > double(0))
                     {
                         are_bounded[idx_face] &= 1;
@@ -3759,7 +3759,7 @@ FlowModelSingleSpecies::checkGlobalSideDataPrimitiveVariablesBounded(
                     // Compute the linear index.
                     const int idx_face = (i + num_ghosts_0_primitive_var) +
                         (j + num_ghosts_1_primitive_var)*ghostcell_dim_0_primitive_var;
-                
+                    
                     if (V[0][idx_face] > double(0))
                     {
                         are_bounded[idx_face] &= 1;

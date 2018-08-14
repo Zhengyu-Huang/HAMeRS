@@ -158,9 +158,6 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
         V.push_back(variables->getPointer(di));
     }
 
-    //std::cout << " mirrorGhostCell depth is " << depth << std::endl;
-
-
 
     int ghost_count;//Set to -inf to start get rid of these block that never use in current computation
     if (d_direction == DIRECTION::X_DIRECTION) {
@@ -227,6 +224,7 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                     if (ghost_count >= 1 && ghost_count <= d_num_var_ghosts[d_direction] && (i + 2 * ghost_count - 1) <= interior_dims[0] + 2 * d_num_var_ghosts[0] - 1) {
                         const int idx_mirr =
                                 (i + 2 * ghost_count - 1) + j * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
+
                         if(depth == 1) {
                             V[0][idx] = V[0][idx_mirr];
                         } else if (depth == 2 && d_condition == WALL_SLIP)
@@ -278,6 +276,7 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
 
                         const int idx_mirr =
                                 i + (j - 2 * ghost_count + 1) * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
+
                         if(depth == 1) {
                             V[0][idx] = V[0][idx_mirr];
                         } else if (depth == 2 && d_condition == WALL_SLIP) {
@@ -317,6 +316,7 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
 
                         const int idx_mirr =
                                 i + (j + 2 * ghost_count - 1) * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
+
                         if(depth == 1) {
                             V[0][idx] = V[0][idx_mirr];
                         } else if (depth == 2 && d_condition == WALL_SLIP)
