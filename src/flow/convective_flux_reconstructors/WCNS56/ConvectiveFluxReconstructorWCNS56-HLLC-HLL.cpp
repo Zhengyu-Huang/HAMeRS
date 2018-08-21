@@ -1059,7 +1059,7 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                         (j + num_subghosts_1_primitive_var)*subghostcell_dim_0_primitive_var;
                     
                     if (flag_minus[idx_midpoint_y] == 0 || flag_plus[idx_midpoint_y] == 0)
-                    {   
+                    {
                         V_minus[ei][idx_midpoint_y] = V[ei][idx_cell_B];
                         V_plus[ei][idx_midpoint_y] = V[ei][idx_cell_T];
                     }
