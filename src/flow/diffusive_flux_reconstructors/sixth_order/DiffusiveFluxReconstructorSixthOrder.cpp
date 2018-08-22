@@ -366,6 +366,9 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
             var_data_y,
             var_component_idx_y);
 
+        /*
+         * Reconstruct the flux in x-direction.
+         */
 
         {
            /*
@@ -380,10 +383,6 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
                 du_x.push_back(derivative_y[d_num_eqn - 1][vi]);
             mirrorGhostCellDerivative(du_x, cell_status, DIRECTION::X_DIRECTION);
         }
-        
-        /*
-         * Reconstruct the flux in x-direction.
-         */
         
         for (int ei = 0; ei < d_num_eqn; ei++)
         {
@@ -457,49 +456,6 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
                                 (mu[idx_node_LL] * dudx[idx_node_LL] + mu[idx_node_RR] * dudx[idx_node_RR]) +
                                 double(1) / double(60) *
                                 (mu[idx_node_LLL] * dudx[idx_node_LLL] + mu[idx_node_RRR] * dudx[idx_node_RRR]));
-
-
-                        if ((cell_status_data[idx_node_L] < 0.5 && cell_status_data[idx_node_R] > 0.5) ||
-                            (cell_status_data[idx_node_L] > 0.5 && cell_status_data[idx_node_R] < 0.5)) {
-                            if ((ei <= d_num_eqn - 2) &&(fabs(mu[idx_node_L]*dudx[idx_node_L] - mu[idx_node_R]*dudx[idx_node_R]) > 1e-8 ||
-                                fabs(mu[idx_node_LL]*dudx[idx_node_LL] - mu[idx_node_RR]*dudx[idx_node_RR]) > 1e-8 ||
-                                fabs(mu[idx_node_LLL]*dudx[idx_node_LLL] - mu[idx_node_LLL]*dudx[idx_node_RRR]) > 1e-8)) {
-                                std::cout << "num_ghosts_cell_status[0] " << num_ghosts_cell_status[0] << std::endl;
-                                std::cout << dudx[idx_node_L] << " " << dudx[idx_node_R] << " " << dudx[idx_node_LL]
-                                          << " " << dudx[idx_node_RR] << " " << dudx[idx_node_LLL] << " "
-                                          << dudx[idx_node_RRR] << std::endl;
-
-                                std::cout << mu[idx_node_L] << " " << mu[idx_node_R] << " " << mu[idx_node_LL]
-                                          << " " << mu[idx_node_RR] << " " << mu[idx_node_LLL] << " "
-                                          << mu[idx_node_RRR] << std::endl;
-
-
-                                std::cout << "dudx wrong!!!" << " ei " << ei << " vi " << vi  << std::endl;
-                                exit(1);
-                            }
-
-
-                            if ((ei == d_num_eqn - 1) &&(fabs(mu[idx_node_L]*dudx[idx_node_L] + mu[idx_node_R]*dudx[idx_node_R]) > 1e-8 ||
-                                                         fabs(mu[idx_node_LL]*dudx[idx_node_LL] + mu[idx_node_RR]*dudx[idx_node_RR]) > 1e-8 ||
-                                                         fabs(mu[idx_node_LLL]*dudx[idx_node_LLL] + mu[idx_node_RRR]*dudx[idx_node_RRR]) > 1e-8)) {
-                                std::cout << "num_ghosts_cell_status[0] " << num_ghosts_cell_status[0] << std::endl;
-                                std::cout << "dudx " << dudx[idx_node_L] << " " << dudx[idx_node_R] << " " << dudx[idx_node_LL]
-                                          << " " << dudx[idx_node_RR] << " " << dudx[idx_node_LLL] << " "
-                                          << dudx[idx_node_RRR] << std::endl;
-
-                                std::cout << "mu " << mu[idx_node_L] << " " << mu[idx_node_R] << " " << mu[idx_node_LL]
-                                          << " " << mu[idx_node_RR] << " " << mu[idx_node_LLL] << " "
-                                          << mu[idx_node_RRR] << std::endl;
-
-                                std::cout << mu[idx_node_L]*dudx[idx_node_L] + mu[idx_node_R]*dudx[idx_node_R]  << " "
-                                          << mu[idx_node_LL]*dudx[idx_node_LL] + mu[idx_node_RR]*dudx[idx_node_RR] << " "
-                                          << mu[idx_node_LLL]*dudx[idx_node_LLL] + mu[idx_node_RRR]*dudx[idx_node_RRR] << std::endl;
-
-                                std::cout << "dudx wrong!!!" << " ei " << ei << " vi " << vi  << std::endl;
-                                exit(1);
-                            }
-                        }
-
 
                     }
                 }
@@ -717,6 +673,10 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
             var_data_y,
             var_component_idx_y);
 
+        /*
+         * Reconstruct the flux in y-direction.
+         */
+
         {
             std::vector<boost::shared_ptr<pdat::CellData<double> > > du_y;
             du_y.reserve(5); //du/dx, dv/dx, du/dy, dv/dy dT/dy
@@ -727,10 +687,7 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
                 du_y.push_back(derivative_y[d_num_eqn - 1][vi]);
             mirrorGhostCellDerivative(du_y, cell_status, DIRECTION::Y_DIRECTION);
         }
-        
-        /*
-         * Reconstruct the flux in y-direction.
-         */
+
         
         for (int ei = 0; ei < d_num_eqn; ei++)
         {
@@ -911,49 +868,6 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
                             double(1)/double(60)*(mu[idx_node_BBB]*dudy[idx_node_BBB] + mu[idx_node_TTT]*dudy[idx_node_TTT]));
 
 
-                        if((cell_status_data[idx_node_B] < 0.5 && cell_status_data[idx_node_T] > 0.5)||
-                           (cell_status_data[idx_node_B] > 0.5 && cell_status_data[idx_node_T] < 0.5))
-                        {
-
-
-                            if((ei <= d_num_eqn - 2) &&
-                               (fabs(mu[idx_node_B]*dudy[idx_node_B] - mu[idx_node_T]*dudy[idx_node_T]) > 1e-8 ||
-                                fabs(mu[idx_node_BB]*dudy[idx_node_BB] - mu[idx_node_TT]*dudy[idx_node_TT]) > 1e-8 ||
-                                fabs(mu[idx_node_BBB]*dudy[idx_node_BBB] - mu[idx_node_TTT]*dudy[idx_node_TTT]) > 1e-8)) {
-                                std::cout << "num_ghosts_cell_status[0] " << num_ghosts_cell_status[0] << std::endl;
-                                std::cout << mu[idx_node_B] << " " << mu[idx_node_T] << " " << mu[idx_node_BB] << " "
-                                          << mu[idx_node_TT] << " " << mu[idx_node_BBB] << " " << mu[idx_node_TTT]
-                                          << std::endl;
-
-                                std::cout << dudy[idx_node_B] << " " <<  dudy[idx_node_T] << " " <<  dudy[idx_node_BB] << " "
-                                          <<  dudy[idx_node_TT] << " " <<  dudy[idx_node_BBB] << " " <<  dudy[idx_node_TTT]
-                                          << std::endl;
-
-                                std::cout << "dudy2 mu wrong!!!" << " ei " << ei << " vi " << vi << std::endl;
-                                exit(1);
-                            }
-                            if((ei == d_num_eqn - 1) &&
-                               (fabs(mu[idx_node_B]*dudy[idx_node_B] + mu[idx_node_T]*dudy[idx_node_T]) > 1e-8 ||
-                                fabs(mu[idx_node_BB]*dudy[idx_node_BB] + mu[idx_node_TT]*dudy[idx_node_TT]) > 1e-8 ||
-                                fabs(mu[idx_node_BBB]*dudy[idx_node_BBB] + mu[idx_node_TTT]*dudy[idx_node_TTT]) > 1e-8)) {
-                                std::cout << "num_ghosts_cell_status[0] " << num_ghosts_cell_status[0] << std::endl;
-                                std::cout << mu[idx_node_B] << " " << mu[idx_node_T] << " " << mu[idx_node_BB] << " "
-                                          << mu[idx_node_TT] << " " << mu[idx_node_BBB] << " " << mu[idx_node_TTT]
-                                          << std::endl;
-
-                                std::cout << (velocity->getPointer(0))[idx_node_B] << " " << (velocity->getPointer(0))[idx_node_T] << " " << (velocity->getPointer(0))[idx_node_BB] << " "
-                                          << (velocity->getPointer(0))[idx_node_TT] << " " << (velocity->getPointer(0))[idx_node_BBB] << " " << (velocity->getPointer(0))[idx_node_TTT]
-                                          << std::endl;
-
-                                std::cout << dudy[idx_node_B] << " " <<  dudy[idx_node_T] << " " <<  dudy[idx_node_BB] << " "
-                                          <<  dudy[idx_node_TT] << " " <<  dudy[idx_node_BBB] << " " <<  dudy[idx_node_TTT]
-                                          << std::endl;
-                                std::cout << "dudy2 mu wrong!!!" << " ei " << ei << " vi " << vi  << " i " << i <<  " j "  << j  << " mu_idx " << mu_idx << std::endl;
-                                exit(1);
-                            }
-                        }
-
-
                     }
                 }
             }
@@ -1048,6 +962,11 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
             var_component_idx_z,
             DIRECTION::X_DIRECTION,
             DIRECTION::Z_DIRECTION);
+
+        /*
+         * mirror ghost cell data for computing flux in the x-direction.
+         */
+        mirrorGhostCell(velocity, cell_status, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
         
         // Get the diffusivities in the diffusive flux.
         d_flow_model->getDiffusiveFluxDiffusivities(
@@ -1080,6 +999,13 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
         TBOX_ASSERT(static_cast<int>(diffusivities_component_idx_x.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(diffusivities_component_idx_y.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(diffusivities_component_idx_z.size()) == d_num_eqn);
+
+        /*
+         * mirror ghost cell data for computing the direvative in the x-direction.
+         */
+
+        mirrorGhostCell(velocity, cell_status, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
+        mirrorGhostCell(temperature, cell_status, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
         
         /*
          * Compute the derivatives in x-direction for diffusive flux in x-direction.
@@ -1091,6 +1017,13 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
             derivative_x_computed,
             var_data_x,
             var_component_idx_x);
+
+        /*
+         * mirror ghost cell data for computing the direvative in the x-direction.
+         */
+
+        mirrorGhostCell(velocity, cell_status, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
+        mirrorGhostCell(temperature, cell_status, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
         
         /*
          * Compute the derivatives in y-direction for diffusive flux in x-direction.
@@ -1102,7 +1035,14 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
             derivative_y_computed,
             var_data_y,
             var_component_idx_y);
-        
+
+        /*
+         * mirror ghost cell data for computing the direvative in the x-direction.
+         */
+
+        mirrorGhostCell(velocity, cell_status, DIRECTION::Z_DIRECTION, WALL_NO_SLIP);
+        mirrorGhostCell(temperature, cell_status, DIRECTION::Z_DIRECTION, WALL_NO_SLIP);
+
         /*
          * Compute the derivatives in z-direction for diffusive flux in x-direction.
          */
@@ -1117,6 +1057,22 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
         /*
          * Reconstruct the flux in x-direction.
          */
+
+        {
+            /*
+             * Mirror the derivatives in x-direction to compute flux in the x direction.
+             */
+            std::vector<boost::shared_ptr<pdat::CellData<double> > > du_x;
+            du_x.reserve(8); //du/dx, dv/dx, dw/dx, dT/dx, du/dy, dv/dy, du/dz, dw/dz
+            int ei = d_num_eqn - 1;
+            for(int vi = 0; vi < static_cast<int>(var_data_x[ei].size()); vi++)
+                du_x.push_back(derivative_x[d_num_eqn - 1][vi]);
+            for(int vi = 0; vi < static_cast<int>(var_data_y[ei].size()); vi++)
+                du_x.push_back(derivative_y[d_num_eqn - 1][vi]);
+            for(int vi = 0; vi < static_cast<int>(var_data_z[ei].size()); vi++)
+                du_x.push_back(derivative_z[d_num_eqn - 1][vi]);
+            mirrorGhostCellDerivative(du_x, cell_status, DIRECTION::X_DIRECTION);
+        }
         
         for (int ei = 0; ei < d_num_eqn; ei++)
         {
@@ -1204,10 +1160,54 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
                                 (k + num_diff_ghosts_2)*diff_ghostcell_dim_0*
                                     diff_ghostcell_dim_1;
                             
-                            F_face_x[idx_face_x] += dt*mu[idx_diffusivity]*(
-                                double(37)/double(60)*(dudx[idx_node_L] + dudx[idx_node_R]) +
-                                double(-2)/double(15)*(dudx[idx_node_LL] + dudx[idx_node_RR]) +
-                                double(1)/double(60)*(dudx[idx_node_LLL] + dudx[idx_node_RRR]));
+                            F_face_x[idx_face_x] += dt*(
+                                double(37)/double(60)*(mu[idx_node_L]*dudx[idx_node_L] + mu[idx_node_R]*dudx[idx_node_R]) +
+                                double(-2)/double(15)*(mu[idx_node_LL]*dudx[idx_node_LL] + mu[idx_node_RR]*dudx[idx_node_RR]) +
+                                double(1)/double(60)*(mu[idx_node_LLL]*dudx[idx_node_LLL] + mu[idx_node_RRR]*dudx[idx_node_RRR]));
+
+
+                            if ((cell_status_data[idx_node_L] < 0.5 && cell_status_data[idx_node_R] > 0.5) ||
+                                (cell_status_data[idx_node_L] > 0.5 && cell_status_data[idx_node_R] < 0.5)) {
+                                if ((ei <= d_num_eqn - 2) &&(fabs(mu[idx_node_L]*dudx[idx_node_L] - mu[idx_node_R]*dudx[idx_node_R]) > 1e-8 ||
+                                                             fabs(mu[idx_node_LL]*dudx[idx_node_LL] - mu[idx_node_RR]*dudx[idx_node_RR]) > 1e-8 ||
+                                                             fabs(mu[idx_node_LLL]*dudx[idx_node_LLL] - mu[idx_node_LLL]*dudx[idx_node_RRR]) > 1e-8)) {
+                                    std::cout << "num_ghosts_cell_status[0] " << num_ghosts_cell_status[0] << std::endl;
+                                    std::cout << dudx[idx_node_L] << " " << dudx[idx_node_R] << " " << dudx[idx_node_LL]
+                                              << " " << dudx[idx_node_RR] << " " << dudx[idx_node_LLL] << " "
+                                              << dudx[idx_node_RRR] << std::endl;
+
+                                    std::cout << mu[idx_node_L] << " " << mu[idx_node_R] << " " << mu[idx_node_LL]
+                                              << " " << mu[idx_node_RR] << " " << mu[idx_node_LLL] << " "
+                                              << mu[idx_node_RRR] << std::endl;
+
+
+                                    std::cout << "dudx wrong!!!" << " ei " << ei << " vi " << vi  << std::endl;
+                                    exit(1);
+                                }
+
+
+                                if ((ei == d_num_eqn - 1) &&(fabs(mu[idx_node_L]*dudx[idx_node_L] + mu[idx_node_R]*dudx[idx_node_R]) > 1e-8 ||
+                                                             fabs(mu[idx_node_LL]*dudx[idx_node_LL] + mu[idx_node_RR]*dudx[idx_node_RR]) > 1e-8 ||
+                                                             fabs(mu[idx_node_LLL]*dudx[idx_node_LLL] + mu[idx_node_RRR]*dudx[idx_node_RRR]) > 1e-8)) {
+                                    std::cout << "num_ghosts_cell_status[0] " << num_ghosts_cell_status[0] << std::endl;
+                                    std::cout << "dudx " << dudx[idx_node_L] << " " << dudx[idx_node_R] << " " << dudx[idx_node_LL]
+                                              << " " << dudx[idx_node_RR] << " " << dudx[idx_node_LLL] << " "
+                                              << dudx[idx_node_RRR] << std::endl;
+
+                                    std::cout << "mu " << mu[idx_node_L] << " " << mu[idx_node_R] << " " << mu[idx_node_LL]
+                                              << " " << mu[idx_node_RR] << " " << mu[idx_node_LLL] << " "
+                                              << mu[idx_node_RRR] << std::endl;
+
+                                    std::cout << mu[idx_node_L]*dudx[idx_node_L] + mu[idx_node_R]*dudx[idx_node_R]  << " "
+                                              << mu[idx_node_LL]*dudx[idx_node_LL] + mu[idx_node_RR]*dudx[idx_node_RR] << " "
+                                              << mu[idx_node_LLL]*dudx[idx_node_LLL] + mu[idx_node_RRR]*dudx[idx_node_RRR] << std::endl;
+
+                                    std::cout << "dudx wrong!!!" << " ei " << ei << " vi " << vi  << std::endl;
+                                    exit(1);
+                                }
+                            }
+
+
                         }
                     }
                 }
@@ -1295,10 +1295,10 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
                                 (k + num_diff_ghosts_2)*diff_ghostcell_dim_0*
                                     diff_ghostcell_dim_1;
                             
-                            F_face_x[idx_face_x] += dt*mu[idx_diffusivity]*(
-                                double(37)/double(60)*(dudy[idx_node_L] + dudy[idx_node_R]) +
-                                double(-2)/double(15)*(dudy[idx_node_LL] + dudy[idx_node_RR]) +
-                                double(1)/double(60)*(dudy[idx_node_LLL] + dudy[idx_node_RRR]));
+                            F_face_x[idx_face_x] += dt*(
+                                double(37)/double(60)*(mu[idx_node_L]*dudy[idx_node_L] + mu[idx_node_R]*dudy[idx_node_R]) +
+                                double(-2)/double(15)*(mu[idx_node_LL]*dudy[idx_node_LL] + mu[idx_node_RR]*dudy[idx_node_RR]) +
+                                double(1)/double(60)*(mu[idx_node_LLL]*dudy[idx_node_LLL] + mu[idx_node_RRR]*dudy[idx_node_RRR]));
                         }
                     }
                 }
@@ -1386,10 +1386,10 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
                                 (k + num_diff_ghosts_2)*diff_ghostcell_dim_0*
                                     diff_ghostcell_dim_1;
                             
-                            F_face_x[idx_face_x] += dt*mu[idx_diffusivity]*(
-                                double(37)/double(60)*(dudz[idx_node_L] + dudz[idx_node_R]) +
-                                double(-2)/double(15)*(dudz[idx_node_LL] + dudz[idx_node_RR]) +
-                                double(1)/double(60)*(dudz[idx_node_LLL] + dudz[idx_node_RRR]));
+                            F_face_x[idx_face_x] += dt*(
+                                double(37)/double(60)*(mu[idx_node_L]*dudz[idx_node_L] + mu[idx_node_R]*dudz[idx_node_R]) +
+                                double(-2)/double(15)*(mu[idx_node_LL]*dudz[idx_node_LL] + mu[idx_node_RR]*dudz[idx_node_RR]) +
+                                double(1)/double(60)*(mu[idx_node_LLL]*dudz[idx_node_LLL] + mu[idx_node_RRR]*dudz[idx_node_RRR]));
                         }
                     }
                 }
@@ -1438,13 +1438,18 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
             var_component_idx_z,
             DIRECTION::Y_DIRECTION,
             DIRECTION::Z_DIRECTION);
+
+        /*
+         * mirror ghost cell data for computing flux in the y-direction. need to recompute diffusivities
+         */
+        mirrorGhostCell(velocity, cell_status, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
         
         // Get the diffusivities in the diffusive flux.
         d_flow_model->getDiffusiveFluxDiffusivities(
             diffusivities_data_x,
             diffusivities_component_idx_x,
             DIRECTION::Y_DIRECTION,
-            DIRECTION::X_DIRECTION);
+            DIRECTION::X_DIRECTION, true);
         
         d_flow_model->getDiffusiveFluxDiffusivities(
             diffusivities_data_y,
@@ -1470,6 +1475,13 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
         TBOX_ASSERT(static_cast<int>(diffusivities_component_idx_x.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(diffusivities_component_idx_y.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(diffusivities_component_idx_z.size()) == d_num_eqn);
+
+        /*
+        * mirror ghost cell data for computing the direvative in the x-direction.
+        */
+
+        mirrorGhostCell(velocity, cell_status, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
+        mirrorGhostCell(temperature, cell_status, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
         
         /*
          * Compute the derivatives in x-direction for diffusive flux in y-direction.
@@ -1481,6 +1493,13 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
             derivative_x_computed,
             var_data_x,
             var_component_idx_x);
+
+        /*
+        * mirror ghost cell data for computing the direvative in the x-direction.
+        */
+
+        mirrorGhostCell(velocity, cell_status, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
+        mirrorGhostCell(temperature, cell_status, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
         
         /*
          * Compute the derivatives in y-direction for diffusive flux in y-direction.
@@ -1492,6 +1511,13 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
             derivative_y_computed,
             var_data_y,
             var_component_idx_y);
+
+        /*
+       * mirror ghost cell data for computing the direvative in the x-direction.
+       */
+
+        mirrorGhostCell(velocity, cell_status, DIRECTION::Z_DIRECTION, WALL_NO_SLIP);
+        mirrorGhostCell(temperature, cell_status, DIRECTION::Z_DIRECTION, WALL_NO_SLIP);
         
         /*
          * Compute the derivatives in z-direction for diffusive flux in y-direction.
@@ -1507,6 +1533,19 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
         /*
          * Reconstruct the flux in y-direction.
          */
+
+        {
+            std::vector<boost::shared_ptr<pdat::CellData<double> > > du_y;
+            du_y.reserve(8); //du/dx, dv/dx, du/dy, dv/dy, dw/dy, dT/dy, dv/dz, dw/dz
+            int ei = d_num_eqn - 1;
+            for(int vi = 0; vi < static_cast<int>(var_data_x[ei].size()); vi++)
+                du_y.push_back(derivative_x[d_num_eqn - 1][vi]);
+            for(int vi = 0; vi < static_cast<int>(var_data_y[ei].size()); vi++)
+                du_y.push_back(derivative_y[d_num_eqn - 1][vi]);
+            for(int vi = 0; vi < static_cast<int>(var_data_z[ei].size()); vi++)
+                du_y.push_back(derivative_z[d_num_eqn - 1][vi]);
+            mirrorGhostCellDerivative(du_y, cell_status, DIRECTION::Y_DIRECTION);
+        }
         
         for (int ei = 0; ei < d_num_eqn; ei++)
         {
@@ -1594,10 +1633,10 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
                                 (k + num_diff_ghosts_2)*diff_ghostcell_dim_0*
                                     diff_ghostcell_dim_1;
                             
-                            F_face_y[idx_face_y] += dt*mu[idx_diffusivity]*(
-                                double(37)/double(60)*(dudx[idx_node_B] + dudx[idx_node_T]) +
-                                double(-2)/double(15)*(dudx[idx_node_BB] + dudx[idx_node_TT]) +
-                                double(1)/double(60)*(dudx[idx_node_BBB] + dudx[idx_node_TTT]));
+                            F_face_y[idx_face_y] += dt*(
+                                double(37)/double(60)*(mu[idx_node_B]*dudx[idx_node_B] + mu[idx_node_T]*dudx[idx_node_T]) +
+                                double(-2)/double(15)*(mu[idx_node_BB]*dudx[idx_node_BB] + mu[idx_node_TT]*dudx[idx_node_TT]) +
+                                double(1)/double(60)*(mu[idx_node_BBB]*dudx[idx_node_BBB] + mu[idx_node_TTT]*dudx[idx_node_TTT]));
                         }
                     }
                 }
@@ -1685,10 +1724,13 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
                                 (k + num_diff_ghosts_2)*diff_ghostcell_dim_0*
                                     diff_ghostcell_dim_1;
                             
-                            F_face_y[idx_face_y] += dt*mu[idx_diffusivity]*(
-                                double(37)/double(60)*(dudy[idx_node_B] + dudy[idx_node_T]) +
-                                double(-2)/double(15)*(dudy[idx_node_BB] + dudy[idx_node_TT]) +
-                                double(1)/double(60)*(dudy[idx_node_BBB] + dudy[idx_node_TTT]));
+                            F_face_y[idx_face_y] += dt*(
+                                double(37)/double(60)*(mu[idx_node_B]*dudy[idx_node_B] + mu[idx_node_T]*dudy[idx_node_T]) +
+                                double(-2)/double(15)*(mu[idx_node_BB]*dudy[idx_node_BB] + mu[idx_node_TT]*dudy[idx_node_TT]) +
+                                double(1)/double(60)*(mu[idx_node_BBB]*dudy[idx_node_BBB] + mu[idx_node_TTT]*dudy[idx_node_TTT]));
+
+
+
                         }
                     }
                 }
@@ -1776,10 +1818,10 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
                                 (k + num_diff_ghosts_2)*diff_ghostcell_dim_0*
                                     diff_ghostcell_dim_1;
                             
-                            F_face_y[idx_face_y] += dt*mu[idx_diffusivity]*(
-                                double(37)/double(60)*(dudz[idx_node_B] + dudz[idx_node_T]) +
-                                double(-2)/double(15)*(dudz[idx_node_BB] + dudz[idx_node_TT]) +
-                                double(1)/double(60)*(dudz[idx_node_BBB] + dudz[idx_node_TTT]));
+                            F_face_y[idx_face_y] += dt*(
+                                double(37)/double(60)*(mu[idx_node_B]*dudz[idx_node_B] + mu[idx_node_T]*dudz[idx_node_T]) +
+                                double(-2)/double(15)*(mu[idx_node_BB]*dudz[idx_node_BB] + mu[idx_node_TT]*dudz[idx_node_TT]) +
+                                double(1)/double(60)*(mu[idx_node_BBB]*dudz[idx_node_BBB] + mu[idx_node_TTT]*dudz[idx_node_TTT]));
                         }
                     }
                 }
@@ -1828,13 +1870,18 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
             var_component_idx_z,
             DIRECTION::Z_DIRECTION,
             DIRECTION::Z_DIRECTION);
+
+        /*
+         * mirror ghost cell data for computing flux in the x-direction.
+         */
+        mirrorGhostCell(velocity, cell_status, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
         
         // Get the diffusivities in the diffusive flux.
         d_flow_model->getDiffusiveFluxDiffusivities(
             diffusivities_data_x,
             diffusivities_component_idx_x,
             DIRECTION::Z_DIRECTION,
-            DIRECTION::X_DIRECTION);
+            DIRECTION::X_DIRECTION, true);
         
         d_flow_model->getDiffusiveFluxDiffusivities(
             diffusivities_data_y,
@@ -1860,6 +1907,13 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
         TBOX_ASSERT(static_cast<int>(diffusivities_component_idx_x.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(diffusivities_component_idx_y.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(diffusivities_component_idx_z.size()) == d_num_eqn);
+
+        /*
+        * mirror ghost cell data for computing the direvative in the x-direction.
+        */
+
+        mirrorGhostCell(velocity, cell_status, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
+        mirrorGhostCell(temperature, cell_status, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
         
         /*
          * Compute the derivatives in x-direction for diffusive flux in z-direction.
@@ -1875,14 +1929,30 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
         /*
          * Compute the derivatives in y-direction for diffusive flux in z-direction.
          */
-        
+
+
+        /*
+         * mirror ghost cell data for computing the direvative in the x-direction.
+         */
+
+        mirrorGhostCell(velocity, cell_status, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
+        mirrorGhostCell(temperature, cell_status, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
+
+
         computeFirstDerivativesInY(
             patch,
             derivative_y,
             derivative_y_computed,
             var_data_y,
             var_component_idx_y);
-        
+
+        /*
+         * mirror ghost cell data for computing the direvative in the x-direction.
+         */
+
+        mirrorGhostCell(velocity, cell_status, DIRECTION::Z_DIRECTION, WALL_NO_SLIP);
+        mirrorGhostCell(temperature, cell_status, DIRECTION::Z_DIRECTION, WALL_NO_SLIP);
+
         /*
          * Compute the derivatives in z-direction for diffusive flux in z-direction.
          */
@@ -1897,7 +1967,28 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
         /*
          * Reconstruct the flux in z-direction.
          */
-        
+
+        /*
+         * Reconstruct the flux in x-direction.
+         */
+
+        {
+            /*
+             * Mirror the derivatives in z-direction to compute flux in the z direction.
+             */
+            std::vector<boost::shared_ptr<pdat::CellData<double> > > du_z;
+            du_z.reserve(8); //du/dx, dw/dx, dv/dy, dw/dy, du/dz, dv/dz, dw/dz, dT/dz
+            int ei = d_num_eqn - 1;
+            for(int vi = 0; vi < static_cast<int>(var_data_x[ei].size()); vi++)
+                du_z.push_back(derivative_x[d_num_eqn - 1][vi]);
+            for(int vi = 0; vi < static_cast<int>(var_data_y[ei].size()); vi++)
+                du_z.push_back(derivative_y[d_num_eqn - 1][vi]);
+            for(int vi = 0; vi < static_cast<int>(var_data_z[ei].size()); vi++)
+                du_z.push_back(derivative_z[d_num_eqn - 1][vi]);
+            mirrorGhostCellDerivative(du_z, cell_status, DIRECTION::Z_DIRECTION);
+        }
+
+
         for (int ei = 0; ei < d_num_eqn; ei++)
         {
             TBOX_ASSERT(static_cast<int>(derivative_x[ei].size()) ==
@@ -1984,10 +2075,10 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
                                 (k + 2 + num_diff_ghosts_2)*diff_ghostcell_dim_0*
                                     diff_ghostcell_dim_1;
                             
-                            F_face_z[idx_face_z] += dt*mu[idx_diffusivity]*(
-                                double(37)/double(60)*(dudx[idx_node_B] + dudx[idx_node_F]) +
-                                double(-2)/double(15)*(dudx[idx_node_BB] + dudx[idx_node_FF]) +
-                                double(1)/double(60)*(dudx[idx_node_BBB] + dudx[idx_node_FFF]));
+                            F_face_z[idx_face_z] += dt*(
+                                double(37)/double(60)*(mu[idx_node_B]*dudx[idx_node_B] + mu[idx_node_F]*dudx[idx_node_F]) +
+                                double(-2)/double(15)*(mu[idx_node_BB]*dudx[idx_node_BB] + mu[idx_node_FF]*dudx[idx_node_FF]) +
+                                double(1)/double(60)*(mu[idx_node_BBB]*dudx[idx_node_BBB] + mu[idx_node_FFF]*dudx[idx_node_FFF]));
                         }
                     }
                 }
@@ -2075,10 +2166,10 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
                                 (k + 2 + num_diff_ghosts_2)*diff_ghostcell_dim_0*
                                     diff_ghostcell_dim_1;
                             
-                            F_face_z[idx_face_z] += dt*mu[idx_diffusivity]*(
-                                double(37)/double(60)*(dudy[idx_node_B] + dudy[idx_node_F]) +
-                                double(-2)/double(15)*(dudy[idx_node_BB] + dudy[idx_node_FF]) +
-                                double(1)/double(60)*(dudy[idx_node_BBB] + dudy[idx_node_FFF]));
+                            F_face_z[idx_face_z] += dt*(
+                                double(37)/double(60)*(mu[idx_node_B]*dudy[idx_node_B] + mu[idx_node_F]*dudy[idx_node_F]) +
+                                double(-2)/double(15)*(mu[idx_node_BB]*dudy[idx_node_BB] + mu[idx_node_FF]*dudy[idx_node_FF]) +
+                                double(1)/double(60)*(mu[idx_node_BBB]*dudy[idx_node_BBB] + mu[idx_node_FFF]*dudy[idx_node_FFF]));
                         }
                     }
                 }
@@ -2166,10 +2257,54 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
                                 (k + 2 + num_diff_ghosts_2)*diff_ghostcell_dim_0*
                                     diff_ghostcell_dim_1;
                             
-                            F_face_z[idx_face_z] += dt*mu[idx_diffusivity]*(
-                                double(37)/double(60)*(dudz[idx_node_B] + dudz[idx_node_F]) +
-                                double(-2)/double(15)*(dudz[idx_node_BB] + dudz[idx_node_FF]) +
-                                double(1)/double(60)*(dudz[idx_node_BBB] + dudz[idx_node_FFF]));
+                            F_face_z[idx_face_z] += dt*(
+                                double(37)/double(60)*(mu[idx_node_B]*dudz[idx_node_B] + mu[idx_node_F]*dudz[idx_node_F]) +
+                                double(-2)/double(15)*(mu[idx_node_BB]*dudz[idx_node_BB] + mu[idx_node_FF]*dudz[idx_node_FF]) +
+                                double(1)/double(60)*(mu[idx_node_BBB]*dudz[idx_node_BBB] + mu[idx_node_FFF]*dudz[idx_node_FFF]));
+
+
+                            if((cell_status_data[idx_node_B] < 0.5 && cell_status_data[idx_node_F] > 0.5)||
+                               (cell_status_data[idx_node_B] > 0.5 && cell_status_data[idx_node_F] < 0.5))
+                            {
+
+
+                                if((ei <= d_num_eqn - 2) &&
+                                   (fabs(mu[idx_node_B]*dudz[idx_node_B] - mu[idx_node_F]*dudz[idx_node_F]) > 1e-8 ||
+                                    fabs(mu[idx_node_BB]*dudz[idx_node_BB] - mu[idx_node_FF]*dudz[idx_node_FF]) > 1e-8 ||
+                                    fabs(mu[idx_node_BBB]*dudz[idx_node_BBB] - mu[idx_node_FFF]*dudz[idx_node_FFF]) > 1e-8)) {
+                                    std::cout << "num_ghosts_cell_status[0] " << num_ghosts_cell_status[0] << std::endl;
+                                    std::cout << mu[idx_node_B] << " " << mu[idx_node_F] << " " << mu[idx_node_BB] << " "
+                                              << mu[idx_node_FF] << " " << mu[idx_node_BBB] << " " << mu[idx_node_FFF]
+                                              << std::endl;
+
+                                    std::cout << dudz[idx_node_B] << " " <<  dudz[idx_node_F] << " " <<  dudz[idx_node_BB] << " "
+                                              <<  dudz[idx_node_FF] << " " <<  dudz[idx_node_BBB] << " " <<  dudz[idx_node_FFF]
+                                              << std::endl;
+
+                                    std::cout << "dudz2 mu wrong!!!" << " ei " << ei << " vi " << vi << std::endl;
+                                    exit(1);
+                                }
+                                if((ei == d_num_eqn - 1) &&
+                                   (fabs(mu[idx_node_B]*dudz[idx_node_B] + mu[idx_node_F]*dudz[idx_node_F]) > 1e-8 ||
+                                    fabs(mu[idx_node_BB]*dudz[idx_node_BB] + mu[idx_node_FF]*dudz[idx_node_FF]) > 1e-8 ||
+                                    fabs(mu[idx_node_BBB]*dudz[idx_node_BBB] + mu[idx_node_FFF]*dudz[idx_node_FFF]) > 1e-8)) {
+                                    std::cout << "num_ghosts_cell_status[0] " << num_ghosts_cell_status[0] << std::endl;
+                                    std::cout << mu[idx_node_B] << " " << mu[idx_node_F] << " " << mu[idx_node_BB] << " "
+                                              << mu[idx_node_FF] << " " << mu[idx_node_BBB] << " " << mu[idx_node_FFF]
+                                              << std::endl;
+
+                                    std::cout << (velocity->getPointer(0))[idx_node_B] << " " << (velocity->getPointer(0))[idx_node_F] << " " << (velocity->getPointer(0))[idx_node_BB] << " "
+                                              << (velocity->getPointer(0))[idx_node_FF] << " " << (velocity->getPointer(0))[idx_node_BBB] << " " << (velocity->getPointer(0))[idx_node_FFF]
+                                              << std::endl;
+
+                                    std::cout << dudz[idx_node_B] << " " <<  dudz[idx_node_F] << " " <<  dudz[idx_node_BB] << " "
+                                              <<  dudz[idx_node_FF] << " " <<  dudz[idx_node_BBB] << " " <<  dudz[idx_node_FFF]
+                                              << std::endl;
+                                    std::cout << "dudz2 mu wrong!!!" << " ei " << ei << " vi " << vi  << " i " << i <<  " j "  << j  << " mu_idx " << mu_idx << std::endl;
+                                    exit(1);
+                                }
+                            }
+
                         }
                     }
                 }
@@ -2195,12 +2330,7 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
         derivative_x.clear();
         derivative_y.clear();
         derivative_z.clear();
-        
-//        /*
-//         * Unregister the patch and data of all registered derived cell variables in the flow model.
-//         */
-//
-//        d_flow_model->unregisterPatch();
+
         
     } // if (d_dim == tbox::Dimension(3))
 

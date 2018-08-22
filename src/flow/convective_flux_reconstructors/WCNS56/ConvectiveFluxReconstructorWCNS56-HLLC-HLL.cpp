@@ -889,7 +889,7 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
 
         for (int d_direction = 0; d_direction != 2; d_direction++ ) {
             /*
-             * populate ghost nodes in x direction by mirroring
+             * populate ghost nodes in this direction by mirroring
              */
             for (int vi = 0; vi < static_cast<int>(primitive_variables.size()); vi++) {
                 mirrorGhostCell(primitive_variables[vi], cell_status, static_cast<DIRECTION::TYPE>(d_direction), WALL_SLIP);
@@ -1442,7 +1442,13 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
             AVERAGING::SIMPLE);
         
         d_flow_model->computeGlobalDerivedCellData();
-        
+
+        /*
+         * Get the cell status todo
+         */
+        boost::shared_ptr<pdat::CellData<double> > cell_status = d_flow_model->getGlobalCellStatus();
+        double* cell_status_data = cell_status->getPointer(0);
+
         /*
          * Get the pointers to the velocity and convective flux cell data inside the flow model.
          * The numbers of ghost cells and the dimensions of the ghost cell boxes are also determined.
@@ -1455,7 +1461,14 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
         convective_flux_node[0] = d_flow_model->getGlobalCellData("CONVECTIVE_FLUX_X");
         convective_flux_node[1] = d_flow_model->getGlobalCellData("CONVECTIVE_FLUX_Y");
         convective_flux_node[2] = d_flow_model->getGlobalCellData("CONVECTIVE_FLUX_Z");
-        
+
+        //mirroring the convective flux
+        mirrorGhostCell(convective_flux_node[0], cell_status, DIRECTION::X_DIRECTION, WALL_SLIP);
+        mirrorGhostCell(convective_flux_node[1], cell_status, DIRECTION::Y_DIRECTION, WALL_SLIP);
+        mirrorGhostCell(convective_flux_node[2], cell_status, DIRECTION::Z_DIRECTION, WALL_SLIP);
+
+
+
         hier::IntVector num_subghosts_velocity = velocity->getGhostCellWidth();
         hier::IntVector subghostcell_dims_velocity = velocity->getGhostBox().numberCells();
         
@@ -1563,7 +1576,10 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
         
         boost::shared_ptr<DerivativeFirstOrder> derivative_first_order_z(
             new DerivativeFirstOrder("first order derivative in z-direction", d_dim, DIRECTION::Z_DIRECTION, 1));
-        
+
+        //mirroring velocity in x direction to compute x-derivative
+        mirrorGhostCell(velocity, cell_status, DIRECTION::X_DIRECTION, WALL_SLIP);
+
         // Compute dudx.
         derivative_first_order_x->computeDerivative(
             velocity_derivatives,
@@ -1571,7 +1587,27 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
             dx[0],
             0,
             0);
-        
+
+        // Compute dvdx.
+        derivative_first_order_x->computeDerivative(
+                velocity_derivatives,
+                velocity,
+                dx[0],
+                3,
+                1);
+
+        // Compute dwdx.
+        derivative_first_order_x->computeDerivative(
+                velocity_derivatives,
+                velocity,
+                dx[0],
+                6,
+                2);
+
+        //mirroring velocity in y direction to compute y-derivative
+        mirrorGhostCell(velocity, cell_status, DIRECTION::Y_DIRECTION, WALL_SLIP);
+
+
         // Compute dudy.
         derivative_first_order_y->computeDerivative(
             velocity_derivatives,
@@ -1579,31 +1615,34 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
             dx[1],
             1,
             0);
-        
-        // Compute dudz.
-        derivative_first_order_z->computeDerivative(
-            velocity_derivatives,
-            velocity,
-            dx[2],
-            2,
-            0);
-        
-        // Compute dvdx.
-        derivative_first_order_x->computeDerivative(
-            velocity_derivatives,
-            velocity,
-            dx[0],
-            3,
-            1);
-        
+
         // Compute dvdy.
         derivative_first_order_y->computeDerivative(
-            velocity_derivatives,
-            velocity,
-            dx[1],
-            4,
-            1);
-        
+                velocity_derivatives,
+                velocity,
+                dx[1],
+                4,
+                1);
+
+        // Compute dwdy.
+        derivative_first_order_y->computeDerivative(
+                velocity_derivatives,
+                velocity,
+                dx[1],
+                7,
+                2);
+
+        //mirroring velocity in z direction to compute z-derivative
+        mirrorGhostCell(velocity, cell_status, DIRECTION::Z_DIRECTION, WALL_SLIP);
+
+        // Compute dudz.
+        derivative_first_order_z->computeDerivative(
+                velocity_derivatives,
+                velocity,
+                dx[2],
+                2,
+                0);
+
         // Compute dvdz.
         derivative_first_order_z->computeDerivative(
             velocity_derivatives,
@@ -1611,23 +1650,7 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
             dx[2],
             5,
             1);
-        
-        // Compute dwdx.
-        derivative_first_order_x->computeDerivative(
-            velocity_derivatives,
-            velocity,
-            dx[0],
-            6,
-            2);
-        
-        // Compute dwdy.
-        derivative_first_order_y->computeDerivative(
-            velocity_derivatives,
-            velocity,
-            dx[1],
-            7,
-            2);
-        
+
         // Compute dwdz.
         derivative_first_order_z->computeDerivative(
             velocity_derivatives,
@@ -1836,23 +1859,33 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
         
         /*
          * Compute global side data of the projection variables for transformation between
-         * primitive variables and characteristic variables.
+         * primitive variables and characteristic variables, for each direction sequentially.
          */
-        
-        d_flow_model->computeGlobalSideDataProjectionVariablesForPrimitiveVariables(
-            projection_variables);
-        
-        /*
-         * Transform primitive variables to characteristic variables.
-         */
-        
-        for (int m = 0; m < 6; m++)
-        {
-            d_flow_model->computeGlobalSideDataCharacteristicVariablesFromPrimitiveVariables(
-                characteristic_variables[m],
-                primitive_variables,
-                projection_variables,
-                m - 3);
+
+        for (int d_direction = 0; d_direction != 3; d_direction++ ) {
+            /*
+             * populate ghost nodes in this direction by mirroring
+             */
+            for (int vi = 0; vi < static_cast<int>(primitive_variables.size()); vi++) {
+                mirrorGhostCell(primitive_variables[vi], cell_status, static_cast<DIRECTION::TYPE>(d_direction),
+                                WALL_SLIP);
+            }
+
+
+            d_flow_model->computeGlobalSideDataProjectionVariablesForPrimitiveVariables(
+                    projection_variables, static_cast<DIRECTION::TYPE>(d_direction));
+
+            /*
+             * Transform primitive variables to characteristic variables.
+             */
+
+            for (int m = 0; m < 6; m++) {
+                d_flow_model->computeGlobalSideDataCharacteristicVariablesFromPrimitiveVariables(
+                        characteristic_variables[m],
+                        primitive_variables,
+                        projection_variables,
+                        m - 3, static_cast<DIRECTION::TYPE>(d_direction));
+            }
         }
         
         /*
@@ -1915,6 +1948,13 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
         
         flag_minus = bounded_flag_minus->getPointer(0);
         flag_plus = bounded_flag_plus->getPointer(0);
+
+        /*
+        * populate ghost nodes in x direction by mirroring, todo!!!!!
+        */
+        for (int vi = 0; vi < static_cast<int>(primitive_variables.size()); vi++) {
+            mirrorGhostCell(primitive_variables[vi], cell_status, DIRECTION::X_DIRECTION, WALL_SLIP);
+        }
         
         for (int ei = 0; ei < d_num_eqn; ei++)
         {
@@ -1972,6 +2012,13 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
         
         flag_minus = bounded_flag_minus->getPointer(1);
         flag_plus = bounded_flag_plus->getPointer(1);
+
+        /*
+        * populate ghost nodes in y direction by mirroring, todo!!!!!
+        */
+        for (int vi = 0; vi < static_cast<int>(primitive_variables.size()); vi++) {
+            mirrorGhostCell(primitive_variables[vi], cell_status, DIRECTION::Y_DIRECTION, WALL_SLIP);
+        }
         
         for (int ei = 0; ei < d_num_eqn; ei++)
         {
@@ -2029,6 +2076,13 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
         
         flag_minus = bounded_flag_minus->getPointer(2);
         flag_plus = bounded_flag_plus->getPointer(2);
+
+        /*
+        * populate ghost nodes in z direction by mirroring, todo!!!!!
+        */
+        for (int vi = 0; vi < static_cast<int>(primitive_variables.size()); vi++) {
+            mirrorGhostCell(primitive_variables[vi], cell_status, DIRECTION::Z_DIRECTION, WALL_SLIP);
+        }
         
         for (int ei = 0; ei < d_num_eqn; ei++)
         {
@@ -2408,6 +2462,22 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                             double(3)/double(10)*(F_node_x[ei][idx_node_R] +
                                 F_node_x[ei][idx_node_L]) +
                             double(23)/double(15)*F_midpoint_x[ei][idx_midpoint_x]);
+
+//                        if ((cell_status_data[idx_node_L] < 0.5 && cell_status_data[idx_node_R] > 0.5) ||
+//                                    (cell_status_data[idx_node_L] > 0.5 && cell_status_data[idx_node_R] < 0.5)) {
+//                            std::cout << "Pressure" << V[4][idx_node_L] << " " << V[4][idx_node_L] << std::endl;
+//                            std::cout <<i << " " << j << " " << k << " ijk " <<  F_face_x[idx_face_x] << " " << F_midpoint_x[ei][idx_midpoint_x_R] << " "
+//                                      << F_midpoint_x[ei][idx_midpoint_x_L]
+//                                      << " " << F_node_x[ei][idx_node_R] << " " << F_node_x[ei][idx_node_L] << " "
+//                                      << F_midpoint_x[ei][idx_midpoint_x] << " " << (
+//                                              double(1) / double(30) * (F_midpoint_x[ei][idx_midpoint_x_R] +
+//                                                                        F_midpoint_x[ei][idx_midpoint_x_L]) -
+//                                              double(3) / double(10) * (F_node_x[ei][idx_node_R] +
+//                                                                        F_node_x[ei][idx_node_L]) +
+//                                              double(23) / double(15) * F_midpoint_x[ei][idx_midpoint_x]) << std::endl;
+//                        }
+
+
                     }
                 }
             }

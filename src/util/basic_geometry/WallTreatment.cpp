@@ -292,22 +292,22 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
 
                             if (depth == 1) {
                                 V[0][idx] = V[0][idx_mirr];
-                            } else if (depth == 2 && d_condition == WALL_SLIP) {
+                            } else if (depth == 3 && d_condition == WALL_SLIP) {
                                 V[0][idx] = -V[0][idx_mirr];
                                 V[1][idx] = V[1][idx_mirr];
                                 V[2][idx] = V[2][idx_mirr];
-                            } else if (depth == 2 && d_condition == WALL_NO_SLIP) {
+                            } else if (depth == 3 && d_condition == WALL_NO_SLIP) {
                                 V[0][idx] = -V[0][idx_mirr];
                                 V[1][idx] = -V[1][idx_mirr];
                                 V[2][idx] = -V[2][idx_mirr];
-                            } else if (depth == 4 && d_condition == WALL_SLIP) {
+                            } else if (depth == 5 && d_condition == WALL_SLIP) {
                                 //Convective Flux in x direction rhou, rhouu +p, rhouv, rhouw, u(E + p)
                                 V[0][idx] = -V[0][idx_mirr];
                                 V[1][idx] = V[1][idx_mirr];
                                 V[2][idx] = -V[2][idx_mirr];
                                 V[3][idx] = -V[3][idx_mirr];
                                 V[4][idx] = -V[4][idx_mirr];
-                            } else if (depth == 4 && d_condition == WALL_NO_SLIP) {
+                            } else if (depth == 5 && d_condition == WALL_NO_SLIP) {
                                 V[0][idx] = -V[0][idx_mirr];
                                 V[1][idx] = V[1][idx_mirr];
                                 V[2][idx] = V[2][idx_mirr];
@@ -346,22 +346,22 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
 
                             if (depth == 1) {
                                 V[0][idx] = V[0][idx_mirr];
-                            } else if (depth == 2 && d_condition == WALL_SLIP) {   //velocity u, v
+                            } else if (depth == 3 && d_condition == WALL_SLIP) {   //velocity u, v
                                 V[0][idx] = -V[0][idx_mirr];
                                 V[1][idx] = V[1][idx_mirr];
                                 V[2][idx] = V[2][idx_mirr];
-                            } else if (depth == 2 && d_condition == WALL_NO_SLIP) {
+                            } else if (depth == 3 && d_condition == WALL_NO_SLIP) {
                                 V[0][idx] = -V[0][idx_mirr];
                                 V[1][idx] = -V[1][idx_mirr];
                                 V[2][idx] = -V[2][idx_mirr];
-                            } else if (depth == 4 && d_condition == WALL_SLIP) {
+                            } else if (depth == 5 && d_condition == WALL_SLIP) {
                                 //Convective Flux in x direction rhou, rhouu +p, rhouv, rhouw, u(E + p)
                                 V[0][idx] = -V[0][idx_mirr];
                                 V[1][idx] = V[1][idx_mirr];
                                 V[2][idx] = -V[2][idx_mirr];
                                 V[3][idx] = -V[3][idx_mirr];
                                 V[4][idx] = -V[4][idx_mirr];
-                            } else if (depth == 4 && d_condition == WALL_NO_SLIP) {
+                            } else if (depth == 5 && d_condition == WALL_NO_SLIP) {
                                 V[0][idx] = -V[0][idx_mirr];
                                 V[1][idx] = V[1][idx_mirr];
                                 V[2][idx] = V[2][idx_mirr];
@@ -503,22 +503,22 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
 
                             if (depth == 1) {
                                 V[0][idx] = V[0][idx_mirr];
-                            } else if (depth == 2 && d_condition == WALL_SLIP) {
+                            } else if (depth == 3 && d_condition == WALL_SLIP) {
                                 V[0][idx] = V[0][idx_mirr];
                                 V[1][idx] = -V[1][idx_mirr];
                                 V[2][idx] = V[2][idx_mirr];
-                            } else if (depth == 2 && d_condition == WALL_NO_SLIP) {
+                            } else if (depth == 3 && d_condition == WALL_NO_SLIP) {
                                 V[0][idx] = -V[0][idx_mirr];
                                 V[1][idx] = -V[1][idx_mirr];
                                 V[2][idx] = -V[2][idx_mirr];
-                            } else if (depth == 4 && d_condition == WALL_SLIP) {
+                            } else if (depth == 5 && d_condition == WALL_SLIP) {
                                 //Convective Flux in x direction rho v, rho vu, rho v v + p, rho v w, v(E + p)
                                 V[0][idx] = -V[0][idx_mirr];
                                 V[1][idx] = -V[1][idx_mirr];
                                 V[2][idx] = V[2][idx_mirr];
                                 V[3][idx] = -V[3][idx_mirr];
                                 V[4][idx] = -V[4][idx_mirr];
-                            } else if (depth == 4 && d_condition == WALL_NO_SLIP) {
+                            } else if (depth == 5 && d_condition == WALL_NO_SLIP) {
                                 V[0][idx] = -V[0][idx_mirr];
                                 V[1][idx] = V[1][idx_mirr];
                                 V[2][idx] = V[2][idx_mirr];
@@ -556,22 +556,22 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
 
                             if (depth == 1) {
                                 V[0][idx] = V[0][idx_mirr];
-                            } else if (depth == 2 && d_condition == WALL_SLIP) {
+                            } else if (depth == 3 && d_condition == WALL_SLIP) {
                                 V[0][idx] = V[0][idx_mirr];
                                 V[1][idx] = -V[1][idx_mirr];
                                 V[2][idx] = V[2][idx_mirr];
-                            } else if (depth == 2 && d_condition == WALL_NO_SLIP) {
+                            } else if (depth == 3 && d_condition == WALL_NO_SLIP) {
                                 V[0][idx] = -V[0][idx_mirr];
                                 V[1][idx] = -V[1][idx_mirr];
                                 V[2][idx] = -V[2][idx_mirr];
-                            } else if (depth == 4 && d_condition == WALL_SLIP) {
+                            } else if (depth == 5 && d_condition == WALL_SLIP) {
                                 //Convective Flux in x direction rho v, rho v u, rho v v + p, rho v w, v(E + p)
                                 V[0][idx] = -V[0][idx_mirr];
                                 V[1][idx] = -V[1][idx_mirr];
                                 V[2][idx] = V[2][idx_mirr];
                                 V[3][idx] = -V[3][idx_mirr];
                                 V[4][idx] = -V[4][idx_mirr];
-                            } else if (depth == 4 && d_condition == WALL_NO_SLIP) {
+                            } else if (depth == 5 && d_condition == WALL_NO_SLIP) {
                                 V[0][idx] = -V[0][idx_mirr];
                                 V[1][idx] = V[1][idx_mirr];
                                 V[2][idx] = V[2][idx_mirr];
@@ -621,22 +621,22 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
 
                             if (depth == 1) {
                                 V[0][idx] = V[0][idx_mirr];
-                            } else if (depth == 2 && d_condition == WALL_SLIP) {
+                            } else if (depth == 3 && d_condition == WALL_SLIP) {
                                 V[0][idx] = V[0][idx_mirr];
                                 V[1][idx] = V[1][idx_mirr];
                                 V[2][idx] = -V[2][idx_mirr];
-                            } else if (depth == 2 && d_condition == WALL_NO_SLIP) {
+                            } else if (depth == 3 && d_condition == WALL_NO_SLIP) {
                                 V[0][idx] = -V[0][idx_mirr];
                                 V[1][idx] = -V[1][idx_mirr];
                                 V[2][idx] = -V[2][idx_mirr];
-                            } else if (depth == 4 && d_condition == WALL_SLIP) {
+                            } else if (depth == 5 && d_condition == WALL_SLIP) {
                                 //Convective Flux in x direction rho w, rho wu, rho w v, rho w w + p, w(E + p)
                                 V[0][idx] = -V[0][idx_mirr];
                                 V[1][idx] = -V[1][idx_mirr];
                                 V[2][idx] = -V[2][idx_mirr];
                                 V[3][idx] = V[3][idx_mirr];
                                 V[4][idx] = -V[4][idx_mirr];
-                            } else if (depth == 4 && d_condition == WALL_NO_SLIP) {
+                            } else if (depth == 5 && d_condition == WALL_NO_SLIP) {
                                 V[0][idx] = -V[0][idx_mirr];
                                 V[1][idx] = V[1][idx_mirr];
                                 V[2][idx] = V[2][idx_mirr];
@@ -674,22 +674,22 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
 
                             if (depth == 1) {
                                 V[0][idx] = V[0][idx_mirr];
-                            } else if (depth == 2 && d_condition == WALL_SLIP) {
+                            } else if (depth == 3 && d_condition == WALL_SLIP) {
                                 V[0][idx] = V[0][idx_mirr];
                                 V[1][idx] = V[1][idx_mirr];
                                 V[2][idx] = -V[2][idx_mirr];
-                            } else if (depth == 2 && d_condition == WALL_NO_SLIP) {
+                            } else if (depth == 3 && d_condition == WALL_NO_SLIP) {
                                 V[0][idx] = -V[0][idx_mirr];
                                 V[1][idx] = -V[1][idx_mirr];
                                 V[2][idx] = -V[2][idx_mirr];
-                            } else if (depth == 4 && d_condition == WALL_SLIP) {
+                            } else if (depth == 5 && d_condition == WALL_SLIP) {
                                 //Convective Flux in x direction rho v, rho v u, rho v v + p, rho v w, v(E + p)
                                 V[0][idx] = -V[0][idx_mirr];
                                 V[1][idx] = -V[1][idx_mirr];
                                 V[2][idx] = -V[2][idx_mirr];
                                 V[3][idx] = V[3][idx_mirr];
                                 V[4][idx] = -V[4][idx_mirr];
-                            } else if (depth == 4 && d_condition == WALL_NO_SLIP) {
+                            } else if (depth == 5 && d_condition == WALL_NO_SLIP) {
                                 V[0][idx] = -V[0][idx_mirr];
                                 V[1][idx] = V[1][idx_mirr];
                                 V[2][idx] = V[2][idx_mirr];
