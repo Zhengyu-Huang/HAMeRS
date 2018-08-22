@@ -767,6 +767,26 @@ ConvectiveFluxReconstructorFirstOrderHLLC::computeConvectiveFluxAndSourceOnPatch
                         
                         Q_minus[ei][idx_face_x] = Q[ei][idx_L];
                         Q_plus[ei][idx_face_x] = Q[ei][idx_R];
+
+                        /*
+                         * Modify flow states near the wall, to impose transmission condition,
+                         * weakly impose the transmission condition.
+                         */
+
+                        if(cell_status_data[idx_L] < 0.5){
+                            if(ei == 1)
+                                Q_minus[ei][idx_face_x] = -Q_plus[ei][idx_face_x];
+                            else
+                                Q_minus[ei][idx_face_x] = Q_plus[ei][idx_face_x];
+
+                        } else if(cell_status_data[idx_R] < 0.5)
+                        {
+                            if(ei == 1)
+                                Q_plus[ei][idx_face_x] = -Q_minus[ei][idx_face_x];
+                            else
+                                Q_plus[ei][idx_face_x]  = Q_minus[ei][idx_face_x];
+                        }
+
                     }
                 }
             }
@@ -856,6 +876,26 @@ ConvectiveFluxReconstructorFirstOrderHLLC::computeConvectiveFluxAndSourceOnPatch
                         
                         Q_minus[ei][idx_face_y] = Q[ei][idx_B];
                         Q_plus[ei][idx_face_y] = Q[ei][idx_T];
+
+
+                        /*
+                         * Modify flow states near the wall, to impose transmission condition,
+                         * weakly impose the transmission condition.
+                         */
+                        if(cell_status_data[idx_B] < 0.5){
+                            if(ei == 2)
+                                Q_minus[ei][idx_face_y] = -Q_plus[ei][idx_face_y];
+                            else
+                                Q_minus[ei][idx_face_y] = Q_plus[ei][idx_face_y];
+
+                        } else if(cell_status_data[idx_T] < 0.5)
+                        {
+                            if(ei == 2)
+                                Q_plus[ei][idx_face_y] = -Q_minus[ei][idx_face_y];
+                            else
+                                Q_plus[ei][idx_face_y]  = Q_minus[ei][idx_face_y];
+
+                        }
                     }
                 }
             }
@@ -944,6 +984,25 @@ ConvectiveFluxReconstructorFirstOrderHLLC::computeConvectiveFluxAndSourceOnPatch
                         
                         Q_minus[ei][idx_face_z] = Q[ei][idx_B];
                         Q_plus[ei][idx_face_z] = Q[ei][idx_F];
+
+                        /*
+                         * Modify flow states near the wall, to impose transmission condition,
+                         * weakly impose the transmission condition.
+                         */
+                        if(cell_status_data[idx_B] < 0.5){
+                            if(ei == 3)
+                                Q_minus[ei][idx_face_z] = -Q_plus[ei][idx_face_z];
+                            else
+                                Q_minus[ei][idx_face_z] = Q_plus[ei][idx_face_z];
+
+                        } else if(cell_status_data[idx_F] < 0.5)
+                        {
+                            if(ei == 3)
+                                Q_plus[ei][idx_face_z] = -Q_minus[ei][idx_face_z];
+                            else
+                                Q_plus[ei][idx_face_z]  = Q_minus[ei][idx_face_z];
+
+                        }
                     }
                 }
             }
