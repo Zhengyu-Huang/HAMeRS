@@ -668,78 +668,78 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
         //mirroring velocity in x direction to compute x-derivative
         mirrorGhostCell(velocity, cell_status, DIRECTION::X_DIRECTION, WALL_SLIP);
 
-        // Compute dudx.
-        derivative_first_order_x->computeDerivative(
-            velocity_derivatives,
-            velocity,
-            dx[0],
-            0,
-            0);
-
-        // Compute dvdx.
-        derivative_first_order_x->computeDerivative(
-                velocity_derivatives,
-                velocity,
-                dx[0],
-                2,
-                1);
+//        // Compute dudx.
+//        derivative_first_order_x->computeDerivative(
+//            velocity_derivatives,
+//            velocity,
+//            dx[0],
+//            0,
+//            0);
+//
+//        // Compute dvdx.
+//        derivative_first_order_x->computeDerivative(
+//                velocity_derivatives,
+//                velocity,
+//                dx[0],
+//                2,
+//                1);
 
         //mirroring velocity in y direction to compute y-derivative
         mirrorGhostCell(velocity, cell_status, DIRECTION::Y_DIRECTION, WALL_SLIP);
 
-        // Compute dudy.
-        derivative_first_order_y->computeDerivative(
-            velocity_derivatives,
-            velocity,
-            dx[1],
-            1,
-            0);
-        
-        // Compute dvdy.
-        derivative_first_order_y->computeDerivative(
-            velocity_derivatives,
-            velocity,
-            dx[1],
-            3,
-            1);
-        
-        // Get the pointers to the cell data of velocity derivatives.
-        double* dudx = velocity_derivatives->getPointer(0);
-        double* dudy = velocity_derivatives->getPointer(1);
-        double* dvdx = velocity_derivatives->getPointer(2);
-        double* dvdy = velocity_derivatives->getPointer(3);
-        
-        // Compute the dilatation.
-        for (int j = -2; j < interior_dim_1 + 2; j++)
-        {
-#ifdef HAMERS_ENABLE_SIMD
-            #pragma omp simd
-#endif
-            for (int i = -2; i < interior_dim_0 + 2; i++)
-            {
-                // Compute the linear index.
-                const int idx = (i + 2) +
-                    (j + 2)*(interior_dim_0 + 4);
-                
-                theta[idx] = dudx[idx] + dvdy[idx];
-            }
-        }
-        
-        // Compute the magnitude of vorticity.
-        for (int j = -2; j < interior_dim_1 + 2; j++)
-        {
-#ifdef HAMERS_ENABLE_SIMD
-            #pragma omp simd
-#endif
-            for (int i = -2; i < interior_dim_0 + 2; i++)
-            {
-                // Compute the linear index.
-                const int idx = (i + 2) +
-                    (j + 2)*(interior_dim_0 + 4);
-                
-                Omega[idx] = fabs(dvdx[idx] - dudy[idx]);
-            }
-        }
+//        // Compute dudy.
+//        derivative_first_order_y->computeDerivative(
+//            velocity_derivatives,
+//            velocity,
+//            dx[1],
+//            1,
+//            0);
+//
+//        // Compute dvdy.
+//        derivative_first_order_y->computeDerivative(
+//            velocity_derivatives,
+//            velocity,
+//            dx[1],
+//            3,
+//            1);
+//
+//        // Get the pointers to the cell data of velocity derivatives.
+//        double* dudx = velocity_derivatives->getPointer(0);
+//        double* dudy = velocity_derivatives->getPointer(1);
+//        double* dvdx = velocity_derivatives->getPointer(2);
+//        double* dvdy = velocity_derivatives->getPointer(3);
+//
+//        // Compute the dilatation.
+//        for (int j = -2; j < interior_dim_1 + 2; j++)
+//        {
+//#ifdef HAMERS_ENABLE_SIMD
+//            #pragma omp simd
+//#endif
+//            for (int i = -2; i < interior_dim_0 + 2; i++)
+//            {
+//                // Compute the linear index.
+//                const int idx = (i + 2) +
+//                    (j + 2)*(interior_dim_0 + 4);
+//
+//                theta[idx] = dudx[idx] + dvdy[idx];
+//            }
+//        }
+//
+//        // Compute the magnitude of vorticity.
+//        for (int j = -2; j < interior_dim_1 + 2; j++)
+//        {
+//#ifdef HAMERS_ENABLE_SIMD
+//            #pragma omp simd
+//#endif
+//            for (int i = -2; i < interior_dim_0 + 2; i++)
+//            {
+//                // Compute the linear index.
+//                const int idx = (i + 2) +
+//                    (j + 2)*(interior_dim_0 + 4);
+//
+//                Omega[idx] = fabs(dvdx[idx] - dudy[idx]);
+//            }
+//        }
         
         /*
          * Get the pointers to the conservative variables and primitive variables.
@@ -953,119 +953,119 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
          * Check whether the interpolated side primitive variables are within the bounds.
          */
         
-        d_flow_model->checkGlobalSideDataPrimitiveVariablesBounded(
-            bounded_flag_minus,
-            primitive_variables_minus);
-        
-        d_flow_model->checkGlobalSideDataPrimitiveVariablesBounded(
-            bounded_flag_plus,
-            primitive_variables_plus);
-        
-        /*
-         * Use first order interpolation if interpolated side primitive variables in x-direction
-         * are out of bounds.
-         */
-        
-        for (int ei = 0; ei < d_num_eqn; ei++)
-        {
-            V_minus[ei] = primitive_variables_minus[ei]->getPointer(0);
-            V_plus[ei] = primitive_variables_plus[ei]->getPointer(0);
-        }
-        
-        flag_minus = bounded_flag_minus->getPointer(0);
-        flag_plus = bounded_flag_plus->getPointer(0);
-
-        /*
-         * populate ghost nodes in x direction by mirroring
-         */
-        for (int vi = 0; vi < static_cast<int>(primitive_variables.size()); vi++) {
-            mirrorGhostCell(primitive_variables[vi], cell_status, DIRECTION::X_DIRECTION, WALL_SLIP);
-        }
-        
-        for (int ei = 0; ei < d_num_eqn; ei++)
-        {
-            const int num_subghosts_0_primitive_var = num_subghosts_primitive_var[ei][0];
-            const int num_subghosts_1_primitive_var = num_subghosts_primitive_var[ei][1];
-            const int subghostcell_dim_0_primitive_var = subghostcell_dims_primitive_var[ei][0];
-            
-            for (int j = 0; j < interior_dim_1; j++)
-            {
-#ifdef HAMERS_ENABLE_SIMD
-                #pragma omp simd
-#endif
-                for (int i = -1; i < interior_dim_0 + 2; i++)
-                {
-                    // Compute the linear indices.
-                    const int idx_midpoint_x = (i + 1) +
-                        (j + 1)*(interior_dim_0 + 3);
-                    
-                    const int idx_cell_L = (i - 1 + num_subghosts_0_primitive_var) +
-                        (j + num_subghosts_1_primitive_var)*subghostcell_dim_0_primitive_var;
-                    
-                    const int idx_cell_R = (i + num_subghosts_0_primitive_var) +
-                        (j + num_subghosts_1_primitive_var)*subghostcell_dim_0_primitive_var;
-                    
-                    if (flag_minus[idx_midpoint_x] == 0 || flag_plus[idx_midpoint_x] == 0)
-                    {
-                        V_minus[ei][idx_midpoint_x] = V[ei][idx_cell_L];
-                        V_plus[ei][idx_midpoint_x] = V[ei][idx_cell_R];
-                    }
-                }
-            }
-        }
-        
-        /*
-         * Use first order interpolation if interpolated side primitive variables in y-direction
-         * are out of bounds.
-         */
-        
-        for (int ei = 0; ei < d_num_eqn; ei++)
-        {
-            V_minus[ei] = primitive_variables_minus[ei]->getPointer(1);
-            V_plus[ei] = primitive_variables_plus[ei]->getPointer(1);
-        }
-        
-        flag_minus = bounded_flag_minus->getPointer(1);
-        flag_plus = bounded_flag_plus->getPointer(1);
-
-        /*
-         * populate ghost nodes in y direction by mirroring
-         */
-        for (int vi = 0; vi < static_cast<int>(primitive_variables.size()); vi++) {
-            mirrorGhostCell(primitive_variables[vi], cell_status, DIRECTION::Y_DIRECTION, WALL_SLIP);
-        }
-        
-        for (int ei = 0; ei < d_num_eqn; ei++)
-        {
-            const int num_subghosts_0_primitive_var = num_subghosts_primitive_var[ei][0];
-            const int num_subghosts_1_primitive_var = num_subghosts_primitive_var[ei][1];
-            const int subghostcell_dim_0_primitive_var = subghostcell_dims_primitive_var[ei][0];
-            
-            for (int j = -1; j < interior_dim_1 + 2; j++)
-            {
-#ifdef HAMERS_ENABLE_SIMD
-                #pragma omp simd
-#endif
-                for (int i = 0; i < interior_dim_0; i++)
-                {
-                    // Compute the linear indices.
-                    const int idx_midpoint_y = (i + 1) +
-                        (j + 1)*(interior_dim_0 + 2);
-                    
-                    const int idx_cell_B = (i + num_subghosts_0_primitive_var) +
-                        (j - 1 + num_subghosts_1_primitive_var)*subghostcell_dim_0_primitive_var;
-                    
-                    const int idx_cell_T = (i + num_subghosts_0_primitive_var) +
-                        (j + num_subghosts_1_primitive_var)*subghostcell_dim_0_primitive_var;
-                    
-                    if (flag_minus[idx_midpoint_y] == 0 || flag_plus[idx_midpoint_y] == 0)
-                    {
-                        V_minus[ei][idx_midpoint_y] = V[ei][idx_cell_B];
-                        V_plus[ei][idx_midpoint_y] = V[ei][idx_cell_T];
-                    }
-                }
-            }
-        }
+//        d_flow_model->checkGlobalSideDataPrimitiveVariablesBounded(
+//            bounded_flag_minus,
+//            primitive_variables_minus);
+//
+//        d_flow_model->checkGlobalSideDataPrimitiveVariablesBounded(
+//            bounded_flag_plus,
+//            primitive_variables_plus);
+//
+//        /*
+//         * Use first order interpolation if interpolated side primitive variables in x-direction
+//         * are out of bounds.
+//         */
+//
+//        for (int ei = 0; ei < d_num_eqn; ei++)
+//        {
+//            V_minus[ei] = primitive_variables_minus[ei]->getPointer(0);
+//            V_plus[ei] = primitive_variables_plus[ei]->getPointer(0);
+//        }
+//
+//        flag_minus = bounded_flag_minus->getPointer(0);
+//        flag_plus = bounded_flag_plus->getPointer(0);
+//
+//        /*
+//         * populate ghost nodes in x direction by mirroring
+//         */
+//        for (int vi = 0; vi < static_cast<int>(primitive_variables.size()); vi++) {
+//            mirrorGhostCell(primitive_variables[vi], cell_status, DIRECTION::X_DIRECTION, WALL_SLIP);
+//        }
+//
+//        for (int ei = 0; ei < d_num_eqn; ei++)
+//        {
+//            const int num_subghosts_0_primitive_var = num_subghosts_primitive_var[ei][0];
+//            const int num_subghosts_1_primitive_var = num_subghosts_primitive_var[ei][1];
+//            const int subghostcell_dim_0_primitive_var = subghostcell_dims_primitive_var[ei][0];
+//
+//            for (int j = 0; j < interior_dim_1; j++)
+//            {
+//#ifdef HAMERS_ENABLE_SIMD
+//                #pragma omp simd
+//#endif
+//                for (int i = -1; i < interior_dim_0 + 2; i++)
+//                {
+//                    // Compute the linear indices.
+//                    const int idx_midpoint_x = (i + 1) +
+//                        (j + 1)*(interior_dim_0 + 3);
+//
+//                    const int idx_cell_L = (i - 1 + num_subghosts_0_primitive_var) +
+//                        (j + num_subghosts_1_primitive_var)*subghostcell_dim_0_primitive_var;
+//
+//                    const int idx_cell_R = (i + num_subghosts_0_primitive_var) +
+//                        (j + num_subghosts_1_primitive_var)*subghostcell_dim_0_primitive_var;
+//
+//                    if (flag_minus[idx_midpoint_x] == 0 || flag_plus[idx_midpoint_x] == 0)
+//                    {
+//                        V_minus[ei][idx_midpoint_x] = V[ei][idx_cell_L];
+//                        V_plus[ei][idx_midpoint_x] = V[ei][idx_cell_R];
+//                    }
+//                }
+//            }
+//        }
+//
+//        /*
+//         * Use first order interpolation if interpolated side primitive variables in y-direction
+//         * are out of bounds.
+//         */
+//
+//        for (int ei = 0; ei < d_num_eqn; ei++)
+//        {
+//            V_minus[ei] = primitive_variables_minus[ei]->getPointer(1);
+//            V_plus[ei] = primitive_variables_plus[ei]->getPointer(1);
+//        }
+//
+//        flag_minus = bounded_flag_minus->getPointer(1);
+//        flag_plus = bounded_flag_plus->getPointer(1);
+//
+//        /*
+//         * populate ghost nodes in y direction by mirroring
+//         */
+//        for (int vi = 0; vi < static_cast<int>(primitive_variables.size()); vi++) {
+//            mirrorGhostCell(primitive_variables[vi], cell_status, DIRECTION::Y_DIRECTION, WALL_SLIP);
+//        }
+//
+//        for (int ei = 0; ei < d_num_eqn; ei++)
+//        {
+//            const int num_subghosts_0_primitive_var = num_subghosts_primitive_var[ei][0];
+//            const int num_subghosts_1_primitive_var = num_subghosts_primitive_var[ei][1];
+//            const int subghostcell_dim_0_primitive_var = subghostcell_dims_primitive_var[ei][0];
+//
+//            for (int j = -1; j < interior_dim_1 + 2; j++)
+//            {
+//#ifdef HAMERS_ENABLE_SIMD
+//                #pragma omp simd
+//#endif
+//                for (int i = 0; i < interior_dim_0; i++)
+//                {
+//                    // Compute the linear indices.
+//                    const int idx_midpoint_y = (i + 1) +
+//                        (j + 1)*(interior_dim_0 + 2);
+//
+//                    const int idx_cell_B = (i + num_subghosts_0_primitive_var) +
+//                        (j - 1 + num_subghosts_1_primitive_var)*subghostcell_dim_0_primitive_var;
+//
+//                    const int idx_cell_T = (i + num_subghosts_0_primitive_var) +
+//                        (j + num_subghosts_1_primitive_var)*subghostcell_dim_0_primitive_var;
+//
+//                    if (flag_minus[idx_midpoint_y] == 0 || flag_plus[idx_midpoint_y] == 0)
+//                    {
+//                        V_minus[ei][idx_midpoint_y] = V[ei][idx_cell_B];
+//                        V_plus[ei][idx_midpoint_y] = V[ei][idx_cell_T];
+//                    }
+//                }
+//            }
+//        }
         
         /*
          * Compute mid-point flux in the x-direction.
@@ -1091,37 +1091,37 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                 RIEMANN_SOLVER::HLLC);
         }
         
-        d_riemann_solver->computeConvectiveFluxFromPrimitiveVariables(
-            convective_flux_midpoint_HLLC_HLL,
-            primitive_variables_minus,
-            primitive_variables_plus,
-            DIRECTION::X_DIRECTION,
-            RIEMANN_SOLVER::HLLC_HLL);
-        
-        // Compute the Ducros-like shock sensor.
-        for (int j = 0; j < interior_dim_1; j++)
-        {
-#ifdef HAMERS_ENABLE_SIMD
-            #pragma omp simd
-#endif
-            for (int i = -1; i < interior_dim_0 + 2; i++)
-            {
-                // Compute the linear index of the side.
-                const int idx_midpoint_x = (i + 1) +
-                    (j + 1)*(interior_dim_0 + 3);
-                
-                const int idx_L = (i + 1) +
-                    (j + 2)*(interior_dim_0 + 4);
-                
-                const int idx_R = (i + 2) +
-                    (j + 2)*(interior_dim_0 + 4);
-                
-                double theta_avg = 0.5*(theta[idx_L] + theta[idx_R]);
-                double Omega_avg = 0.5*(Omega[idx_L] + Omega[idx_R]);
-                
-                s_x[idx_midpoint_x] = -theta_avg/(fabs(theta_avg) + Omega_avg + EPSILON);
-            }
-        }
+//        d_riemann_solver->computeConvectiveFluxFromPrimitiveVariables(
+//            convective_flux_midpoint_HLLC_HLL,
+//            primitive_variables_minus,
+//            primitive_variables_plus,
+//            DIRECTION::X_DIRECTION,
+//            RIEMANN_SOLVER::HLLC_HLL);
+//
+//        // Compute the Ducros-like shock sensor.
+//        for (int j = 0; j < interior_dim_1; j++)
+//        {
+//#ifdef HAMERS_ENABLE_SIMD
+//            #pragma omp simd
+//#endif
+//            for (int i = -1; i < interior_dim_0 + 2; i++)
+//            {
+//                // Compute the linear index of the side.
+//                const int idx_midpoint_x = (i + 1) +
+//                    (j + 1)*(interior_dim_0 + 3);
+//
+//                const int idx_L = (i + 1) +
+//                    (j + 2)*(interior_dim_0 + 4);
+//
+//                const int idx_R = (i + 2) +
+//                    (j + 2)*(interior_dim_0 + 4);
+//
+//                double theta_avg = 0.5*(theta[idx_L] + theta[idx_R]);
+//                double Omega_avg = 0.5*(Omega[idx_L] + Omega[idx_R]);
+//
+//                s_x[idx_midpoint_x] = -theta_avg/(fabs(theta_avg) + Omega_avg + EPSILON);
+//            }
+//        }
         
         for (int ei = 0; ei < d_num_eqn; ei++)
         {
@@ -1136,14 +1136,16 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                     const int idx_midpoint_x = (i + 1) +
                         (j + 1)*(interior_dim_0 + 3);
                     
-                    if (s_x[idx_midpoint_x] > 0.65)
-                    {
-                        F_midpoint_x[ei][idx_midpoint_x] = F_midpoint_HLLC_HLL_x[ei][idx_midpoint_x];
-                    }
-                    else
-                    {
-                        F_midpoint_x[ei][idx_midpoint_x] = F_midpoint_HLLC_x[ei][idx_midpoint_x];
-                    }
+//                    if (s_x[idx_midpoint_x] > 0.65)
+//                    {
+//                        F_midpoint_x[ei][idx_midpoint_x] = F_midpoint_HLLC_HLL_x[ei][idx_midpoint_x];
+//                    }
+//                    else
+//                    {
+//                        F_midpoint_x[ei][idx_midpoint_x] = F_midpoint_HLLC_x[ei][idx_midpoint_x];
+//                    }
+
+                    F_midpoint_x[ei][idx_midpoint_x] = F_midpoint_HLLC_x[ei][idx_midpoint_x];
                 }
             }
         }
@@ -1172,37 +1174,37 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                 RIEMANN_SOLVER::HLLC);
         }
         
-        d_riemann_solver->computeConvectiveFluxFromPrimitiveVariables(
-            convective_flux_midpoint_HLLC_HLL,
-            primitive_variables_minus,
-            primitive_variables_plus,
-            DIRECTION::Y_DIRECTION,
-            RIEMANN_SOLVER::HLLC_HLL);
-        
-        // Compute the Ducros-like shock sensor.
-        for (int j = -1; j < interior_dim_1 + 2; j++)
-        {
-#ifdef HAMERS_ENABLE_SIMD
-            #pragma omp simd
-#endif
-            for (int i = 0; i < interior_dim_0; i++)
-            {
-                // Compute the linear index of the side.
-                const int idx_midpoint_y = (i + 1) +
-                    (j + 1)*(interior_dim_0 + 2);
-                
-                const int idx_B = (i + 2) +
-                    (j + 1)*(interior_dim_0 + 4);
-                
-                const int idx_T = (i + 2) +
-                    (j + 2)*(interior_dim_0 + 4);
-                
-                double theta_avg = 0.5*(theta[idx_B] + theta[idx_T]);
-                double Omega_avg = 0.5*(Omega[idx_B] + Omega[idx_T]);
-                
-                s_y[idx_midpoint_y] = -theta_avg/(fabs(theta_avg) + Omega_avg + EPSILON);
-            }
-        }
+//        d_riemann_solver->computeConvectiveFluxFromPrimitiveVariables(
+//            convective_flux_midpoint_HLLC_HLL,
+//            primitive_variables_minus,
+//            primitive_variables_plus,
+//            DIRECTION::Y_DIRECTION,
+//            RIEMANN_SOLVER::HLLC_HLL);
+//
+//        // Compute the Ducros-like shock sensor.
+//        for (int j = -1; j < interior_dim_1 + 2; j++)
+//        {
+//#ifdef HAMERS_ENABLE_SIMD
+//            #pragma omp simd
+//#endif
+//            for (int i = 0; i < interior_dim_0; i++)
+//            {
+//                // Compute the linear index of the side.
+//                const int idx_midpoint_y = (i + 1) +
+//                    (j + 1)*(interior_dim_0 + 2);
+//
+//                const int idx_B = (i + 2) +
+//                    (j + 1)*(interior_dim_0 + 4);
+//
+//                const int idx_T = (i + 2) +
+//                    (j + 2)*(interior_dim_0 + 4);
+//
+//                double theta_avg = 0.5*(theta[idx_B] + theta[idx_T]);
+//                double Omega_avg = 0.5*(Omega[idx_B] + Omega[idx_T]);
+//
+//                s_y[idx_midpoint_y] = -theta_avg/(fabs(theta_avg) + Omega_avg + EPSILON);
+//            }
+//        }
         
         for (int ei = 0; ei < d_num_eqn; ei++)
         {
@@ -1217,14 +1219,15 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                     const int idx_midpoint_y = (i + 1) +
                         (j + 1)*(interior_dim_0 + 2);
                     
-                    if (s_y[idx_midpoint_y] > 0.65)
-                    {
-                        F_midpoint_y[ei][idx_midpoint_y] = F_midpoint_HLLC_HLL_y[ei][idx_midpoint_y];
-                    }
-                    else
-                    {
-                        F_midpoint_y[ei][idx_midpoint_y] = F_midpoint_HLLC_y[ei][idx_midpoint_y];
-                    }
+//                    if (s_y[idx_midpoint_y] > 0.65)
+//                    {
+//                        F_midpoint_y[ei][idx_midpoint_y] = F_midpoint_HLLC_HLL_y[ei][idx_midpoint_y];
+//                    }
+//                    else
+//                    {
+//                        F_midpoint_y[ei][idx_midpoint_y] = F_midpoint_HLLC_y[ei][idx_midpoint_y];
+//                    }
+                    F_midpoint_y[ei][idx_midpoint_y] = F_midpoint_HLLC_y[ei][idx_midpoint_y];
                 }
             }
         }

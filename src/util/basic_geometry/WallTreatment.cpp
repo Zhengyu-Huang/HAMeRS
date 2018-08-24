@@ -129,6 +129,7 @@ int isOutsidePorousWall3Y(int dim, double x, double y, double z)
      * The computational domain is at least is 8 by 8 by 8
      * A solid wall at y = 0
      */
+    return 1;
     double y0 = 0.0, r_hole = 1./8;
     if(fabs(y - y0) > r_hole) return 1;
     else return 0;
@@ -168,7 +169,7 @@ initializeCellStatus(hier::Patch& patch,
                 const double x = x_lo[0] + (i + 0.5) * dx[0],
                         y = x_lo[1] + (j + 0.5) * dx[1];
                 const int idx = i + j * patch_dims[0];
-                cell_status_data[idx] = isOutsidePorousWall2X(2, x, y);
+                cell_status_data[idx] = isOutsidePorousWall3Y(2, x, y);
             }
         }
 
@@ -184,7 +185,7 @@ initializeCellStatus(hier::Patch& patch,
                                  y = x_lo[1] + (j + 0.5) * dx[1],
                                  z = x_lo[2] + (k + 0.5) * dx[2];
                     const int idx = i + j * patch_dims[0] + k*patch_dims[0]*patch_dims[1];
-                    cell_status_data[idx] = isOutsidePorousWall2X(3, x, y, z);
+                    cell_status_data[idx] = isOutsidePorousWall3Y(3, x, y, z);
                 }
             }
         }
@@ -197,6 +198,7 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
        const boost::shared_ptr<pdat::CellData<double> > &cell_status,
        const DIRECTION::TYPE d_direction,
        const WALL_TREATMENT_CONDITION d_condition) {
+    return;
 
     const tbox::Dimension d_dim = cell_status->getDim();
     const hier::IntVector interior_dims = cell_status->getBox().numberCells();

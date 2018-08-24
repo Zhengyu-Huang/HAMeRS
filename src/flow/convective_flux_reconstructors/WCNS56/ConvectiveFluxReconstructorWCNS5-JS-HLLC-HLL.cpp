@@ -98,6 +98,7 @@ static inline __attribute__((always_inline)) void performLocalWENOInterpolationM
     omega_0 = double(1.0)/double(16)/ipow((beta_0 + EPSILON), p);
     omega_1 = double(5.0)/double(8)/ipow((beta_1 + EPSILON), p);
     omega_2 = double(5.0)/double(16)/ipow((beta_2 + EPSILON), p);
+
     
     double omega_sum = omega_0 + omega_1 + omega_2;
     
@@ -115,6 +116,8 @@ static inline __attribute__((always_inline)) void performLocalWENOInterpolationM
         double(3)/double(8)*omega_2)*U_array[2][idx_side] +
         (double(3)/double(8)*omega_1 + double(6)/double(8)*omega_2)*U_array[3][idx_side] -
         double(1)/double(8)*omega_2*U_array[4][idx_side];
+
+    //U_minus[idx_side] = double(8)/double(9)*U_array[2][idx_side] + double(2.)/double(27.)*U_array[1][idx_side] + double(1)/double(54.)*U_array[0][idx_side] + double(1)/double(54.)*U_array[3][idx_side];
 }
 
 
@@ -144,6 +147,7 @@ static inline __attribute__((always_inline)) void performLocalWENOInterpolationP
     omega_tilde_0 = double(1)/double(16)/ipow((beta_tilde_0 + EPSILON), p);
     omega_tilde_1 = double(5)/double(8)/ipow((beta_tilde_1 + EPSILON), p);
     omega_tilde_2 = double(5)/double(16)/ipow((beta_tilde_2 + EPSILON), p);
+
     
     double omega_tilde_sum = omega_tilde_0 + omega_tilde_1 + omega_tilde_2;
     
@@ -161,6 +165,8 @@ static inline __attribute__((always_inline)) void performLocalWENOInterpolationP
         double(3)/double(8)*omega_tilde_2)*U_array[3][idx_side] +
         (double(3)/double(8)*omega_tilde_1 + double(6)/double(8)*omega_tilde_2)*U_array[2][idx_side] -
         double(1)/double(8)*omega_tilde_2*U_array[1][idx_side];
+
+    //U_plus[idx_side] = double(8)/double(9)*U_array[3][idx_side] + double(2.)/double(27.)*U_array[4][idx_side] + double(1)/double(54.)*U_array[5][idx_side] + double(1)/double(54.)*U_array[2][idx_side];
 }
 
 
