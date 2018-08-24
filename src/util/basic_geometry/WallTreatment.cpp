@@ -43,13 +43,13 @@ int isOutsidePorousWall1(int dim, double x, double y, double z)
  * the mesh size is 1/(8N).
  *
  */
-int isOutsidePorousWall2(int dim, double x, double y, double z)
+int isOutsidePorousWall2X(int dim, double x, double y, double z)
 {
     /*
      * The porous wall is centered at x0. and this is a QUASI 2D structure
      * The computational domain is at least is 8 by 8 by 8
-     * There are 1 holes in y and z directions, of size 2,
-     *           2 solid in y and z directions, each of size 3;
+     * There are 1 holes in x directions at x=0.0, of size 2,
+     *           2 solid in x directions, each of size 3;
      * 3 2 3
      */
 
@@ -65,6 +65,35 @@ int isOutsidePorousWall2(int dim, double x, double y, double z)
     return 1;
 }
 
+/* This is simple debugging setup
+ * This function decide point (x, y, z) is in the wall or not
+ * return 0 if the point is in the wall
+ * return 1 if the point is outside
+ * the mesh size is 1/(8N).
+ *
+ */
+int isOutsidePorousWall2Y(int dim, double x, double y, double z)
+{
+    /*
+     * The porous wall is centered at x0. and this is a QUASI 2D structure
+     * The computational domain is at least is 8 by 8 by 8
+     * There are 1 holes in y direction at y = 0.0, of size 2,
+     *           2 solid in y direction, each of size 3;
+     * 3 2 3
+     */
+
+    double y0 = 0.0, r_hole = 1./8;
+    if(fabs(y - y0) > r_hole) return 1;
+    if(dim == 2 || dim == 3){
+        double xx = x/r_hole;
+        if(xx < 3 || (xx > 5))
+            return 0;
+        else
+            return 1;
+    }
+    return 1;
+}
+
 
 /* This is simple debugging setup
  * This function decide point (x, y, z) is in the wall or not
@@ -73,7 +102,7 @@ int isOutsidePorousWall2(int dim, double x, double y, double z)
  * the mesh size is 1/(8N).
  *
  */
-int isOutsidePorousWall3(int dim, double x, double y, double z)
+int isOutsidePorousWall3X(int dim, double x, double y, double z)
 {
     /*
      * The porous wall is centered at x0. this is QUASI 1D structure
@@ -85,6 +114,25 @@ int isOutsidePorousWall3(int dim, double x, double y, double z)
     else return 0;
 }
 
+
+/* This is simple debugging setup
+ * This function decide point (x, y, z) is in the wall or not
+ * return 0 if the point is in the wall
+ * return 1 if the point is outside
+ * the mesh size is 1/(8N).
+ *
+ */
+int isOutsidePorousWall3Y(int dim, double x, double y, double z)
+{
+    /*
+     * The porous wall is centered at x0. this is QUASI 1D structure
+     * The computational domain is at least is 8 by 8 by 8
+     * A solid wall at y = 0
+     */
+    double y0 = 0.0, r_hole = 1./8;
+    if(fabs(y - y0) > r_hole) return 1;
+    else return 0;
+}
 
 void
 initializeCellStatus(hier::Patch& patch,
@@ -120,7 +168,7 @@ initializeCellStatus(hier::Patch& patch,
                 const double x = x_lo[0] + (i + 0.5) * dx[0],
                         y = x_lo[1] + (j + 0.5) * dx[1];
                 const int idx = i + j * patch_dims[0];
-                cell_status_data[idx] = isOutsidePorousWall2(2, x, y);
+                cell_status_data[idx] = isOutsidePorousWall2X(2, x, y);
             }
         }
 
@@ -136,7 +184,7 @@ initializeCellStatus(hier::Patch& patch,
                                  y = x_lo[1] + (j + 0.5) * dx[1],
                                  z = x_lo[2] + (k + 0.5) * dx[2];
                     const int idx = i + j * patch_dims[0] + k*patch_dims[0]*patch_dims[1];
-                    cell_status_data[idx] = isOutsidePorousWall2(3, x, y, z);
+                    cell_status_data[idx] = isOutsidePorousWall2X(3, x, y, z);
                 }
             }
         }

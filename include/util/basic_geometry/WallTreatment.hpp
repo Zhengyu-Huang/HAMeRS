@@ -36,10 +36,13 @@ int
         isOutsidePorousWall1(int dim, double x, double y, double z = 0.0);
 
 int
-        isOutsidePorousWall2(int dim, double x, double y, double z = 0.0);
-
+        isOutsidePorousWall2X(int dim, double x, double y, double z = 0.0);
 int
-        isOutsidePorousWall3(int dim, double x, double y, double z = 0.0);
+        isOutsidePorousWall2Y(int dim, double x, double y, double z = 0.0);
+int
+        isOutsidePorousWall3X(int dim, double x, double y, double z = 0.0);
+int
+        isOutsidePorousWall3Y(int dim, double x, double y, double z = 0.0);
 
 void
         initializeCellStatus(hier::Patch& patch,
