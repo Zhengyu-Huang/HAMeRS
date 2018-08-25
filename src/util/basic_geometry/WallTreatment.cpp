@@ -114,24 +114,29 @@ int isOutsidePorousWall3X(int dim, double x, double y, double z)
     else return 0;
 }
 
-
-/* This is simple debugging setup
- * This function decide point (x, y, z) is in the wall or not
- * return 0 if the point is in the wall
- * return 1 if the point is outside
- * the mesh size is 1/(8N).
- *
- */
 int isOutsidePorousWall3Y(int dim, double x, double y, double z)
 {
     /*
-     * The porous wall is centered at x0. this is QUASI 1D structure
+     * The porous wall is centered at y0. this is QUASI 1D structure
      * The computational domain is at least is 8 by 8 by 8
      * A solid wall at y = 0
      */
 
     double y0 = 0.0, r_hole = 1./8;
     if(fabs(y - y0) > r_hole) return 1;
+    else return 0;
+}
+
+int isOutsidePorousWall3Z(int dim, double x, double y, double z)
+{
+    /*
+     * The porous wall is centered at z0. this is QUASI 1D structure
+     * The computational domain is at least is 8 by 8 by 8
+     * A solid wall at y = 0
+     */
+
+    double z0 = 0.0, r_hole = 1./8;
+    if(fabs(z - z0) > r_hole) return 1;
     else return 0;
 }
 
@@ -849,13 +854,13 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                                 V[0][idx] = -V[0][idx_mirr];
                                 V[1][idx] = -V[1][idx_mirr];
                                 V[2][idx] = -V[2][idx_mirr];
-                                V[3][idx] =  V[3][idx_mirr];
+                                V[3][idx] = V[3][idx_mirr];
                                 V[4][idx] = -V[4][idx_mirr];
                             } else if (depth == 5 && d_condition == WALL_NO_SLIP) {
                                 V[0][idx] = -V[0][idx_mirr];
-                                V[1][idx] =  V[1][idx_mirr];
-                                V[2][idx] =  V[2][idx_mirr];
-                                V[3][idx] =  V[3][idx_mirr];
+                                V[1][idx] = V[1][idx_mirr];
+                                V[2][idx] = V[2][idx_mirr];
+                                V[3][idx] = V[3][idx_mirr];
                                 V[4][idx] = -V[4][idx_mirr];
                             }
 

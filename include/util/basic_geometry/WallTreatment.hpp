@@ -38,6 +38,7 @@ int isOutsidePorousWall2Y(int dim, double x, double y, double z = 0.0);
 
 int isOutsidePorousWall3X(int dim, double x, double y, double z = 0.0);
 int isOutsidePorousWall3Y(int dim, double x, double y, double z = 0.0);
+int isOutsidePorousWall3Z(int dim, double x, double y, double z);
 
 int isOutsidePorousWall4X(int dim, double x, double y, double z);
 int isOutsidePorousWall4Y(int dim, double x, double y, double z);

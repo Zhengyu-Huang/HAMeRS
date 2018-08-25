@@ -1371,7 +1371,7 @@ Euler::advanceSingleStepOnPatch(
                     const int num_ghosts_2_conservative_var = num_ghosts_conservative_var[ei][2];
                     const int ghostcell_dim_0_conservative_var = ghostcell_dims_conservative_var[ei][0];
                     const int ghostcell_dim_1_conservative_var = ghostcell_dims_conservative_var[ei][1];
-                    
+
                     for (int k = 0; k < interior_dim_2; k++)
                     {
                         for (int j = 0; j < interior_dim_1; j++)

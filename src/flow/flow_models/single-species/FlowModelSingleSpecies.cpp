@@ -1898,25 +1898,6 @@ FlowModelSingleSpecies::computeGlobalSideDataProjectionVariablesForPrimitiveVari
                                 c_average[idx_face_x] =
                                         double(1) / double(2) * (c[idx_sound_speed_L] + c[idx_sound_speed_R]);
 
-                                //todo modify average value at the interface
-                                if ((cell_status_data[idx_L] < 0.5 && cell_status_data[idx_R] > 0.5) ||
-                                    (cell_status_data[idx_L] > 0.5 && cell_status_data[idx_R] < 0.5)) {
-                                    if (fabs(rho[idx_L] - rho[idx_R]) > 1e-8 ||
-                                        fabs(c[idx_sound_speed_L] - c[idx_sound_speed_R]) > 1e-8) {
-                                        std::cout << "num_ghosts_0_projection_var " << num_ghosts_0_projection_var
-                                                  << std::endl;
-                                        std::cout << "num_subghosts_0_sound_speed " << num_subghosts_0_sound_speed
-                                                  << std::endl;
-                                        std::cout << "num_ghosts_0 " << num_ghosts_0 << std::endl;
-                                        std::cout << "num_ghosts_cell_status[0] " << num_ghosts_cell_status[0] << std::endl;
-                                        std::cout << rho[idx_L] << " " << rho[idx_R] << " " << c[idx_sound_speed_L] << " "
-                                                  << c[idx_sound_speed_R] << std::endl;
-                                        std::cout << "LR wrong!!!" << std::endl;
-                                        exit(1);
-                                    }
-
-                                }
-
 
                             }
                         }
@@ -1974,24 +1955,6 @@ FlowModelSingleSpecies::computeGlobalSideDataProjectionVariablesForPrimitiveVari
                                 c_average[idx_face_y] =
                                         double(1) / double(2) * (c[idx_sound_speed_B] + c[idx_sound_speed_T]);
 
-//                                if ((cell_status_data[idx_B] < 0.5 && cell_status_data[idx_T] > 0.5) ||
-//                                    (cell_status_data[idx_B] > 0.5 && cell_status_data[idx_T] < 0.5)) {
-//                                    if (fabs(rho[idx_B] - rho[idx_T]) > 1e-8 ||
-//                                        fabs(c[idx_sound_speed_B] - c[idx_sound_speed_T]) > 1e-8) {
-//                                        std::cout << "num_ghosts_0_projection_var " << num_ghosts_0_projection_var
-//                                                  << std::endl;
-//                                        std::cout << "num_subghosts_0_sound_speed " << num_subghosts_0_sound_speed
-//                                                  << std::endl;
-//                                        std::cout << "num_ghosts_0 " << num_ghosts_0 << std::endl;
-//                                        std::cout << "num_ghosts_cell_status[0] " << num_ghosts_cell_status[0] << std::endl;
-//                                        std::cout << rho[idx_B] << " " << rho[idx_T] << " " << c[idx_sound_speed_B] << " "
-//                                                  << c[idx_sound_speed_T] << std::endl;
-//                                        std::cout << "BT wrong!!!" << std::endl;
-//                                        exit(1);
-//                                    }
-//
-//                                }
-
                             }
                         }
                     }
@@ -2046,25 +2009,6 @@ FlowModelSingleSpecies::computeGlobalSideDataProjectionVariablesForPrimitiveVari
                                 rho_average[idx_face_z] = double(1) / double(2) * (rho[idx_B] + rho[idx_F]);
                                 c_average[idx_face_z] =
                                         double(1) / double(2) * (c[idx_sound_speed_B] + c[idx_sound_speed_F]);
-
-//                                if ((cell_status_data[idx_B] < 0.5 && cell_status_data[idx_F] > 0.5) ||
-//                                    (cell_status_data[idx_B] > 0.5 && cell_status_data[idx_F] < 0.5)) {
-//                                    if (fabs(rho[idx_B] - rho[idx_F]) > 1e-8 ||
-//                                        fabs(c[idx_sound_speed_B] - c[idx_sound_speed_F]) > 1e-8) {
-//                                        std::cout << "num_ghosts_0_projection_var " << num_ghosts_0_projection_var
-//                                                  << std::endl;
-//                                        std::cout << "num_subghosts_0_sound_speed " << num_subghosts_0_sound_speed
-//                                                  << std::endl;
-//                                        std::cout << "num_ghosts_0 " << num_ghosts_0 << std::endl;
-//                                        std::cout << "num_ghosts_cell_status[0] " << num_ghosts_cell_status[0] << std::endl;
-//                                        std::cout << rho[idx_B] << " " << rho[idx_F] << " " << c[idx_sound_speed_B] << " "
-//                                                  << c[idx_sound_speed_F] << std::endl;
-//                                        std::cout << "BT wrong!!!" << std::endl;
-//                                        exit(1);
-//                                    }
-//
-//                                }
-
 
                             }
                         }
@@ -8883,6 +8827,7 @@ void FlowModelSingleSpecies::cleanInactiveNodes(std::vector<double*> &Q) {
     const hier::IntVector conv_ghostcell_dims = interior_dims + d_num_conv_ghosts + d_num_conv_ghosts;
 
 
+
     if (d_dim == tbox::Dimension(1)) {}
     else if (d_dim == tbox::Dimension(2)) {
         /*
@@ -8914,11 +8859,18 @@ void FlowModelSingleSpecies::cleanInactiveNodes(std::vector<double*> &Q) {
                             i + d_num_conv_ghosts[0] + (j + d_num_conv_ghosts[1]) * conv_ghostcell_dims[0] +
                             (k + d_num_conv_ghosts[2]) * conv_ghostcell_dims[0] * conv_ghostcell_dims[1];
                     if (cell_status_data[idx] < 0.5) {
+
                         Q[0][idx] = 1.0; // rho = 1.0
                         Q[1][idx] = 0.0; // u = 0.0
                         Q[2][idx] = 0.0; // v = 0.0
                         Q[3][idx] = 0.0; // v = 0.0
                         Q[4][idx] = 2.5; // p = 1.0
+
+//                        Q[0][idx] = NAN; // rho = 1.0
+//                        Q[1][idx] = NAN; // u = 0.0
+//                        Q[2][idx] = NAN; // v = 0.0
+//                        Q[3][idx] = NAN; // v = 0.0
+//                        Q[4][idx] = NAN; // p = 1.0
                     }
 
                 }
