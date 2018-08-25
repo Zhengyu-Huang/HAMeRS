@@ -42,6 +42,7 @@ static inline __attribute__((always_inline)) void computeLocalBeta(
          double(31)*U_array[3][idx_side] + double(11)*U_array[4][idx_side]) +
          U_array[3][idx_side]*(double(25)*U_array[3][idx_side] - double(19)*U_array[4][idx_side]) +
          double(4)*U_array[4][idx_side]*U_array[4][idx_side]);
+
 }
 
 
@@ -117,7 +118,7 @@ static inline __attribute__((always_inline)) void performLocalWENOInterpolationM
         (double(3)/double(8)*omega_1 + double(6)/double(8)*omega_2)*U_array[3][idx_side] -
         double(1)/double(8)*omega_2*U_array[4][idx_side];
 
-    //U_minus[idx_side] = double(8)/double(9)*U_array[2][idx_side] + double(2.)/double(27.)*U_array[1][idx_side] + double(1)/double(54.)*U_array[0][idx_side] + double(1)/double(54.)*U_array[3][idx_side];
+
 }
 
 
@@ -166,7 +167,7 @@ static inline __attribute__((always_inline)) void performLocalWENOInterpolationP
         (double(3)/double(8)*omega_tilde_1 + double(6)/double(8)*omega_tilde_2)*U_array[2][idx_side] -
         double(1)/double(8)*omega_tilde_2*U_array[1][idx_side];
 
-    //U_plus[idx_side] = double(8)/double(9)*U_array[3][idx_side] + double(2.)/double(27.)*U_array[4][idx_side] + double(1)/double(54.)*U_array[5][idx_side] + double(1)/double(54.)*U_array[2][idx_side];
+
 }
 
 

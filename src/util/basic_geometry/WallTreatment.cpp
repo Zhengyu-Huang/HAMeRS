@@ -129,10 +129,122 @@ int isOutsidePorousWall3Y(int dim, double x, double y, double z)
      * The computational domain is at least is 8 by 8 by 8
      * A solid wall at y = 0
      */
-    return 1;
+
     double y0 = 0.0, r_hole = 1./8;
     if(fabs(y - y0) > r_hole) return 1;
     else return 0;
+}
+
+/* This is simple debugging setup
+ * This function decide point (x, y, z) is in the wall or not
+ * return 0 if the point is in the wall
+ * return 1 if the point is outside
+ * the mesh size is 1/(8N).
+ *
+ */
+int isOutsidePorousWall4X(int dim, double x, double y, double z)
+{
+    /*
+     * The porous wall is centered at x0. and this is a 3D structure
+     * The computational domain is at least is 8 by 8 by 8
+     * There are 1 holes in x direction at x = 0.0, of size 2,
+     *                ########
+     *                ########
+     *                ########
+     *                ###  ###
+     *                ###  ###
+     *                ########
+     *                ########
+     *                ########
+     * 3 2 3
+     */
+
+
+    double x0 = 0.0, r_hole = 1./8;
+    if(fabs(x - x0) > r_hole) return 1;
+    if(dim == 2 || dim == 3){
+        double yy = y/r_hole, zz = z/r_hole;
+        if((yy < 3 || yy > 5) || (zz < 3 || zz > 5))
+            return 0;
+        else
+            return 1;
+    }
+    return 1;
+}
+
+/* This is simple debugging setup
+ * This function decide point (x, y, z) is in the wall or not
+ * return 0 if the point is in the wall
+ * return 1 if the point is outside
+ * the mesh size is 1/(8N).
+ *
+ */
+int isOutsidePorousWall4Y(int dim, double x, double y, double z)
+{
+    /*
+     * The porous wall is centered at x0. and this is a 3D structure
+     * The computational domain is at least is 8 by 8 by 8
+     * There are 1 holes in x direction at x = 0.0, of size 2,
+     *                ########
+     *                ########
+     *                ########
+     *                ###  ###
+     *                ###  ###
+     *                ########
+     *                ########
+     *                ########
+     * 3 2 3
+     */
+
+
+    double y0 = 0.0, r_hole = 1./8;
+    if(fabs(y - y0) > r_hole) return 1;
+    if(dim == 2 || dim == 3){
+        double xx = x/r_hole, zz = z/r_hole;
+        if((xx < 3 || xx > 5) || (zz < 3 || zz > 5))
+            return 0;
+        else
+            return 1;
+    }
+    return 1;
+}
+
+
+/* This is simple debugging setup
+ * This function decide point (x, y, z) is in the wall or not
+ * return 0 if the point is in the wall
+ * return 1 if the point is outside
+ * the mesh size is 1/(8N).
+ *
+ */
+int isOutsidePorousWall4Z(int dim, double x, double y, double z)
+{
+    /*
+     * The porous wall is centered at x0. and this is a 3D structure
+     * The computational domain is at least is 8 by 8 by 8
+     * There are 1 holes in x direction at x = 0.0, of size 2,
+     *                ########
+     *                ########
+     *                ########
+     *                ###  ###
+     *                ###  ###
+     *                ########
+     *                ########
+     *                ########
+     * 3 2 3
+     */
+
+
+    double z0 = 0.0, r_hole = 1./8;
+    if(fabs(z - z0) > r_hole) return 1;
+    if(dim == 2 || dim == 3){
+        double yy = y/r_hole, xx = x/r_hole;
+        if((yy < 3 || yy > 5) || (xx < 3 || xx > 5))
+            return 0;
+        else
+            return 1;
+    }
+    return 1;
 }
 
 void
@@ -169,7 +281,7 @@ initializeCellStatus(hier::Patch& patch,
                 const double x = x_lo[0] + (i + 0.5) * dx[0],
                         y = x_lo[1] + (j + 0.5) * dx[1];
                 const int idx = i + j * patch_dims[0];
-                cell_status_data[idx] = isOutsidePorousWall3Y(2, x, y);
+                cell_status_data[idx] = isOutsidePorousWall2Y(2, x, y);
             }
         }
 
@@ -185,7 +297,7 @@ initializeCellStatus(hier::Patch& patch,
                                  y = x_lo[1] + (j + 0.5) * dx[1],
                                  z = x_lo[2] + (k + 0.5) * dx[2];
                     const int idx = i + j * patch_dims[0] + k*patch_dims[0]*patch_dims[1];
-                    cell_status_data[idx] = isOutsidePorousWall3Y(3, x, y, z);
+                    cell_status_data[idx] = isOutsidePorousWall4Z(3, x, y, z);
                 }
             }
         }
@@ -198,7 +310,7 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
        const boost::shared_ptr<pdat::CellData<double> > &cell_status,
        const DIRECTION::TYPE d_direction,
        const WALL_TREATMENT_CONDITION d_condition) {
-    return;
+
 
     const tbox::Dimension d_dim = cell_status->getDim();
     const hier::IntVector interior_dims = cell_status->getBox().numberCells();
@@ -642,8 +754,8 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                 //loop x direction
                 for (int i = 0; i < interior_dims[0] + 2 * d_num_var_ghosts[0]; i++) {
                     //loop z direction
+                    ghost_count = std::numeric_limits<int>::min();
                     for (int k = 0; k < interior_dims[2] + 2 * d_num_var_ghosts[2]; k++) {
-                        ghost_count = std::numeric_limits<int>::min();
 
                         const int idx = i + j * (interior_dims[0] + 2 * d_num_var_ghosts[0]) +
                                         k * (interior_dims[0] + 2 * d_num_var_ghosts[0]) *
@@ -737,13 +849,13 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                                 V[0][idx] = -V[0][idx_mirr];
                                 V[1][idx] = -V[1][idx_mirr];
                                 V[2][idx] = -V[2][idx_mirr];
-                                V[3][idx] = V[3][idx_mirr];
+                                V[3][idx] =  V[3][idx_mirr];
                                 V[4][idx] = -V[4][idx_mirr];
                             } else if (depth == 5 && d_condition == WALL_NO_SLIP) {
                                 V[0][idx] = -V[0][idx_mirr];
-                                V[1][idx] = V[1][idx_mirr];
-                                V[2][idx] = V[2][idx_mirr];
-                                V[3][idx] = V[3][idx_mirr];
+                                V[1][idx] =  V[1][idx_mirr];
+                                V[2][idx] =  V[2][idx_mirr];
+                                V[3][idx] =  V[3][idx_mirr];
                                 V[4][idx] = -V[4][idx_mirr];
                             }
 

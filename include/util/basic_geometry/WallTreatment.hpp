@@ -32,17 +32,16 @@ enum WALL_TREATMENT_CONDITION {
     WALL_SLIP = 1
 };
 
-int
-        isOutsidePorousWall1(int dim, double x, double y, double z = 0.0);
+int isOutsidePorousWall1(int dim, double x, double y, double z = 0.0);
+int isOutsidePorousWall2X(int dim, double x, double y, double z = 0.0);
+int isOutsidePorousWall2Y(int dim, double x, double y, double z = 0.0);
 
-int
-        isOutsidePorousWall2X(int dim, double x, double y, double z = 0.0);
-int
-        isOutsidePorousWall2Y(int dim, double x, double y, double z = 0.0);
-int
-        isOutsidePorousWall3X(int dim, double x, double y, double z = 0.0);
-int
-        isOutsidePorousWall3Y(int dim, double x, double y, double z = 0.0);
+int isOutsidePorousWall3X(int dim, double x, double y, double z = 0.0);
+int isOutsidePorousWall3Y(int dim, double x, double y, double z = 0.0);
+
+int isOutsidePorousWall4X(int dim, double x, double y, double z);
+int isOutsidePorousWall4Y(int dim, double x, double y, double z);
+int isOutsidePorousWall4Z(int dim, double x, double y, double z);
 
 void
         initializeCellStatus(hier::Patch& patch,

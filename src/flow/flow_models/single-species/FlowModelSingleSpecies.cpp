@@ -8870,7 +8870,7 @@ FlowModelSingleSpecies::computeGlobalCellDataMaxDiffusivityWithPressureAndTemper
  * Clean Inactive Cell Variables in the patch. Q contains conservative variables
  */
 void FlowModelSingleSpecies::cleanInactiveNodes(std::vector<double*> &Q) {
-    return;
+
     // Get the cell data of the registered cell status.
     boost::shared_ptr <pdat::CellData<double>> cell_status(
             BOOST_CAST < pdat::CellData < double > , hier::PatchData > (
