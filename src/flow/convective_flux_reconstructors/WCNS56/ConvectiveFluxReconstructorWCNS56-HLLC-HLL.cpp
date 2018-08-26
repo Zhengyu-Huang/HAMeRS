@@ -1993,7 +1993,7 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                                 subghostcell_dim_1_primitive_var;
                         
                         if (flag_minus[idx_midpoint_x] == 0 || flag_plus[idx_midpoint_x] == 0)
-                        {
+                        {   std::cout << "x negative "<< std::endl;exit(1);
                             V_minus[ei][idx_midpoint_x] = V[ei][idx_cell_L];
                             V_plus[ei][idx_midpoint_x] = V[ei][idx_cell_R];
                         }
@@ -2057,7 +2057,7 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                                 subghostcell_dim_1_primitive_var;
                         
                         if (flag_minus[idx_midpoint_y] == 0 || flag_plus[idx_midpoint_y] == 0)
-                        {
+                        {   std::cout << "y negative "<< std::endl;exit(1);
                             V_minus[ei][idx_midpoint_y] = V[ei][idx_cell_B];
                             V_plus[ei][idx_midpoint_y] = V[ei][idx_cell_T];
                         }
@@ -2121,7 +2121,7 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                                 subghostcell_dim_1_primitive_var;
                         
                         if (flag_minus[idx_midpoint_z] == 0 || flag_plus[idx_midpoint_z] == 0)
-                        {   
+                        {   std::cout << "z negative "<< std::endl;exit(1);
                             V_minus[ei][idx_midpoint_z] = V[ei][idx_cell_B];
                             V_plus[ei][idx_midpoint_z] = V[ei][idx_cell_F];
                         }
