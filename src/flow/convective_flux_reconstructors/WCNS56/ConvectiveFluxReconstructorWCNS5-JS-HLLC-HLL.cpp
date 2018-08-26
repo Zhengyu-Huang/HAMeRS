@@ -1,6 +1,6 @@
 #include "flow/convective_flux_reconstructors/WCNS56/ConvectiveFluxReconstructorWCNS5-JS-HLLC-HLL.hpp"
 
-//#define EPSILON HAMERS_EPSILON
+#define EPSILON HAMERS_EPSILON
 
 
 /*
@@ -97,7 +97,6 @@ static inline __attribute__((always_inline)) void performLocalWENOInterpolationM
     
     double omega_0, omega_1, omega_2;
 
-    double EPSILON = 0.0001;
     
     omega_0 = double(1.0)/double(16)/ipow((beta_0 + EPSILON), p);
     omega_1 = double(5.0)/double(8)/ipow((beta_1 + EPSILON), p);
@@ -148,7 +147,6 @@ static inline __attribute__((always_inline)) void performLocalWENOInterpolationP
     
     double omega_tilde_0, omega_tilde_1, omega_tilde_2;
 
-    double EPSILON = 0.0001;
 
     omega_tilde_0 = double(1)/double(16)/ipow((beta_tilde_0 + EPSILON), p);
     omega_tilde_1 = double(5)/double(8)/ipow((beta_tilde_1 + EPSILON), p);
