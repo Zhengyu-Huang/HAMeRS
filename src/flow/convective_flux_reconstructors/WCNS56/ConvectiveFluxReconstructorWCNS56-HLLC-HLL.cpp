@@ -1993,7 +1993,7 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                                 subghostcell_dim_1_primitive_var;
                         
                         if (flag_minus[idx_midpoint_x] == 0 || flag_plus[idx_midpoint_x] == 0)
-                        {   std::cout << "x negative "<< std::endl;exit(1);
+                        {   
                             V_minus[ei][idx_midpoint_x] = V[ei][idx_cell_L];
                             V_plus[ei][idx_midpoint_x] = V[ei][idx_cell_R];
                         }
@@ -2057,7 +2057,7 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                                 subghostcell_dim_1_primitive_var;
                         
                         if (flag_minus[idx_midpoint_y] == 0 || flag_plus[idx_midpoint_y] == 0)
-                        {   std::cout << "y negative "<< std::endl;exit(1);
+                        {
                             V_minus[ei][idx_midpoint_y] = V[ei][idx_cell_B];
                             V_plus[ei][idx_midpoint_y] = V[ei][idx_cell_T];
                         }
@@ -2121,7 +2121,7 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                                 subghostcell_dim_1_primitive_var;
                         
                         if (flag_minus[idx_midpoint_z] == 0 || flag_plus[idx_midpoint_z] == 0)
-                        {   std::cout << "z negative "<< std::endl;exit(1);
+                        {
                             V_minus[ei][idx_midpoint_z] = V[ei][idx_cell_B];
                             V_plus[ei][idx_midpoint_z] = V[ei][idx_cell_F];
                         }
@@ -2211,16 +2211,16 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                             (j + 1)*(interior_dim_0 + 3) +
                             (k + 1)*(interior_dim_0 + 3)*
                                 (interior_dim_1 + 2);
-                        
-//                        if (s_x[idx_midpoint_x] > 0.65)
-//                        {
-//                            F_midpoint_x[ei][idx_midpoint_x] = F_midpoint_HLLC_HLL_x[ei][idx_midpoint_x];
-//                        }
-//                        else
-//                        {
-//                            F_midpoint_x[ei][idx_midpoint_x] = F_midpoint_HLLC_x[ei][idx_midpoint_x];
-//                        }
-                        F_midpoint_x[ei][idx_midpoint_x] = F_midpoint_HLLC_x[ei][idx_midpoint_x];
+
+                        if (s_x[idx_midpoint_x] > 0.65)
+                        {
+                            F_midpoint_x[ei][idx_midpoint_x] = F_midpoint_HLLC_HLL_x[ei][idx_midpoint_x];
+                        }
+                        else
+                        {
+                            F_midpoint_x[ei][idx_midpoint_x] = F_midpoint_HLLC_x[ei][idx_midpoint_x];
+                        }
+//                        F_midpoint_x[ei][idx_midpoint_x] = F_midpoint_HLLC_x[ei][idx_midpoint_x];
                     }
                 }
             }
@@ -2307,16 +2307,16 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                             (j + 1)*(interior_dim_0 + 2) +
                             (k + 1)*(interior_dim_0 + 2)*
                                 (interior_dim_1 + 3);
-                        
-//                        if (s_y[idx_midpoint_y] > 0.65)
-//                        {
-//                            F_midpoint_y[ei][idx_midpoint_y] = F_midpoint_HLLC_HLL_y[ei][idx_midpoint_y];
-//                        }
-//                        else
-//                        {
-//                            F_midpoint_y[ei][idx_midpoint_y] = F_midpoint_HLLC_y[ei][idx_midpoint_y];
-//                        }
-                        F_midpoint_y[ei][idx_midpoint_y] = F_midpoint_HLLC_y[ei][idx_midpoint_y];
+
+                        if (s_y[idx_midpoint_y] > 0.65)
+                        {
+                            F_midpoint_y[ei][idx_midpoint_y] = F_midpoint_HLLC_HLL_y[ei][idx_midpoint_y];
+                        }
+                        else
+                        {
+                            F_midpoint_y[ei][idx_midpoint_y] = F_midpoint_HLLC_y[ei][idx_midpoint_y];
+                        }
+//                        F_midpoint_y[ei][idx_midpoint_y] = F_midpoint_HLLC_y[ei][idx_midpoint_y];
                     }
                 }
             }
@@ -2404,15 +2404,15 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                             (k + 1)*(interior_dim_0 + 2)*
                                 (interior_dim_1 + 2);
                         
-//                        if (s_z[idx_midpoint_z] > 0.65)
-//                        {
-//                            F_midpoint_z[ei][idx_midpoint_z] = F_midpoint_HLLC_HLL_z[ei][idx_midpoint_z];
-//                        }
-//                        else
-//                        {
-//                            F_midpoint_z[ei][idx_midpoint_z] = F_midpoint_HLLC_z[ei][idx_midpoint_z];
-//                        }
-                        F_midpoint_z[ei][idx_midpoint_z] = F_midpoint_HLLC_z[ei][idx_midpoint_z];
+                        if (s_z[idx_midpoint_z] > 0.65)
+                        {
+                            F_midpoint_z[ei][idx_midpoint_z] = F_midpoint_HLLC_HLL_z[ei][idx_midpoint_z];
+                        }
+                        else
+                        {
+                            F_midpoint_z[ei][idx_midpoint_z] = F_midpoint_HLLC_z[ei][idx_midpoint_z];
+                        }
+//                        F_midpoint_z[ei][idx_midpoint_z] = F_midpoint_HLLC_z[ei][idx_midpoint_z];
                     }
                 }
             }
