@@ -164,7 +164,7 @@ int isOutsidePorousWall4X(int dim, double x, double y, double z)
      * 3 2 3
      */
 
-
+    return 1;
     double x0 = 0.0, r_hole = 1./8;
     if(fabs(x - x0) > r_hole) return 1;
     if(dim == 2 || dim == 3){
@@ -286,7 +286,7 @@ initializeCellStatus(hier::Patch& patch,
                 const double x = x_lo[0] + (i + 0.5) * dx[0],
                         y = x_lo[1] + (j + 0.5) * dx[1];
                 const int idx = i + j * patch_dims[0];
-                cell_status_data[idx] = isOutsidePorousWall2Y(2, x, y);
+                cell_status_data[idx] = isOutsidePorousWall2X(2, x, y);
             }
         }
 
@@ -900,6 +900,7 @@ void
 mirrorGhostCellDerivative(std::vector<boost::shared_ptr<pdat::CellData<double> > >du_x,
                 const boost::shared_ptr<pdat::CellData<double> > &cell_status,
                 const DIRECTION::TYPE d_direction) {
+
     int depth = du_x.size();
 
     const tbox::Dimension d_dim = cell_status->getDim();

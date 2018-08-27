@@ -900,7 +900,7 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
         /*
          * Get the dimensions and number of ghost cells.
          */
-        
+
         const int interior_dim_0 = interior_dims[0];
         const int interior_dim_1 = interior_dims[1];
         const int interior_dim_2 = interior_dims[2];
@@ -1872,9 +1872,9 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
             DIRECTION::Z_DIRECTION);
 
         /*
-         * mirror ghost cell data for computing flux in the x-direction.
+         * mirror ghost cell data for computing flux in the z-direction.
          */
-        mirrorGhostCell(velocity, cell_status, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
+        mirrorGhostCell(velocity, cell_status, DIRECTION::Z_DIRECTION, WALL_NO_SLIP);
         
         // Get the diffusivities in the diffusive flux.
         d_flow_model->getDiffusiveFluxDiffusivities(
@@ -2293,14 +2293,23 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
                                               << mu[idx_node_FF] << " " << mu[idx_node_BBB] << " " << mu[idx_node_FFF]
                                               << std::endl;
 
-                                    std::cout << (velocity->getPointer(0))[idx_node_B] << " " << (velocity->getPointer(0))[idx_node_F] << " " << (velocity->getPointer(0))[idx_node_BB] << " "
+                                    std::cout << "vx " << (velocity->getPointer(0))[idx_node_B] << " " << (velocity->getPointer(0))[idx_node_F] << " " << (velocity->getPointer(0))[idx_node_BB] << " "
                                               << (velocity->getPointer(0))[idx_node_FF] << " " << (velocity->getPointer(0))[idx_node_BBB] << " " << (velocity->getPointer(0))[idx_node_FFF]
+                                              << std::endl;
+
+                                    std::cout << "vy " << (velocity->getPointer(1))[idx_node_B] << " " << (velocity->getPointer(1))[idx_node_F] << " " << (velocity->getPointer(1))[idx_node_BB] << " "
+                                              << (velocity->getPointer(1))[idx_node_FF] << " " << (velocity->getPointer(1))[idx_node_BBB] << " " << (velocity->getPointer(1))[idx_node_FFF]
+                                              << std::endl;
+
+                                    std::cout << "vz " << (velocity->getPointer(2))[idx_node_B] << " " << (velocity->getPointer(2))[idx_node_F] << " " << (velocity->getPointer(2))[idx_node_BB] << " "
+                                              << (velocity->getPointer(2))[idx_node_FF] << " " << (velocity->getPointer(2))[idx_node_BBB] << " " << (velocity->getPointer(2))[idx_node_FFF]
                                               << std::endl;
 
                                     std::cout << dudz[idx_node_B] << " " <<  dudz[idx_node_F] << " " <<  dudz[idx_node_BB] << " "
                                               <<  dudz[idx_node_FF] << " " <<  dudz[idx_node_BBB] << " " <<  dudz[idx_node_FFF]
                                               << std::endl;
-                                    std::cout << "dudz2 mu wrong!!!" << " ei " << ei << " vi " << vi  << " i " << i <<  " j "  << j  << " mu_idx " << mu_idx << std::endl;
+                                    std::cout << "dudz2 mu wrong!!!" << " ei " << ei << " vi " << vi  << " in " << static_cast<int>(var_data_z[ei].size()) <<  " mu_idx " << mu_idx << std::endl;
+                                    std::cout << " i " << i <<  " j "  << j  << " k " << k <<  std::endl;
                                     exit(1);
                                 }
                             }
