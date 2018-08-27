@@ -703,7 +703,7 @@ ConvectiveFluxReconstructorFirstOrderHLLC::computeConvectiveFluxAndSourceOnPatch
                 count_eqn++;
             }
         }
-        
+
         /*
          * Declare temporary data containers for computing the fluxes at cell edges.
          */

@@ -2212,15 +2212,15 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                             (k + 1)*(interior_dim_0 + 3)*
                                 (interior_dim_1 + 2);
 
-                        if (s_x[idx_midpoint_x] > 0.65)
-                        {
-                            F_midpoint_x[ei][idx_midpoint_x] = F_midpoint_HLLC_HLL_x[ei][idx_midpoint_x];
-                        }
-                        else
-                        {
-                            F_midpoint_x[ei][idx_midpoint_x] = F_midpoint_HLLC_x[ei][idx_midpoint_x];
-                        }
-//                        F_midpoint_x[ei][idx_midpoint_x] = F_midpoint_HLLC_x[ei][idx_midpoint_x];
+//                        if (s_x[idx_midpoint_x] > 0.65)
+//                        {
+//                            F_midpoint_x[ei][idx_midpoint_x] = F_midpoint_HLLC_HLL_x[ei][idx_midpoint_x];
+//                        }
+//                        else
+//                        {
+//                            F_midpoint_x[ei][idx_midpoint_x] = F_midpoint_HLLC_x[ei][idx_midpoint_x];
+//                        }
+                        F_midpoint_x[ei][idx_midpoint_x] = F_midpoint_HLLC_x[ei][idx_midpoint_x];
                     }
                 }
             }
@@ -2308,15 +2308,15 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                             (k + 1)*(interior_dim_0 + 2)*
                                 (interior_dim_1 + 3);
 
-                        if (s_y[idx_midpoint_y] > 0.65)
-                        {
-                            F_midpoint_y[ei][idx_midpoint_y] = F_midpoint_HLLC_HLL_y[ei][idx_midpoint_y];
-                        }
-                        else
-                        {
-                            F_midpoint_y[ei][idx_midpoint_y] = F_midpoint_HLLC_y[ei][idx_midpoint_y];
-                        }
-//                        F_midpoint_y[ei][idx_midpoint_y] = F_midpoint_HLLC_y[ei][idx_midpoint_y];
+//                        if (s_y[idx_midpoint_y] > 0.65)
+//                        {
+//                            F_midpoint_y[ei][idx_midpoint_y] = F_midpoint_HLLC_HLL_y[ei][idx_midpoint_y];
+//                        }
+//                        else
+//                        {
+//                            F_midpoint_y[ei][idx_midpoint_y] = F_midpoint_HLLC_y[ei][idx_midpoint_y];
+//                        }
+                        F_midpoint_y[ei][idx_midpoint_y] = F_midpoint_HLLC_y[ei][idx_midpoint_y];
                     }
                 }
             }
@@ -2396,23 +2396,22 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
 #ifdef HAMERS_ENABLE_SIMD
                     #pragma omp simd
 #endif
-                    for (int i = 0; i < interior_dim_0; i++)
-                    {
+                    for (int i = 0; i < interior_dim_0; i++) {
                         // Compute the linear index of the side.
                         const int idx_midpoint_z = (i + 1) +
-                            (j + 1)*(interior_dim_0 + 2) +
-                            (k + 1)*(interior_dim_0 + 2)*
-                                (interior_dim_1 + 2);
-                        
-                        if (s_z[idx_midpoint_z] > 0.65)
-                        {
-                            F_midpoint_z[ei][idx_midpoint_z] = F_midpoint_HLLC_HLL_z[ei][idx_midpoint_z];
-                        }
-                        else
-                        {
-                            F_midpoint_z[ei][idx_midpoint_z] = F_midpoint_HLLC_z[ei][idx_midpoint_z];
-                        }
-//                        F_midpoint_z[ei][idx_midpoint_z] = F_midpoint_HLLC_z[ei][idx_midpoint_z];
+                                                   (j + 1) * (interior_dim_0 + 2) +
+                                                   (k + 1) * (interior_dim_0 + 2) *
+                                                   (interior_dim_1 + 2);
+
+//                        if (s_z[idx_midpoint_z] > 0.65)
+//                        {
+//                            F_midpoint_z[ei][idx_midpoint_z] = F_midpoint_HLLC_HLL_z[ei][idx_midpoint_z];
+//                        }
+//                        else
+//                        {
+//                            F_midpoint_z[ei][idx_midpoint_z] = F_midpoint_HLLC_z[ei][idx_midpoint_z];
+//                        }
+                        F_midpoint_z[ei][idx_midpoint_z] = F_midpoint_HLLC_z[ei][idx_midpoint_z];
                     }
                 }
             }

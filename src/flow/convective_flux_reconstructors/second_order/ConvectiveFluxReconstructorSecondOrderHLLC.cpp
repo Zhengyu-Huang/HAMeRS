@@ -766,6 +766,7 @@ ConvectiveFluxReconstructorSecondOrderHLLC::computeConvectiveFluxAndSourceOnPatc
          */
         std::unordered_map<std::string, hier::IntVector> num_subghosts_of_data;
         num_subghosts_of_data.insert(std::pair<std::string, hier::IntVector>("PRIMITIVE_VARIABLES", d_num_conv_ghosts));
+
         d_flow_model->registerDerivedCellVariable(num_subghosts_of_data);
         d_flow_model->computeGlobalDerivedCellData();
         
@@ -806,8 +807,8 @@ ConvectiveFluxReconstructorSecondOrderHLLC::computeConvectiveFluxAndSourceOnPatc
 
                 V.push_back(primitive_variables[vi]->getPointer(di));
                 Q.push_back(conservative_variables[vi]->getPointer(di));
-                num_subghosts_primitive_var.push_back(conservative_variables[vi]->getGhostCellWidth());
-                subghostcell_dims_primitive_var.push_back(conservative_variables[vi]->getGhostBox().numberCells());
+                num_subghosts_primitive_var.push_back(primitive_variables[vi]->getGhostCellWidth());
+                subghostcell_dims_primitive_var.push_back(primitive_variables[vi]->getGhostBox().numberCells());
                 
                 count_eqn++;
             }
@@ -905,10 +906,10 @@ ConvectiveFluxReconstructorSecondOrderHLLC::computeConvectiveFluxAndSourceOnPatc
                                           (k + num_subghosts_primitive_var[ei][2]) *
                                           subghostcell_dims_primitive_var[ei][0] *
                                           subghostcell_dims_primitive_var[ei][1];
-
                         //limiter reconstruction
                         limiterReconstruction(V[ei][idx_LL], V[ei][idx_L], V[ei][idx_R], V[ei][idx_RR],
                                               V_minus[ei][idx_face_x], V_plus[ei][idx_face_x]);
+
                     }
                 }
             }
@@ -961,7 +962,7 @@ ConvectiveFluxReconstructorSecondOrderHLLC::computeConvectiveFluxAndSourceOnPatc
                         const int idx_cell_R = (i + num_subghosts_0_primitive_var) +
                                                (j + num_subghosts_1_primitive_var) * subghostcell_dim_0_primitive_var +
                                                (k + num_subghosts_2_primitive_var) * subghostcell_dim_0_primitive_var *
-                                               subghostcell_dim_1_primitive_var;;
+                                               subghostcell_dim_1_primitive_var;
 
                         if (flag_minus[idx_midpoint_x] == 0 || flag_plus[idx_midpoint_x] == 0) {
                             //std::cout <<"negative pressure or density" << std::endl;
@@ -1004,13 +1005,12 @@ ConvectiveFluxReconstructorSecondOrderHLLC::computeConvectiveFluxAndSourceOnPatc
             {
                 for (int j = 0; j < interior_dims[1]; j++)
                 {
-                    for (int i = 0; i < interior_dims[0] + 1; i++)
-                    {
+                    for (int i = 0; i < interior_dims[0] + 1; i++) {
                         // Compute the linear index.
                         const int idx_face_x = i +
-                            j*(interior_dims[0] + 1) +
-                            k*(interior_dims[0] + 1)*interior_dims[1];
-                        
+                                               j * (interior_dims[0] + 1) +
+                                               k * (interior_dims[0] + 1) * interior_dims[1];
+
                         F_face_x[ei][idx_face_x] *= dt;
                     }
                 }
@@ -1173,7 +1173,7 @@ ConvectiveFluxReconstructorSecondOrderHLLC::computeConvectiveFluxAndSourceOnPatc
                         const int idx_face_y = i +
                             j*interior_dims[0] +
                             k*interior_dims[0]*(interior_dims[1] + 1);
-                        
+
                         F_face_y[ei][idx_face_y] *= dt;
                     }
                 }
@@ -1336,7 +1336,7 @@ ConvectiveFluxReconstructorSecondOrderHLLC::computeConvectiveFluxAndSourceOnPatc
                         const int idx_face_z = i +
                             j*interior_dims[0] +
                             k*interior_dims[0]*interior_dims[1];
-                        
+
                         F_face_z[ei][idx_face_z] *= dt;
                     }
                 }

@@ -895,7 +895,7 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
 //        d_flow_model->unregisterPatch();
         
     } // if (d_dim == tbox::Dimension(2))
-    else if (d_dim == tbox::Dimension(3) && false)
+    else if (d_dim == tbox::Dimension(3))
     {
         /*
          * Get the dimensions and number of ghost cells.
