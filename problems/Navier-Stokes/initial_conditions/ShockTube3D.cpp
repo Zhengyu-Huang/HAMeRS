@@ -72,9 +72,9 @@ NavierStokesInitialConditions::initializeDataOnPatch(
         // Post-shock condition.
         const double rho_post = double(1.0);
         const double p_post = double(1.0) / gamma;
-        const double u_post = double(0.0);
+        const double u_post = double(1.8);
         const double v_post = double(0.0);
-        const double w_post = double(1.8);
+        const double w_post = double(0.0);
 
         // Pre-shock condition.
         const double rho_pre = double(1.);
@@ -84,7 +84,7 @@ NavierStokesInitialConditions::initializeDataOnPatch(
         const double w_pre = double(0);
 
         //seperation between preshock and postshock
-        double x2 = -0.5;
+        double x0 = -0.5;
         for (int k = 0; k < patch_dims[2]; k++) {
             for (int j = 0; j < patch_dims[1]; j++) {
                 for (int i = 0; i < patch_dims[0]; i++) {
@@ -97,7 +97,7 @@ NavierStokesInitialConditions::initializeDataOnPatch(
                     x[1] = patch_xlo[1] + (double(j) + double(1) / double(2)) * dx[1];
                     x[2] = patch_xlo[2] + (double(k) + double(1) / double(2)) * dx[2];
 
-                    if (x[2] < x2) {
+                    if (x[0] < x0) {
                         rho[idx_cell] = rho_post;
                         rho_u[idx_cell] = rho_post * u_post;
                         rho_v[idx_cell] = rho_post * v_post;
