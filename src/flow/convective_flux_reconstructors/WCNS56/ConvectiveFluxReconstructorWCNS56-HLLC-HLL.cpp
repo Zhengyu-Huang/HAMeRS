@@ -1099,6 +1099,10 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
             RIEMANN_SOLVER::HLLC_HLL);
 
         // Compute the Ducros-like shock sensor.
+
+        mirrorGhostCell(dilatation, cell_status, DIRECTION::X_DIRECTION, WALL_SLIP);
+        mirrorGhostCell(vorticity_magnitude, cell_status, DIRECTION::X_DIRECTION, WALL_SLIP);
+
         for (int j = 0; j < interior_dim_1; j++)
         {
 #ifdef HAMERS_ENABLE_SIMD
@@ -1135,17 +1139,17 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                     // Compute the linear index of the side.
                     const int idx_midpoint_x = (i + 1) +
                         (j + 1)*(interior_dim_0 + 3);
-                    
-//                    if (s_x[idx_midpoint_x] > 0.65)
-//                    {
-//                        F_midpoint_x[ei][idx_midpoint_x] = F_midpoint_HLLC_HLL_x[ei][idx_midpoint_x];
-//                    }
-//                    else
-//                    {
-//                        F_midpoint_x[ei][idx_midpoint_x] = F_midpoint_HLLC_x[ei][idx_midpoint_x];
-//                    }
 
-                    F_midpoint_x[ei][idx_midpoint_x] = F_midpoint_HLLC_x[ei][idx_midpoint_x];
+                    if (s_x[idx_midpoint_x] > 0.65)
+                    {
+                        F_midpoint_x[ei][idx_midpoint_x] = F_midpoint_HLLC_HLL_x[ei][idx_midpoint_x];
+                    }
+                    else
+                    {
+                        F_midpoint_x[ei][idx_midpoint_x] = F_midpoint_HLLC_x[ei][idx_midpoint_x];
+                    }
+
+//                    F_midpoint_x[ei][idx_midpoint_x] = F_midpoint_HLLC_HLL_x[ei][idx_midpoint_x];
                 }
             }
         }
@@ -1182,6 +1186,10 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
             RIEMANN_SOLVER::HLLC_HLL);
 
         // Compute the Ducros-like shock sensor.
+
+        mirrorGhostCell(dilatation, cell_status, DIRECTION::Y_DIRECTION, WALL_SLIP);
+        mirrorGhostCell(vorticity_magnitude, cell_status, DIRECTION::Y_DIRECTION, WALL_SLIP);
+
         for (int j = -1; j < interior_dim_1 + 2; j++)
         {
 #ifdef HAMERS_ENABLE_SIMD
@@ -1218,16 +1226,16 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                     // Compute the linear index of the side.
                     const int idx_midpoint_y = (i + 1) +
                         (j + 1)*(interior_dim_0 + 2);
-                    
-//                    if (s_y[idx_midpoint_y] > 0.65)
-//                    {
-//                        F_midpoint_y[ei][idx_midpoint_y] = F_midpoint_HLLC_HLL_y[ei][idx_midpoint_y];
-//                    }
-//                    else
-//                    {
-//                        F_midpoint_y[ei][idx_midpoint_y] = F_midpoint_HLLC_y[ei][idx_midpoint_y];
-//                    }
-                    F_midpoint_y[ei][idx_midpoint_y] = F_midpoint_HLLC_y[ei][idx_midpoint_y];
+
+                    if (s_y[idx_midpoint_y] > 0.65)
+                    {
+                        F_midpoint_y[ei][idx_midpoint_y] = F_midpoint_HLLC_HLL_y[ei][idx_midpoint_y];
+                    }
+                    else
+                    {
+                        F_midpoint_y[ei][idx_midpoint_y] = F_midpoint_HLLC_y[ei][idx_midpoint_y];
+                    }
+//                    F_midpoint_y[ei][idx_midpoint_y] = F_midpoint_HLLC_HLL_y[ei][idx_midpoint_y];
                 }
             }
         }
@@ -2162,6 +2170,10 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
             RIEMANN_SOLVER::HLLC_HLL);
         
         // Compute the Ducros-like shock sensor.
+
+        mirrorGhostCell(dilatation, cell_status, DIRECTION::X_DIRECTION, WALL_SLIP);
+        mirrorGhostCell(vorticity_magnitude, cell_status, DIRECTION::X_DIRECTION, WALL_SLIP);
+
         for (int k = 0; k < interior_dim_2; k++)
         {
             for (int j = 0; j < interior_dim_1; j++)
@@ -2212,15 +2224,15 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                             (k + 1)*(interior_dim_0 + 3)*
                                 (interior_dim_1 + 2);
 
-//                        if (s_x[idx_midpoint_x] > 0.65)
-//                        {
-//                            F_midpoint_x[ei][idx_midpoint_x] = F_midpoint_HLLC_HLL_x[ei][idx_midpoint_x];
-//                        }
-//                        else
-//                        {
-//                            F_midpoint_x[ei][idx_midpoint_x] = F_midpoint_HLLC_x[ei][idx_midpoint_x];
-//                        }
-                        F_midpoint_x[ei][idx_midpoint_x] = F_midpoint_HLLC_x[ei][idx_midpoint_x];
+                        if (s_x[idx_midpoint_x] > 0.65)
+                        {
+                            F_midpoint_x[ei][idx_midpoint_x] = F_midpoint_HLLC_HLL_x[ei][idx_midpoint_x];
+                        }
+                        else
+                        {
+                            F_midpoint_x[ei][idx_midpoint_x] = F_midpoint_HLLC_x[ei][idx_midpoint_x];
+                        }
+//                        F_midpoint_x[ei][idx_midpoint_x] = F_midpoint_HLLC_x[ei][idx_midpoint_x];
                     }
                 }
             }
@@ -2258,6 +2270,9 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
             RIEMANN_SOLVER::HLLC_HLL);
         
         // Compute the Ducros-like shock sensor.
+        mirrorGhostCell(dilatation, cell_status, DIRECTION::Y_DIRECTION, WALL_SLIP);
+        mirrorGhostCell(vorticity_magnitude, cell_status, DIRECTION::Y_DIRECTION, WALL_SLIP);
+
         for (int k = 0; k < interior_dim_2; k++)
         {
             for (int j = -1; j < interior_dim_1 + 2; j++)
@@ -2308,15 +2323,15 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                             (k + 1)*(interior_dim_0 + 2)*
                                 (interior_dim_1 + 3);
 
-//                        if (s_y[idx_midpoint_y] > 0.65)
-//                        {
-//                            F_midpoint_y[ei][idx_midpoint_y] = F_midpoint_HLLC_HLL_y[ei][idx_midpoint_y];
-//                        }
-//                        else
-//                        {
-//                            F_midpoint_y[ei][idx_midpoint_y] = F_midpoint_HLLC_y[ei][idx_midpoint_y];
-//                        }
-                        F_midpoint_y[ei][idx_midpoint_y] = F_midpoint_HLLC_y[ei][idx_midpoint_y];
+                        if (s_y[idx_midpoint_y] > 0.65)
+                        {
+                            F_midpoint_y[ei][idx_midpoint_y] = F_midpoint_HLLC_HLL_y[ei][idx_midpoint_y];
+                        }
+                        else
+                        {
+                            F_midpoint_y[ei][idx_midpoint_y] = F_midpoint_HLLC_y[ei][idx_midpoint_y];
+                        }
+//                        F_midpoint_y[ei][idx_midpoint_y] = F_midpoint_HLLC_y[ei][idx_midpoint_y];
                     }
                 }
             }
@@ -2354,6 +2369,10 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
             RIEMANN_SOLVER::HLLC_HLL);
         
         // Compute the Ducros-like shock sensor.
+
+        mirrorGhostCell(dilatation, cell_status, DIRECTION::Z_DIRECTION, WALL_SLIP);
+        mirrorGhostCell(vorticity_magnitude, cell_status, DIRECTION::Z_DIRECTION, WALL_SLIP);
+
         for (int k = -1; k < interior_dim_2 + 2; k++)
         {
             for (int j = 0; j < interior_dim_1; j++)
@@ -2403,15 +2422,15 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                                                    (k + 1) * (interior_dim_0 + 2) *
                                                    (interior_dim_1 + 2);
 
-//                        if (s_z[idx_midpoint_z] > 0.65)
-//                        {
-//                            F_midpoint_z[ei][idx_midpoint_z] = F_midpoint_HLLC_HLL_z[ei][idx_midpoint_z];
-//                        }
-//                        else
-//                        {
-//                            F_midpoint_z[ei][idx_midpoint_z] = F_midpoint_HLLC_z[ei][idx_midpoint_z];
-//                        }
-                        F_midpoint_z[ei][idx_midpoint_z] = F_midpoint_HLLC_z[ei][idx_midpoint_z];
+                        if (s_z[idx_midpoint_z] > 0.65)
+                        {
+                            F_midpoint_z[ei][idx_midpoint_z] = F_midpoint_HLLC_HLL_z[ei][idx_midpoint_z];
+                        }
+                        else
+                        {
+                            F_midpoint_z[ei][idx_midpoint_z] = F_midpoint_HLLC_z[ei][idx_midpoint_z];
+                        }
+//                        F_midpoint_z[ei][idx_midpoint_z] = F_midpoint_HLLC_z[ei][idx_midpoint_z];
                     }
                 }
             }
