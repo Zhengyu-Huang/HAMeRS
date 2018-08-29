@@ -224,7 +224,6 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
                 {
                     // Compute the linear indices.
                     const int idx_face_x = i;
-                    const int idx_diffusivity = i + num_subghosts_0_diffusivity;
                     const int idx_node_LLL = i - 3 + num_diff_ghosts_0;
                     const int idx_node_LL  = i - 2 + num_diff_ghosts_0;
                     const int idx_node_L   = i - 1 + num_diff_ghosts_0;
@@ -232,10 +231,10 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
                     const int idx_node_RR  = i + 1 + num_diff_ghosts_0;
                     const int idx_node_RRR = i + 2 + num_diff_ghosts_0;
                     
-                    F_face_x[idx_face_x] += dt*mu[idx_diffusivity]*(
-                        double(37)/double(60)*(dudx[idx_node_L] + dudx[idx_node_R]) +
-                        double(-2)/double(15)*(dudx[idx_node_LL] + dudx[idx_node_RR]) +
-                        double(1)/double(60)*(dudx[idx_node_LLL] + dudx[idx_node_RRR]));
+                    F_face_x[idx_face_x] += dt*(
+                        double(37)/double(60)*(mu[idx_node_L]*dudx[idx_node_L] + mu[idx_node_R]*dudx[idx_node_R]) +
+                        double(-2)/double(15)*(mu[idx_node_LL]*dudx[idx_node_LL] + mu[idx_node_RR]*dudx[idx_node_RR]) +
+                        double(1)/double(60)*(mu[idx_node_LLL]*dudx[idx_node_LLL] + mu[idx_node_RRR]*dudx[idx_node_RRR]));
                 }
             }
         }
@@ -428,9 +427,6 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
                         const int idx_face_x = i +
                                                j * (interior_dim_0 + 1);
 
-                        const int idx_diffusivity = (i + num_subghosts_0_diffusivity) +
-                                                    (j + num_subghosts_1_diffusivity) * subghostcell_dim_0_diffusivity;
-
                         const int idx_node_LLL = (i - 3 + num_diff_ghosts_0) +
                                                  (j + num_diff_ghosts_1) * diff_ghostcell_dim_0;
 
@@ -503,9 +499,6 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
                         const int idx_face_x = i +
                             j*(interior_dim_0 + 1);
                         
-                        const int idx_diffusivity = (i + num_subghosts_0_diffusivity) +
-                            (j + num_subghosts_1_diffusivity)*subghostcell_dim_0_diffusivity;
-                        
                         const int idx_node_LLL = (i - 3 + num_diff_ghosts_0) +
                             (j + num_diff_ghosts_1)*diff_ghostcell_dim_0;
                         
@@ -528,48 +521,6 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
                             double(37)/double(60)*(mu[idx_node_L]*dudy[idx_node_L] + mu[idx_node_R]*dudy[idx_node_R]) +
                             double(-2)/double(15)*(mu[idx_node_LL]*dudy[idx_node_LL] + mu[idx_node_RR]*dudy[idx_node_RR]) +
                             double(1)/double(60)*(mu[idx_node_LLL]*dudy[idx_node_LLL] + mu[idx_node_RRR]*dudy[idx_node_RRR]));
-
-
-//                        if ((cell_status_data[idx_node_L] < 0.5 && cell_status_data[idx_node_R] > 0.5) ||
-//                            (cell_status_data[idx_node_L] > 0.5 && cell_status_data[idx_node_R] < 0.5)) {
-//                            if ((ei <= d_num_eqn - 2) &&(fabs(mu[idx_node_L]*dudy[idx_node_L] - mu[idx_node_R]*dudy[idx_node_R]) > 1e-8 ||
-//                                                         fabs(mu[idx_node_LL]*dudy[idx_node_LL] - mu[idx_node_RR]*dudy[idx_node_RR]) > 1e-8 ||
-//                                                         fabs(mu[idx_node_LLL]*dudy[idx_node_LLL] - mu[idx_node_LLL]*dudy[idx_node_RRR]) > 1e-8)) {
-//                                std::cout << "ei " << ei << " vi " << vi << " i " << i << " j " << j  << std::endl;
-//                                std::cout << " num_ghosts_cell_status[0] " << num_ghosts_cell_status[0]
-//                                          << " num_subghosts_0_diffusivity " << num_subghosts_0_diffusivity
-//                                          << " num_diff_ghosts_0 " << num_diff_ghosts_0
-//                                          << " diff_ghostcell_dim_0 " << diff_ghostcell_dim_0
-//                                          << " diff_ghostcell_dim_1 "<< diff_ghostcell_dims[1] <<std::endl;
-//
-//                                std::cout << (velocity->getPointer(1))[idx_node_R + 3*diff_ghostcell_dim_0] << " " << (velocity->getPointer(1))[idx_node_R + 2*diff_ghostcell_dim_0] << " "
-//                                          << (velocity->getPointer(1))[idx_node_R + 1*diff_ghostcell_dim_0] << " " << (velocity->getPointer(1))[idx_node_R - 1*diff_ghostcell_dim_0] << " "
-//                                          << (velocity->getPointer(1))[idx_node_R - 2*diff_ghostcell_dim_0] << " " << (velocity->getPointer(1))[idx_node_R - 3*diff_ghostcell_dim_0] << std::endl;
-//
-//                                std::cout << "dudy " << dudy[idx_node_L] << " " << dudy[idx_node_R] << " " << dudy[idx_node_LL]
-//                                          << " " << dudy[idx_node_RR] << " " << dudy[idx_node_LLL] << " "
-//                                          << dudy[idx_node_RRR] << std::endl;
-//                                std::cout << "mu " << mu[idx_node_L] << " " << mu[idx_node_R] << " " << mu[idx_node_LL]
-//                                          << " " << mu[idx_node_RR] << " " << mu[idx_node_LLL] << " "
-//                                          << mu[idx_node_RRR] << std::endl;
-//
-//                                std::cout << "dudy -  wrong!!! ei " << ei << " vi " << vi  << std::endl;
-//                                exit(1);
-//                            }
-//
-//
-//                            if ((ei == d_num_eqn - 1) &&(fabs(mu[idx_node_L]*dudy[idx_node_L] + mu[idx_node_R]*dudy[idx_node_R]) > 1e-8 ||
-//                                                         fabs(mu[idx_node_LL]*dudy[idx_node_LL] + mu[idx_node_RR]*dudy[idx_node_RR]) > 1e-8 ||
-//                                                         fabs(mu[idx_node_LLL]*dudy[idx_node_LLL] + mu[idx_node_RRR]*dudy[idx_node_RRR]) > 1e-8)) {
-//                                std::cout << "num_ghosts_cell_status[0] " << num_ghosts_cell_status[0] << std::endl;
-//                                std::cout << dudy[idx_node_L] << " " << dudy[idx_node_R] << " " << dudy[idx_node_LL]
-//                                          << " " << dudy[idx_node_RR] << " " << dudy[idx_node_LLL] << " "
-//                                          << dudy[idx_node_RRR] << std::endl;
-//                                std::cout << "dudy +  wrong!!!" << std::endl;
-//                                exit(1);
-//                            }
-//                        }
-
 
                     }
                 }
@@ -735,9 +686,6 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
                         const int idx_face_y = i +
                             j*interior_dim_0;
                         
-                        const int idx_diffusivity = (i + num_subghosts_0_diffusivity) +
-                            (j + num_subghosts_1_diffusivity)*subghostcell_dim_0_diffusivity;
-                        
                         const int idx_node_BBB = (i + num_diff_ghosts_0) +
                             (j - 3 + num_diff_ghosts_1)*diff_ghostcell_dim_0;
                         
@@ -760,40 +708,6 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
                             double(37)/double(60)*(mu[idx_node_B]*dudx[idx_node_B] +  mu[idx_node_T]*dudx[idx_node_T]) +
                             double(-2)/double(15)*(mu[idx_node_BB]*dudx[idx_node_BB] + mu[idx_node_TT]*dudx[idx_node_TT]) +
                             double(1)/double(60)*(mu[idx_node_BBB]*dudx[idx_node_BBB] + mu[idx_node_TTT]*dudx[idx_node_TTT]));
-
-
-//                        if((cell_status_data[idx_node_B] < 0.5 && cell_status_data[idx_node_T] > 0.5)||
-//                           (cell_status_data[idx_node_B] > 0.5 && cell_status_data[idx_node_T] < 0.5))
-//                        {
-//
-//
-//                            if((ei <= d_num_eqn - 2) &&
-//                                   (fabs(mu[idx_node_B]*dudx[idx_node_B] - mu[idx_node_T]*dudx[idx_node_T]) > 1e-8 ||
-//                                    fabs(mu[idx_node_BB]*dudx[idx_node_BB] - mu[idx_node_TT]*dudx[idx_node_TT]) > 1e-8 ||
-//                                    fabs(mu[idx_node_BBB]*dudx[idx_node_BBB] - mu[idx_node_TTT]*dudx[idx_node_TTT]) > 1e-8)) {
-//                                    std::cout << " i "  << i << " j " << j << std::endl;
-//                                    std::cout << mu[idx_node_B] << " " << mu[idx_node_T] << " " << mu[idx_node_BB] << " "
-//                                              << mu[idx_node_TT] << " " << mu[idx_node_BBB] << " " << mu[idx_node_TTT]
-//                                              << std::endl;
-//                                    std::cout << dudx[idx_node_B] << " " << dudx[idx_node_T] << " " << dudx[idx_node_BB] << " "
-//                                          << dudx[idx_node_TT] << " " << dudx[idx_node_BBB] << " " << dudx[idx_node_TTT]
-//                                          << std::endl;
-//                                    std::cout << " ei " << ei << " vi " << vi << " dudx2 mu wrong!!!" << std::endl;
-//                                    exit(1);
-//                                }
-//                            if((ei == d_num_eqn - 1) &&
-//                                      (fabs(mu[idx_node_B]*dudx[idx_node_B] + mu[idx_node_T]*dudx[idx_node_T]) > 1e-8 ||
-//                                       fabs(mu[idx_node_BB]*dudx[idx_node_BB] + mu[idx_node_TT]*dudx[idx_node_TT]) > 1e-8 ||
-//                                       fabs(mu[idx_node_BBB]*dudx[idx_node_BBB] + mu[idx_node_TTT]*dudx[idx_node_TTT]) > 1e-8)) {
-//                                std::cout << "num_ghosts_cell_status[0] " << num_ghosts_cell_status[0] << std::endl;
-//                                std::cout << mu[idx_node_B] << " " << mu[idx_node_T] << " " << mu[idx_node_BB] << " "
-//                                          << mu[idx_node_TT] << " " << mu[idx_node_BBB] << " " << mu[idx_node_TTT]
-//                                          << std::endl;
-//                                std::cout  << " ei " << ei << "dudx2 mu wrong!!!" << std::endl;
-//                                exit(1);
-//                            }
-//                        }
-
 
                     }
                 }
@@ -840,9 +754,6 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
                         // Compute the linear indices.
                         const int idx_face_y = i +
                             j*interior_dim_0;
-                        
-                        const int idx_diffusivity = (i + num_subghosts_0_diffusivity) +
-                            (j + num_subghosts_1_diffusivity)*subghostcell_dim_0_diffusivity;
                         
                         const int idx_node_BBB = (i + num_diff_ghosts_0) +
                             (j - 3 + num_diff_ghosts_1)*diff_ghostcell_dim_0;
@@ -1125,11 +1036,6 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
                                 j*(interior_dim_0 + 1) +
                                 k*(interior_dim_0 + 1)*interior_dim_1;
                             
-                            const int idx_diffusivity = (i + num_subghosts_0_diffusivity) +
-                                (j + num_subghosts_1_diffusivity)*subghostcell_dim_0_diffusivity +
-                                (k + num_subghosts_2_diffusivity)*subghostcell_dim_0_diffusivity*
-                                    subghostcell_dim_1_diffusivity;
-                            
                             const int idx_node_LLL = (i - 3 + num_diff_ghosts_0) +
                                 (j + num_diff_ghosts_1)*diff_ghostcell_dim_0 +
                                 (k + num_diff_ghosts_2)*diff_ghostcell_dim_0*
@@ -1260,11 +1166,6 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
                                 j*(interior_dim_0 + 1) +
                                 k*(interior_dim_0 + 1)*interior_dim_1;
                             
-                            const int idx_diffusivity = (i + num_subghosts_0_diffusivity) +
-                                (j + num_subghosts_1_diffusivity)*subghostcell_dim_0_diffusivity +
-                                (k + num_subghosts_2_diffusivity)*subghostcell_dim_0_diffusivity*
-                                    subghostcell_dim_1_diffusivity;
-                            
                             const int idx_node_LLL = (i - 3 + num_diff_ghosts_0) +
                                 (j + num_diff_ghosts_1)*diff_ghostcell_dim_0 +
                                 (k + num_diff_ghosts_2)*diff_ghostcell_dim_0*
@@ -1350,12 +1251,7 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
                             const int idx_face_x = i +
                                 j*(interior_dim_0 + 1) +
                                 k*(interior_dim_0 + 1)*interior_dim_1;
-                            
-                            const int idx_diffusivity = (i + num_subghosts_0_diffusivity) +
-                                (j + num_subghosts_1_diffusivity)*subghostcell_dim_0_diffusivity +
-                                (k + num_subghosts_2_diffusivity)*subghostcell_dim_0_diffusivity*
-                                    subghostcell_dim_1_diffusivity;
-                            
+
                             const int idx_node_LLL = (i - 3 + num_diff_ghosts_0) +
                                 (j + num_diff_ghosts_1)*diff_ghostcell_dim_0 +
                                 (k + num_diff_ghosts_2)*diff_ghostcell_dim_0*
@@ -1598,11 +1494,6 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
                                 j*interior_dim_0 +
                                 k*interior_dim_0*(interior_dim_1 + 1);
                             
-                            const int idx_diffusivity = (i + num_subghosts_0_diffusivity) +
-                                (j + num_subghosts_1_diffusivity)*subghostcell_dim_0_diffusivity +
-                                (k + num_subghosts_2_diffusivity)*subghostcell_dim_0_diffusivity*
-                                    subghostcell_dim_1_diffusivity;
-                            
                             const int idx_node_BBB = (i + num_diff_ghosts_0) +
                                 (j - 3 + num_diff_ghosts_1)*diff_ghostcell_dim_0 +
                                 (k + num_diff_ghosts_2)*diff_ghostcell_dim_0*
@@ -1688,11 +1579,6 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
                             const int idx_face_y = i +
                                 j*interior_dim_0 +
                                 k*interior_dim_0*(interior_dim_1 + 1);
-                            
-                            const int idx_diffusivity = (i + num_subghosts_0_diffusivity) +
-                                (j + num_subghosts_1_diffusivity)*subghostcell_dim_0_diffusivity +
-                                (k + num_subghosts_2_diffusivity)*subghostcell_dim_0_diffusivity*
-                                    subghostcell_dim_1_diffusivity;
                             
                             const int idx_node_BBB = (i + num_diff_ghosts_0) +
                                 (j - 3 + num_diff_ghosts_1)*diff_ghostcell_dim_0 +
@@ -1782,11 +1668,6 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
                             const int idx_face_y = i +
                                 j*interior_dim_0 +
                                 k*interior_dim_0*(interior_dim_1 + 1);
-                            
-                            const int idx_diffusivity = (i + num_subghosts_0_diffusivity) +
-                                (j + num_subghosts_1_diffusivity)*subghostcell_dim_0_diffusivity +
-                                (k + num_subghosts_2_diffusivity)*subghostcell_dim_0_diffusivity*
-                                    subghostcell_dim_1_diffusivity;
                             
                             const int idx_node_BBB = (i + num_diff_ghosts_0) +
                                 (j - 3 + num_diff_ghosts_1)*diff_ghostcell_dim_0 +
@@ -2040,11 +1921,6 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
                                 j*interior_dim_0 +
                                 k*interior_dim_0*interior_dim_1;
                             
-                            const int idx_diffusivity = (i + num_subghosts_0_diffusivity) +
-                                (j + num_subghosts_1_diffusivity)*subghostcell_dim_0_diffusivity +
-                                (k + num_subghosts_2_diffusivity)*subghostcell_dim_0_diffusivity*
-                                    subghostcell_dim_1_diffusivity;
-                            
                             const int idx_node_BBB = (i + num_diff_ghosts_0) +
                                 (j + num_diff_ghosts_1)*diff_ghostcell_dim_0 +
                                 (k - 3 + num_diff_ghosts_2)*diff_ghostcell_dim_0*
@@ -2131,11 +2007,6 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
                                 j*interior_dim_0 +
                                 k*interior_dim_0*interior_dim_1;
                             
-                            const int idx_diffusivity = (i + num_subghosts_0_diffusivity) +
-                                (j + num_subghosts_1_diffusivity)*subghostcell_dim_0_diffusivity +
-                                (k + num_subghosts_2_diffusivity)*subghostcell_dim_0_diffusivity*
-                                    subghostcell_dim_1_diffusivity;
-                            
                             const int idx_node_BBB = (i + num_diff_ghosts_0) +
                                 (j + num_diff_ghosts_1)*diff_ghostcell_dim_0 +
                                 (k - 3 + num_diff_ghosts_2)*diff_ghostcell_dim_0*
@@ -2221,11 +2092,6 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
                             const int idx_face_z = i +
                                 j*interior_dim_0 +
                                 k*interior_dim_0*interior_dim_1;
-                            
-                            const int idx_diffusivity = (i + num_subghosts_0_diffusivity) +
-                                (j + num_subghosts_1_diffusivity)*subghostcell_dim_0_diffusivity +
-                                (k + num_subghosts_2_diffusivity)*subghostcell_dim_0_diffusivity*
-                                    subghostcell_dim_1_diffusivity;
                             
                             const int idx_node_BBB = (i + num_diff_ghosts_0) +
                                 (j + num_diff_ghosts_1)*diff_ghostcell_dim_0 +

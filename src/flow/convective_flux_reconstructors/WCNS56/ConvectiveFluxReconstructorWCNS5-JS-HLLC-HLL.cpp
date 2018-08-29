@@ -119,8 +119,6 @@ static inline __attribute__((always_inline)) void performLocalWENOInterpolationM
         double(3)/double(8)*omega_2)*U_array[2][idx_side] +
         (double(3)/double(8)*omega_1 + double(6)/double(8)*omega_2)*U_array[3][idx_side] -
         double(1)/double(8)*omega_2*U_array[4][idx_side];
-
-    //U_minus[idx_side] = 0.5*U_array[2][idx_side] + 0.3*U_array[1][idx_side] + 0.2*U_array[0][idx_side];
 }
 
 
@@ -169,10 +167,6 @@ static inline __attribute__((always_inline)) void performLocalWENOInterpolationP
         double(3)/double(8)*omega_tilde_2)*U_array[3][idx_side] +
         (double(3)/double(8)*omega_tilde_1 + double(6)/double(8)*omega_tilde_2)*U_array[2][idx_side] -
         double(1)/double(8)*omega_tilde_2*U_array[1][idx_side];
-
-    //U_plus[idx_side] = 0.5*U_array[3][idx_side] + 0.3*U_array[4][idx_side] + 0.2*U_array[5][idx_side];
-
-
 }
 
 

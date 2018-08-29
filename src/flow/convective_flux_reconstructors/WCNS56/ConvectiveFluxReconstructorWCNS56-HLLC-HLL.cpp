@@ -1148,8 +1148,6 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                     {
                         F_midpoint_x[ei][idx_midpoint_x] = F_midpoint_HLLC_x[ei][idx_midpoint_x];
                     }
-
-//                    F_midpoint_x[ei][idx_midpoint_x] = F_midpoint_HLLC_HLL_x[ei][idx_midpoint_x];
                 }
             }
         }
@@ -1235,7 +1233,6 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                     {
                         F_midpoint_y[ei][idx_midpoint_y] = F_midpoint_HLLC_y[ei][idx_midpoint_y];
                     }
-//                    F_midpoint_y[ei][idx_midpoint_y] = F_midpoint_HLLC_HLL_y[ei][idx_midpoint_y];
                 }
             }
         }
@@ -2232,7 +2229,6 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                         {
                             F_midpoint_x[ei][idx_midpoint_x] = F_midpoint_HLLC_x[ei][idx_midpoint_x];
                         }
-//                        F_midpoint_x[ei][idx_midpoint_x] = F_midpoint_HLLC_x[ei][idx_midpoint_x];
                     }
                 }
             }
@@ -2331,7 +2327,6 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                         {
                             F_midpoint_y[ei][idx_midpoint_y] = F_midpoint_HLLC_y[ei][idx_midpoint_y];
                         }
-//                        F_midpoint_y[ei][idx_midpoint_y] = F_midpoint_HLLC_y[ei][idx_midpoint_y];
                     }
                 }
             }
@@ -2430,7 +2425,6 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                         {
                             F_midpoint_z[ei][idx_midpoint_z] = F_midpoint_HLLC_z[ei][idx_midpoint_z];
                         }
-//                        F_midpoint_z[ei][idx_midpoint_z] = F_midpoint_HLLC_z[ei][idx_midpoint_z];
                     }
                 }
             }
