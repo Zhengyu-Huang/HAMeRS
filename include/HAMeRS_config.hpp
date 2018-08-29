@@ -13,6 +13,6 @@
 #define HAMERS_DEBUG_CHECK_DEV_ASSERTIONS
 
 /* Define epsilon to prevent divisoin by zero */
-#define HAMERS_EPSILON 1.0e-40
+#define HAMERS_EPSILON 1.0e-6
 
 #endif /* HAMERS_CONFIG_HPP */

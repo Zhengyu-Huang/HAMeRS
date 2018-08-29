@@ -53,15 +53,43 @@ void
                         const boost::shared_ptr <pdat::CellData<double>> &cell_status,
                         const DIRECTION::TYPE d_direction,
                         const WALL_TREATMENT_CONDITION d_condition = WALL_SLIP);
+void
+        buildGhostCellMap2D(const boost::shared_ptr<pdat::CellData<double> > &cell_status,
+                            std::vector<std::array<int,3> > & ghost_cell_maps);
+
 
 void
-populateGhostCellsHelper(std::vector<boost::shared_ptr<pdat::CellData<double> > > &conservative_variables,
-                         const boost::shared_ptr<pdat::CellData<double> > &cell_status,
-                         const WALL_TREATMENT_CONDITION d_condition);
+        buildGhostCellMap3D(const boost::shared_ptr<pdat::CellData<double> > &cell_status,
+                            std::vector<std::array<int,4> > & ghost_cell_maps);
+
 
 void
-mirrorGhostCellDerivative(std::vector<boost::shared_ptr<pdat::CellData<double> > > du_x,
-                          const boost::shared_ptr<pdat::CellData<double> > &cell_status,
-                          const DIRECTION::TYPE d_direction);
+        mirrorGhostCellDerivative(std::vector<boost::shared_ptr<pdat::CellData<double> > >  du_x,
+                                  const boost::shared_ptr<pdat::CellData<double> > &cell_status,
+                                  const DIRECTION::TYPE d_direction);
 
+
+void
+        mirrorGhostCell2D(boost::shared_ptr<pdat::CellData<double> > &variables,
+                          const std::vector<std::vector<std::array<int,3> > > & ghost_cell_maps,
+                          const DIRECTION::TYPE d_direction,
+                          const WALL_TREATMENT_CONDITION d_condition);
+
+void
+        mirrorGhostCell3D(boost::shared_ptr<pdat::CellData<double> > &variables,
+                          const std::vector<std::vector<std::array<int,4> > > & ghost_cell_maps,
+                          const DIRECTION::TYPE d_direction,
+                          const WALL_TREATMENT_CONDITION d_condition);
+
+
+void
+        mirrorGhostCellDerivative2D(std::vector<boost::shared_ptr<pdat::CellData<double> > >du_x,
+                                    const std::vector<std::vector<std::array<int,3> > >& ghost_cell_maps,
+                                    const DIRECTION::TYPE d_direction);
+
+
+void
+        mirrorGhostCellDerivative3D(std::vector<boost::shared_ptr<pdat::CellData<double> > >du_x,
+                                    const std::vector<std::vector<std::array<int,4> > >& ghost_cell_maps,
+                                    const DIRECTION::TYPE d_direction);
 #endif /* WALL_TREATMENT_CONDITIONS_HPP */
