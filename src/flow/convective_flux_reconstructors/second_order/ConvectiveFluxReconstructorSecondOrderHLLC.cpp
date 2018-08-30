@@ -332,6 +332,13 @@ ConvectiveFluxReconstructorSecondOrderHLLC::computeConvectiveFluxAndSourceOnPatc
         num_subghosts_of_data.insert(std::pair<std::string, hier::IntVector>("PRIMITIVE_VARIABLES", d_num_conv_ghosts));
         d_flow_model->registerDerivedCellVariable(num_subghosts_of_data);
         d_flow_model->computeGlobalDerivedCellData();
+
+        /*
+         * Build ghost cell map
+         */
+        std::vector<std::vector<std::array<int,3> > > ghost_cell_maps;
+        ghost_cell_maps.resize(2);
+        buildGhostCellMap2D(cell_status, ghost_cell_maps);
         
         /*
          * Get the pointers to the conservative/primitive variables.
@@ -418,6 +425,8 @@ ConvectiveFluxReconstructorSecondOrderHLLC::computeConvectiveFluxAndSourceOnPatc
          */
         for (int vi = 0; vi < static_cast<int>(primitive_variables.size()); vi++)
         {
+
+            mirrorGhostCell2D(primitive_variables[vi], ghost_cell_maps, DIRECTION::X_DIRECTION);
             mirrorGhostCell(primitive_variables[vi], cell_status, DIRECTION::X_DIRECTION);
         }
         
@@ -557,6 +566,8 @@ ConvectiveFluxReconstructorSecondOrderHLLC::computeConvectiveFluxAndSourceOnPatc
          */
         for (int vi = 0; vi < static_cast<int>(primitive_variables.size()); vi++)
         {
+
+            mirrorGhostCell2D(primitive_variables[vi], ghost_cell_maps, DIRECTION::Y_DIRECTION);
             mirrorGhostCell(primitive_variables[vi], cell_status, DIRECTION::Y_DIRECTION);
         }
 
@@ -769,6 +780,13 @@ ConvectiveFluxReconstructorSecondOrderHLLC::computeConvectiveFluxAndSourceOnPatc
 
         d_flow_model->registerDerivedCellVariable(num_subghosts_of_data);
         d_flow_model->computeGlobalDerivedCellData();
+
+        /*
+         * Build ghost cell map
+         */
+        std::vector<std::vector<std::array<int,4> > > ghost_cell_maps;
+        ghost_cell_maps.resize(3);
+        buildGhostCellMap3D(cell_status, ghost_cell_maps);
         
         /*
          * Get the pointers to the conservative variables.
@@ -855,6 +873,8 @@ ConvectiveFluxReconstructorSecondOrderHLLC::computeConvectiveFluxAndSourceOnPatc
          */
         for (int vi = 0; vi < static_cast<int>(primitive_variables.size()); vi++)
         {
+
+            mirrorGhostCell3D(primitive_variables[vi], ghost_cell_maps, DIRECTION::X_DIRECTION);
             mirrorGhostCell(primitive_variables[vi], cell_status, DIRECTION::X_DIRECTION);
         }
 
@@ -1023,6 +1043,8 @@ ConvectiveFluxReconstructorSecondOrderHLLC::computeConvectiveFluxAndSourceOnPatc
 
         for (int vi = 0; vi < static_cast<int>(primitive_variables.size()); vi++)
         {
+
+            mirrorGhostCell3D(primitive_variables[vi], ghost_cell_maps, DIRECTION::Y_DIRECTION);
             mirrorGhostCell(primitive_variables[vi], cell_status, DIRECTION::Y_DIRECTION);
         }
 
@@ -1185,6 +1207,8 @@ ConvectiveFluxReconstructorSecondOrderHLLC::computeConvectiveFluxAndSourceOnPatc
          */
         for (int vi = 0; vi < static_cast<int>(primitive_variables.size()); vi++)
         {
+
+            mirrorGhostCell3D(primitive_variables[vi], ghost_cell_maps, DIRECTION::Z_DIRECTION);
             mirrorGhostCell(primitive_variables[vi], cell_status, DIRECTION::Z_DIRECTION);
         }
         

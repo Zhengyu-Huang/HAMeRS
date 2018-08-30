@@ -286,7 +286,7 @@ initializeCellStatus(hier::Patch& patch,
                 const double x = x_lo[0] + (i + 0.5) * dx[0],
                         y = x_lo[1] + (j + 0.5) * dx[1];
                 const int idx = i + j * patch_dims[0];
-                cell_status_data[idx] = isOutsidePorousWall2Y(2, x, y);
+                cell_status_data[idx] = isOutsidePorousWall2X(2, x, y);
             }
         }
 
@@ -349,6 +349,7 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                     const int idx_status = (i - d_num_var_ghosts[0] + d_num_status_ghosts[0]) +
                                            (j - d_num_var_ghosts[1] + d_num_status_ghosts[1]) *
                                            (interior_dims[0] + 2 * d_num_status_ghosts[0]);
+
                     if (cell_status_data[idx_status] < 0.5) {
                         ghost_count++;
                     } else {
@@ -358,6 +359,9 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                         (i - 2 * ghost_count + 1) >= 0) {
                         const int idx_mirr =
                                 (i - 2 * ghost_count + 1) + j * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
+
+                        std::vector<double> test;
+                        for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
 
                         if (depth == 1) {
                             V[0][idx] = V[0][idx_mirr];
@@ -379,6 +383,9 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                             V[2][idx] = V[2][idx_mirr];
                             V[3][idx] = -V[3][idx_mirr];
                         }
+
+                        for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) { std::cout << "2-X-1 " << test[tid] << " " << V[tid][idx] << " tid " << tid << " depth " << depth
+                                                                                                                   <<  " " << i << " " << j << std::endl; exit(1);};
 
 
                     }
@@ -402,6 +409,9 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                         const int idx_mirr =
                                 (i + 2 * ghost_count - 1) + j * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
 
+                        std::vector<double> test;
+                        for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
+
                         if (depth == 1) {
                             V[0][idx] = V[0][idx_mirr];
                         } else if (depth == 2 && d_condition == WALL_SLIP) {   //velocity u, v
@@ -422,6 +432,8 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                             V[2][idx] = V[2][idx_mirr];
                             V[3][idx] = -V[3][idx_mirr];
                         }
+
+                        for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) { std::cout << "2-X-2 " << test[tid] << " " << V[tid][idx] <<  std::endl; exit(1);};
 
                     }
 
@@ -457,6 +469,9 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                                     k * (interior_dims[0] + 2 * d_num_var_ghosts[0]) *
                                     (interior_dims[1] + 2 * d_num_var_ghosts[1]);
 
+                            std::vector<double> test;
+                            for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
+
                             if (depth == 1) {
                                 V[0][idx] = V[0][idx_mirr];
                             } else if (depth == 3 && d_condition == WALL_SLIP) {
@@ -481,6 +496,8 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                                 V[3][idx] = V[3][idx_mirr];
                                 V[4][idx] = -V[4][idx_mirr];
                             }
+
+                            for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) { std::cout << "3-X-1 " << test[tid] << " " << V[tid][idx] <<  std::endl; exit(1);};
 
 
                         }
@@ -511,6 +528,9 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                                     k * (interior_dims[0] + 2 * d_num_var_ghosts[0]) *
                                     (interior_dims[1] + 2 * d_num_var_ghosts[1]);
 
+                            std::vector<double> test;
+                            for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
+
                             if (depth == 1) {
                                 V[0][idx] = V[0][idx_mirr];
                             } else if (depth == 3 && d_condition == WALL_SLIP) {   //velocity u, v
@@ -535,6 +555,8 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                                 V[3][idx] = V[3][idx_mirr];
                                 V[4][idx] = -V[4][idx_mirr];
                             }
+
+                            for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) { std::cout << "3-X-2 " << test[tid] << " " << V[tid][idx] <<  std::endl; exit(1);};
 
                         }
 
@@ -569,6 +591,9 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                         const int idx_mirr =
                                 i + (j - 2 * ghost_count + 1) * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
 
+                        std::vector<double> test;
+                        for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
+
                         if (depth == 1) {
                             V[0][idx] = V[0][idx_mirr];
                         } else if (depth == 2 && d_condition == WALL_SLIP) {
@@ -589,6 +614,8 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                             V[2][idx] = V[2][idx_mirr];
                             V[3][idx] = -V[3][idx_mirr];
                         }
+
+                        for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) { std::cout << "2-Y-1 " << test[tid] << " " << V[tid][idx] <<  std::endl; exit(1);};
 
                     }
                 }
@@ -611,6 +638,9 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                         const int idx_mirr =
                                 i + (j + 2 * ghost_count - 1) * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
 
+                        std::vector<double> test;
+                        for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
+
                         if (depth == 1) {
                             V[0][idx] = V[0][idx_mirr];
                         } else if (depth == 2 && d_condition == WALL_SLIP) {
@@ -631,6 +661,8 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                             V[2][idx] = V[2][idx_mirr];
                             V[3][idx] = -V[3][idx_mirr];
                         }
+
+                        for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) { std::cout << "2-Y-2 " << test[tid] << " " << V[tid][idx] <<  std::endl; exit(1);};
 
                     }
 
@@ -668,6 +700,9 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                                                  k * (interior_dims[0] + 2 * d_num_var_ghosts[0]) *
                                                  (interior_dims[1] + 2 * d_num_var_ghosts[1]);
 
+                            std::vector<double> test;
+                            for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
+
                             if (depth == 1) {
                                 V[0][idx] = V[0][idx_mirr];
                             } else if (depth == 3 && d_condition == WALL_SLIP) {
@@ -692,6 +727,10 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                                 V[3][idx] = V[3][idx_mirr];
                                 V[4][idx] = -V[4][idx_mirr];
                             }
+
+                            for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) { std::cout << "3-Y-1 " << test[tid] << " " << V[tid][idx]
+                                                                                                                       << " tid " << tid << " depth " << depth
+                                                                                                                       <<  " " << i << " " << j  << " " << k << " " << (j - 2 * ghost_count + 1) << std::endl;  exit(1);};
 
                         }
                     }
@@ -721,6 +760,9 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                                     k * (interior_dims[0] + 2 * d_num_var_ghosts[0]) *
                                     (interior_dims[1] + 2 * d_num_var_ghosts[1]);
 
+                            std::vector<double> test;
+                            for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
+
                             if (depth == 1) {
                                 V[0][idx] = V[0][idx_mirr];
                             } else if (depth == 3 && d_condition == WALL_SLIP) {
@@ -745,6 +787,8 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                                 V[3][idx] = V[3][idx_mirr];
                                 V[4][idx] = -V[4][idx_mirr];
                             }
+
+                            for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) { std::cout << "3-Y-2 " << test[tid] << " " << V[tid][idx] <<  std::endl; exit(1);};
 
                         }
 
@@ -786,6 +830,9 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                                                  (interior_dims[0] + 2 * d_num_var_ghosts[0]) *
                                                  (interior_dims[1] + 2 * d_num_var_ghosts[1]);
 
+                            std::vector<double> test;
+                            for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
+
                             if (depth == 1) {
                                 V[0][idx] = V[0][idx_mirr];
                             } else if (depth == 3 && d_condition == WALL_SLIP) {
@@ -810,6 +857,10 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                                 V[3][idx] = V[3][idx_mirr];
                                 V[4][idx] = -V[4][idx_mirr];
                             }
+
+                            for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) { std::cout << "3-Z-1 " << test[tid] << " " << V[tid][idx] <<" "
+                                                                                                             << i << " "  << j << " " << k <<  " " << (k - 2 * ghost_count + 1)  << " "
+                                                                                                             << interior_dims[0] << " " << interior_dims[1] << " "<<  interior_dims[2] << std::endl; exit(1);};
 
                         }
                     }
@@ -839,6 +890,9 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                                     (k + 2 * ghost_count - 1) * (interior_dims[0] + 2 * d_num_var_ghosts[0]) *
                                     (interior_dims[1] + 2 * d_num_var_ghosts[1]);
 
+                            std::vector<double> test;
+                            for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
+
                             if (depth == 1) {
                                 V[0][idx] = V[0][idx_mirr];
                             } else if (depth == 3 && d_condition == WALL_SLIP) {
@@ -864,6 +918,8 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                                 V[4][idx] = -V[4][idx_mirr];
                             }
 
+                            for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) { std::cout << "3-Z-2 " << test[tid] << " " << V[tid][idx] <<  std::endl; exit(1);};
+
                         }
 
                     }
@@ -872,27 +928,6 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
         }
 
     }
-
-
-//    std::cout << " dim: " << interior_dims[0]    << " " << interior_dims[1] << " ghost " <<
-//                             d_num_var_ghosts[0] << " " << d_num_var_ghosts[1] << std::endl;
-//    for (int i = 0; i < interior_dims[0] + 2 * d_num_var_ghosts[0]; i++) {
-//        //loop x direction
-//        for (int j = 0; j < interior_dims[1] + 2 * d_num_var_ghosts[1]; j++) {
-//            //loop y direction
-//            int idx = i + j * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
-//            int idx_ = i + (interior_dims[1] + 2 * d_num_var_ghosts[1]- j - 1) * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
-//            for(int d = 0; d < depth; d++) {
-//                if (fabs(V[0][idx] - V[0][idx_]) > 1e-10) {
-//                    std::cout << "error (i,j) " << i <<" " << j << " d " << d << " " << (interior_dims[1] + 2 * d_num_var_ghosts[1]- j - 1)
-//                              << " d_drection "<< d_direction << " " << " value " << V[0][idx]  << " " << V[0][idx_]<< std::endl;
-//                    exit(1);
-//                }
-//            }
-//        }
-//    }
-
-
 
 }
 
@@ -942,6 +977,9 @@ mirrorGhostCellDerivative(std::vector<boost::shared_ptr<pdat::CellData<double> >
                         const int idx_mirr =
                                 (i - 2 * ghost_count + 1) + j * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
 
+std::vector<double> test;
+for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
+
                         if (depth == 5) {   // du/dx, dv/dx, dT/dx,  du/dy, dv/dy
                             V[0][idx] = V[0][idx_mirr];
                             V[1][idx] = V[1][idx_mirr];
@@ -949,6 +987,9 @@ mirrorGhostCellDerivative(std::vector<boost::shared_ptr<pdat::CellData<double> >
                             V[3][idx] = -V[3][idx_mirr];
                             V[4][idx] = -V[4][idx_mirr];
                         }
+
+for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) { std::cout << "2-X-1 " << test[tid] << " " << V[tid][idx] <<  std::endl; exit(1);};
+
 
 
                     }
@@ -972,6 +1013,10 @@ mirrorGhostCellDerivative(std::vector<boost::shared_ptr<pdat::CellData<double> >
                         const int idx_mirr =
                                 (i + 2 * ghost_count - 1) + j * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
 
+std::vector<double> test;
+for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
+
+
                         if (depth == 5) {   // du/dx, dv/dx, dT/dx,  du/dy, dv/dy
                             V[0][idx] = V[0][idx_mirr];
                             V[1][idx] = V[1][idx_mirr];
@@ -979,6 +1024,9 @@ mirrorGhostCellDerivative(std::vector<boost::shared_ptr<pdat::CellData<double> >
                             V[3][idx] = -V[3][idx_mirr];
                             V[4][idx] = -V[4][idx_mirr];
                         }
+
+for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) { std::cout << "2-X-2 " << test[tid] << " " << V[tid][idx] <<  std::endl; exit(1);};
+
 
                     }
 
@@ -1014,6 +1062,9 @@ mirrorGhostCellDerivative(std::vector<boost::shared_ptr<pdat::CellData<double> >
                                     k * (interior_dims[0] + 2 * d_num_var_ghosts[0]) *
                                     (interior_dims[1] + 2 * d_num_var_ghosts[1]);;
 
+std::vector<double> test;
+for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
+
                             if (depth == 8) { // du/dx, dv/dx, dw/x, dT/dx,  du/dy, dv/dy, du/dz, dw/dz
                                 V[0][idx] = V[0][idx_mirr];
                                 V[1][idx] = V[1][idx_mirr];
@@ -1024,6 +1075,8 @@ mirrorGhostCellDerivative(std::vector<boost::shared_ptr<pdat::CellData<double> >
                                 V[6][idx] = -V[6][idx_mirr];
                                 V[7][idx] = -V[7][idx_mirr];
                             }
+for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) { std::cout << "3-X-1 " << test[tid] << " " << V[tid][idx] <<  std::endl; exit(1);};
+
 
 
                         }
@@ -1054,6 +1107,9 @@ mirrorGhostCellDerivative(std::vector<boost::shared_ptr<pdat::CellData<double> >
                                     k * (interior_dims[0] + 2 * d_num_var_ghosts[0]) *
                                     (interior_dims[1] + 2 * d_num_var_ghosts[1]);
 
+std::vector<double> test;
+for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
+
                             if (depth == 8) { // du/dx, dv/dx, dw/x, dT/dx,  du/dy, dv/dy, du/dz, dw/dz
                                 V[0][idx] = V[0][idx_mirr];
                                 V[1][idx] = V[1][idx_mirr];
@@ -1064,6 +1120,8 @@ mirrorGhostCellDerivative(std::vector<boost::shared_ptr<pdat::CellData<double> >
                                 V[6][idx] = -V[6][idx_mirr];
                                 V[7][idx] = -V[7][idx_mirr];
                             }
+for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) { std::cout << "3-X-2 " << test[tid] << " " << V[tid][idx] <<  std::endl; exit(1);};
+
 
                         }
 
@@ -1097,6 +1155,9 @@ mirrorGhostCellDerivative(std::vector<boost::shared_ptr<pdat::CellData<double> >
                         const int idx_mirr =
                                 i + (j - 2 * ghost_count + 1) * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
 
+std::vector<double> test;
+for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
+
                         if (depth == 5) {   // du/dx, dv/dx,  du/dy, dv/dy, dT/dy
                             V[0][idx] = -V[0][idx_mirr];
                             V[1][idx] = -V[1][idx_mirr];
@@ -1104,6 +1165,10 @@ mirrorGhostCellDerivative(std::vector<boost::shared_ptr<pdat::CellData<double> >
                             V[3][idx] = V[3][idx_mirr];
                             V[4][idx] = -V[4][idx_mirr];
                         }
+for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) { std::cout << "2-Y-1 visco " << tid <<  " "  << idx << " " << test[tid] << " " << V[tid][idx] << " " <<
+i << " " << j << " " << (j - 2 * ghost_count + 1) << " dim " <<
+interior_dims[0] << " " << interior_dims[1] << " cell "<<  cell_status_data[idx_status] << std::endl; exit(1);};
+
                     }
                 }
                 ghost_count = std::numeric_limits<int>::min();
@@ -1125,6 +1190,9 @@ mirrorGhostCellDerivative(std::vector<boost::shared_ptr<pdat::CellData<double> >
                         const int idx_mirr =
                                 i + (j + 2 * ghost_count - 1) * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
 
+std::vector<double> test;
+for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
+
                         if (depth == 5) {   // du/dx, dv/dx,  du/dy, dv/dy, dT/dy
                             V[0][idx] = -V[0][idx_mirr];
                             V[1][idx] = -V[1][idx_mirr];
@@ -1132,6 +1200,8 @@ mirrorGhostCellDerivative(std::vector<boost::shared_ptr<pdat::CellData<double> >
                             V[3][idx] = V[3][idx_mirr];
                             V[4][idx] = -V[4][idx_mirr];
                         }
+for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) { std::cout << "2-Y-2 " << test[tid] << " " << V[tid][idx] <<  std::endl; exit(1);};
+
 
                     }
 
@@ -1170,6 +1240,9 @@ mirrorGhostCellDerivative(std::vector<boost::shared_ptr<pdat::CellData<double> >
                                                  k * (interior_dims[0] + 2 * d_num_var_ghosts[0]) *
                                                  (interior_dims[1] + 2 * d_num_var_ghosts[1]);
 
+std::vector<double> test;
+for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
+
                             if (depth == 8) { // du/dx, dv/dx, du/dy, dv/dy, dw/dy, dT/dy, dv/dz, dw/dz
                                 V[0][idx] = -V[0][idx_mirr];
                                 V[1][idx] = -V[1][idx_mirr];
@@ -1180,6 +1253,8 @@ mirrorGhostCellDerivative(std::vector<boost::shared_ptr<pdat::CellData<double> >
                                 V[6][idx] = -V[6][idx_mirr];
                                 V[7][idx] = -V[7][idx_mirr];
                             }
+for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) { std::cout << "3-Y-1 " << test[tid] << " " << V[tid][idx] <<  std::endl; exit(1);};
+
 
                         }
                     }
@@ -1209,6 +1284,9 @@ mirrorGhostCellDerivative(std::vector<boost::shared_ptr<pdat::CellData<double> >
                                     k * (interior_dims[0] + 2 * d_num_var_ghosts[0]) *
                                     (interior_dims[1] + 2 * d_num_var_ghosts[1]);
 
+std::vector<double> test;
+for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
+
                             if (depth == 8) { // du/dx, dv/dx, du/dy, dv/dy, dw/dy, dT/dy, dv/dz, dw/dz
                                 V[0][idx] = -V[0][idx_mirr];
                                 V[1][idx] = -V[1][idx_mirr];
@@ -1219,6 +1297,8 @@ mirrorGhostCellDerivative(std::vector<boost::shared_ptr<pdat::CellData<double> >
                                 V[6][idx] = -V[6][idx_mirr];
                                 V[7][idx] = -V[7][idx_mirr];
                             }
+for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) { std::cout << "3-Y-2 " << test[tid] << " " << V[tid][idx] <<  std::endl; exit(1);};
+
 
                         }
 
@@ -1262,6 +1342,9 @@ mirrorGhostCellDerivative(std::vector<boost::shared_ptr<pdat::CellData<double> >
                                                  (interior_dims[0] + 2 * d_num_var_ghosts[0]) *
                                                  (interior_dims[1] + 2 * d_num_var_ghosts[1]);
 
+std::vector<double> test;
+for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
+
                             if (depth == 8) { // du/dx, dw/dx, dv/dy, dw/dy, du/dz, dv/dz, dw/dz, dT/dz
                                 V[0][idx] = -V[0][idx_mirr];
                                 V[1][idx] = -V[1][idx_mirr];
@@ -1272,6 +1355,8 @@ mirrorGhostCellDerivative(std::vector<boost::shared_ptr<pdat::CellData<double> >
                                 V[6][idx] = V[6][idx_mirr];
                                 V[7][idx] = -V[7][idx_mirr];
                             }
+for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) { std::cout << "3-Z-1 " << test[tid] << " " << V[tid][idx] <<  std::endl; exit(1);};
+
                         }
 
                     }
@@ -1302,6 +1387,9 @@ mirrorGhostCellDerivative(std::vector<boost::shared_ptr<pdat::CellData<double> >
                                     (k + 2 * ghost_count - 1) * (interior_dims[0] + 2 * d_num_var_ghosts[0]) *
                                     (interior_dims[1] + 2 * d_num_var_ghosts[1]);
 
+std::vector<double> test;
+for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
+
                             if (depth == 8) { // du/dx, dw/dx, dv/dy, dw/dy, du/dz, dv/dz, dw/dz, dT/dz
                                 V[0][idx] = -V[0][idx_mirr];
                                 V[1][idx] = -V[1][idx_mirr];
@@ -1312,6 +1400,8 @@ mirrorGhostCellDerivative(std::vector<boost::shared_ptr<pdat::CellData<double> >
                                 V[6][idx] = V[6][idx_mirr];
                                 V[7][idx] = -V[7][idx_mirr];
                             }
+for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) { std::cout << "3-Z-2 " << test[tid] << " " << V[tid][idx] <<  std::endl; exit(1);};
+
                         }
                     }
                 }
@@ -1352,7 +1442,7 @@ buildGhostCellMap2D(const boost::shared_ptr<pdat::CellData<double> > &cell_statu
                 ghost_count = 0;
             }
             if (ghost_count >= 1 && ghost_count <= d_num_status_ghosts[0] &&
-                (i - 2 * ghost_count + 1) >= 0) {
+                (i - 2 * ghost_count + 1) >= -d_num_status_ghosts[0]) {
                 //(i,j) --- > (i - 2 * ghost_count + 1 , j)
                 x_map.push_back(std::array<int, 3 >{i,j, i - 2 * ghost_count + 1});
             }
@@ -1395,10 +1485,9 @@ buildGhostCellMap2D(const boost::shared_ptr<pdat::CellData<double> > &cell_statu
                 ghost_count = 0;
             }
             if (ghost_count >= 1 && ghost_count <= d_num_status_ghosts[1] &&
-                j - 2 * ghost_count + 1 >= 0) {
+                j - 2 * ghost_count + 1 >= -d_num_status_ghosts[1]) {
                 //(i, j) --> (i, j - 2 * ghost_count + 1)
                 y_map.push_back(std::array<int, 3 >{i,j, j - 2 * ghost_count + 1});
-
 
             }
         }
@@ -1465,7 +1554,7 @@ buildGhostCellMap3D(const boost::shared_ptr<pdat::CellData<double> > &cell_statu
                     ghost_count = 0;
                 }
                 if (ghost_count >= 1 && ghost_count <= d_num_status_ghosts[0] &&
-                    (i - 2 * ghost_count + 1) >= 0) {
+                    (i - 2 * ghost_count + 1) >= -d_num_status_ghosts[0]) {
                     //(i,j,k) --> (i - 2 * ghost_count + 1, j, k)
                     x_map.push_back(std::array<int, 4 >{i,j,k, i - 2 * ghost_count + 1});
 
@@ -1522,10 +1611,9 @@ buildGhostCellMap3D(const boost::shared_ptr<pdat::CellData<double> > &cell_statu
                     ghost_count = 0;
                 }
                 if (ghost_count >= 1 && ghost_count <= d_num_status_ghosts[1] &&
-                    j - 2 * ghost_count + 1 >= 0) {
+                    j - 2 * ghost_count + 1 >= -d_num_status_ghosts[1]) {
                     //(i,j,k) --> (i, j - 2 * ghost_count + 1, k)
                     y_map.push_back(std::array<int, 4 >{i,j,k, j - 2 * ghost_count + 1});
-
 
                 }
             }
@@ -1548,6 +1636,7 @@ buildGhostCellMap3D(const boost::shared_ptr<pdat::CellData<double> > &cell_statu
                     j + 2 * ghost_count - 1 <= interior_dims[1] + d_num_status_ghosts[1] - 1) {
                     //(i,j,k) --> (i, j + 2 * ghost_count - 1, k)
                     y_map.push_back(std::array<int, 4 >{i,j,k, j + 2 * ghost_count - 1});
+
                 }
 
             }
@@ -1556,16 +1645,12 @@ buildGhostCellMap3D(const boost::shared_ptr<pdat::CellData<double> > &cell_statu
 
     // DIRECTION::Z_DIRECTION
     //loop y direction
-    for (int j = d_num_status_ghosts[1]; j < interior_dims[1] + d_num_status_ghosts[1]; j++) {
+    for (int j = -d_num_status_ghosts[1]; j < interior_dims[1] + d_num_status_ghosts[1]; j++) {
     //loop x direction
-        for (
-                int i = d_num_status_ghosts[0];
-                i < interior_dims[0] + d_num_status_ghosts[0]; i++) {
+        for (int i = -d_num_status_ghosts[0]; i < interior_dims[0] + d_num_status_ghosts[0]; i++) {
             //loop z direction
             ghost_count = std::numeric_limits<int>::min();
-            for (
-                    int k = d_num_status_ghosts[2];
-                    k < interior_dims[2] + d_num_status_ghosts[2]; k++) {
+            for (int k = -d_num_status_ghosts[2]; k < interior_dims[2] + d_num_status_ghosts[2]; k++) {
 
                 const int idx_status = (i + d_num_status_ghosts[0]) +
                                        (j + d_num_status_ghosts[1]) * (interior_dims[0] + 2 * d_num_status_ghosts[0]) +
@@ -1577,7 +1662,7 @@ buildGhostCellMap3D(const boost::shared_ptr<pdat::CellData<double> > &cell_statu
                     ghost_count = 0;
                 }
                 if (ghost_count >= 1 && ghost_count <= d_num_status_ghosts[2] &&
-                    k - 2 * ghost_count + 1 >= 0) {
+                    k - 2 * ghost_count + 1 >= -d_num_status_ghosts[2]) {
                     //(i,j,k) --> (i + j, k - 2 * ghost_count + 1)
                     z_map.push_back(std::array<int, 4 >{i,j,k, k - 2 * ghost_count + 1});
 
@@ -1585,9 +1670,7 @@ buildGhostCellMap3D(const boost::shared_ptr<pdat::CellData<double> > &cell_statu
             }
             ghost_count = std::numeric_limits<int>::min();
             //loop z direction inversely
-            for (
-                    int k = interior_dims[2] + d_num_status_ghosts[2] - 1;
-                    k >= -d_num_status_ghosts[2]; k--) {
+            for (int k = interior_dims[2] + d_num_status_ghosts[2] - 1; k >= -d_num_status_ghosts[2]; k--) {
 
                 const int idx_status = (i + d_num_status_ghosts[0]) +
                                        (j + d_num_status_ghosts[1]) * (interior_dims[0] + 2 * d_num_status_ghosts[0]) +
@@ -1637,6 +1720,7 @@ mirrorGhostCell2D(boost::shared_ptr<pdat::CellData<double> > &variables,
             i = (*it)[0];
             j = (*it)[1];
             i_mirr = (*it)[2];
+
             if (i < - d_num_var_ghosts[0] || i > interior_dims[0] + d_num_var_ghosts[0] - 1
                 || j < - d_num_var_ghosts[1] || j > interior_dims[1] + d_num_var_ghosts[1] - 1
                 || i_mirr < - d_num_var_ghosts[0] || i_mirr > interior_dims[0] + d_num_var_ghosts[0] - 1 )
@@ -1644,6 +1728,7 @@ mirrorGhostCell2D(boost::shared_ptr<pdat::CellData<double> > &variables,
 
             idx = (i + d_num_var_ghosts[0]) + (j + d_num_var_ghosts[1]) * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
             idx_mirr = (i_mirr + d_num_var_ghosts[0])+ (j + d_num_var_ghosts[1]) * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
+
             if (depth == 1) {
                 V[0][idx] = V[0][idx_mirr];
             } else if (depth == 2 && d_condition == WALL_SLIP) {
@@ -1773,7 +1858,7 @@ mirrorGhostCell3D(boost::shared_ptr<pdat::CellData<double> > &variables,
 
         }
     } else if (d_direction == DIRECTION::Y_DIRECTION) {
-        const std::vector <std::array<int, 4>> &y_map = ghost_cell_maps[0];
+        const std::vector <std::array<int, 4>> &y_map = ghost_cell_maps[1];
         int i, j, k, j_mirr, idx, idx_mirr;
         for (std::vector < std::array < int, 4 > > ::const_iterator it = y_map.begin(); it != y_map.end();
         ++it)
@@ -1819,10 +1904,9 @@ mirrorGhostCell3D(boost::shared_ptr<pdat::CellData<double> > &variables,
                 V[3][idx] = V[3][idx_mirr];
                 V[4][idx] = -V[4][idx_mirr];
             }
-
         }
     } else if (d_direction == DIRECTION::Z_DIRECTION) {
-        const std::vector <std::array<int, 4>> &z_map = ghost_cell_maps[0];
+        const std::vector <std::array<int, 4>> &z_map = ghost_cell_maps[2];
         int i, j, k, k_mirr, idx, idx_mirr;
         for (std::vector < std::array < int, 4 > > ::const_iterator it = z_map.begin(); it != z_map.end();
         ++it)
@@ -2002,7 +2086,7 @@ void mirrorGhostCellDerivative3D(std::vector<boost::shared_ptr<pdat::CellData<do
 
         }
     } else if (d_direction == DIRECTION::Y_DIRECTION) {
-        const std::vector <std::array<int, 4>> &y_map = ghost_cell_maps[0];
+        const std::vector <std::array<int, 4>> &y_map = ghost_cell_maps[1];
         int i, j, k, j_mirr, idx, idx_mirr;
         for (std::vector < std::array < int, 4 > > ::const_iterator it = y_map.begin(); it != y_map.end();
         ++it)
@@ -2034,11 +2118,9 @@ void mirrorGhostCellDerivative3D(std::vector<boost::shared_ptr<pdat::CellData<do
                 V[6][idx] = -V[6][idx_mirr];
                 V[7][idx] = -V[7][idx_mirr];
             }
-
         }
-
     } else if (d_direction == DIRECTION::Z_DIRECTION) {
-        const std::vector <std::array<int, 4>> &z_map = ghost_cell_maps[0];
+        const std::vector <std::array<int, 4>> &z_map = ghost_cell_maps[2];
         int i, j, k, k_mirr, idx, idx_mirr;
         for (std::vector < std::array < int, 4 > > ::const_iterator it = z_map.begin(); it != z_map.end();
         ++it)

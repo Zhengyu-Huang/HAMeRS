@@ -567,9 +567,12 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
         d_flow_model->computeGlobalDerivedCellData();
 
         /*
-         * Get the cell status todo
+         * Get the cell status and build ghost cell map
          */
         boost::shared_ptr<pdat::CellData<double> > cell_status = d_flow_model->getGlobalCellStatus();
+        std::vector<std::vector<std::array<int,3> > > ghost_cell_maps;
+        ghost_cell_maps.resize(2);
+        buildGhostCellMap2D(cell_status, ghost_cell_maps);
         
         /*
          * Get the pointers to the velocity and convective flux cell data inside the flow model.
@@ -584,6 +587,8 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
         convective_flux_node[1] = d_flow_model->getGlobalCellData("CONVECTIVE_FLUX_Y");
 
         //mirroring the convective flux
+        mirrorGhostCell2D(convective_flux_node[0], ghost_cell_maps, DIRECTION::X_DIRECTION, WALL_SLIP);
+        mirrorGhostCell2D(convective_flux_node[1], ghost_cell_maps, DIRECTION::Y_DIRECTION, WALL_SLIP);
         mirrorGhostCell(convective_flux_node[0], cell_status, DIRECTION::X_DIRECTION, WALL_SLIP);
         mirrorGhostCell(convective_flux_node[1], cell_status, DIRECTION::Y_DIRECTION, WALL_SLIP);
 
@@ -666,6 +671,7 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
             new DerivativeFirstOrder("first order derivative in y-direction", d_dim, DIRECTION::Y_DIRECTION, 1));
 
         //mirroring velocity in x direction to compute x-derivative
+        mirrorGhostCell2D(velocity, ghost_cell_maps, DIRECTION::X_DIRECTION, WALL_SLIP);
         mirrorGhostCell(velocity, cell_status, DIRECTION::X_DIRECTION, WALL_SLIP);
 
         // Compute dudx.
@@ -685,6 +691,7 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                 1);
 
         //mirroring velocity in y direction to compute y-derivative
+        mirrorGhostCell2D(velocity, ghost_cell_maps, DIRECTION::Y_DIRECTION, WALL_SLIP);
         mirrorGhostCell(velocity, cell_status, DIRECTION::Y_DIRECTION, WALL_SLIP);
 
         // Compute dudy.
@@ -892,6 +899,7 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
              * populate ghost nodes in this direction by mirroring
              */
             for (int vi = 0; vi < static_cast<int>(primitive_variables.size()); vi++) {
+                mirrorGhostCell2D(primitive_variables[vi], ghost_cell_maps, static_cast<DIRECTION::TYPE>(d_direction), WALL_SLIP);
                 mirrorGhostCell(primitive_variables[vi], cell_status, static_cast<DIRECTION::TYPE>(d_direction), WALL_SLIP);
             }
 
@@ -979,6 +987,7 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
          * populate ghost nodes in x direction by mirroring
          */
         for (int vi = 0; vi < static_cast<int>(primitive_variables.size()); vi++) {
+            mirrorGhostCell2D(primitive_variables[vi], ghost_cell_maps, DIRECTION::X_DIRECTION, WALL_SLIP);
             mirrorGhostCell(primitive_variables[vi], cell_status, DIRECTION::X_DIRECTION, WALL_SLIP);
         }
 
@@ -1032,6 +1041,7 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
          * populate ghost nodes in y direction by mirroring
          */
         for (int vi = 0; vi < static_cast<int>(primitive_variables.size()); vi++) {
+            mirrorGhostCell2D(primitive_variables[vi], ghost_cell_maps, DIRECTION::Y_DIRECTION, WALL_SLIP);
             mirrorGhostCell(primitive_variables[vi], cell_status, DIRECTION::Y_DIRECTION, WALL_SLIP);
         }
 
@@ -1099,7 +1109,8 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
             RIEMANN_SOLVER::HLLC_HLL);
 
         // Compute the Ducros-like shock sensor.
-
+        mirrorGhostCell2D(dilatation, ghost_cell_maps, DIRECTION::X_DIRECTION, WALL_SLIP);
+        mirrorGhostCell2D(vorticity_magnitude, ghost_cell_maps, DIRECTION::X_DIRECTION, WALL_SLIP);
         mirrorGhostCell(dilatation, cell_status, DIRECTION::X_DIRECTION, WALL_SLIP);
         mirrorGhostCell(vorticity_magnitude, cell_status, DIRECTION::X_DIRECTION, WALL_SLIP);
 
@@ -1184,7 +1195,8 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
             RIEMANN_SOLVER::HLLC_HLL);
 
         // Compute the Ducros-like shock sensor.
-
+        mirrorGhostCell2D(dilatation, ghost_cell_maps, DIRECTION::Y_DIRECTION, WALL_SLIP);
+        mirrorGhostCell2D(vorticity_magnitude, ghost_cell_maps, DIRECTION::Y_DIRECTION, WALL_SLIP);
         mirrorGhostCell(dilatation, cell_status, DIRECTION::Y_DIRECTION, WALL_SLIP);
         mirrorGhostCell(vorticity_magnitude, cell_status, DIRECTION::Y_DIRECTION, WALL_SLIP);
 
@@ -1452,10 +1464,13 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
         d_flow_model->computeGlobalDerivedCellData();
 
         /*
-         * Get the cell status todo
+         * Get the cell status and build ghost cell maps
          */
         boost::shared_ptr<pdat::CellData<double> > cell_status = d_flow_model->getGlobalCellStatus();
-        double* cell_status_data = cell_status->getPointer(0);
+        std::vector<std::vector<std::array<int,4> > > ghost_cell_maps;
+        ghost_cell_maps.resize(3);
+        buildGhostCellMap3D(cell_status, ghost_cell_maps);
+
 
         /*
          * Get the pointers to the velocity and convective flux cell data inside the flow model.
@@ -1471,6 +1486,9 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
         convective_flux_node[2] = d_flow_model->getGlobalCellData("CONVECTIVE_FLUX_Z");
 
         //mirroring the convective flux
+        mirrorGhostCell3D(convective_flux_node[0], ghost_cell_maps, DIRECTION::X_DIRECTION, WALL_SLIP);
+        mirrorGhostCell3D(convective_flux_node[1], ghost_cell_maps, DIRECTION::Y_DIRECTION, WALL_SLIP);
+        mirrorGhostCell3D(convective_flux_node[2], ghost_cell_maps, DIRECTION::Z_DIRECTION, WALL_SLIP);
         mirrorGhostCell(convective_flux_node[0], cell_status, DIRECTION::X_DIRECTION, WALL_SLIP);
         mirrorGhostCell(convective_flux_node[1], cell_status, DIRECTION::Y_DIRECTION, WALL_SLIP);
         mirrorGhostCell(convective_flux_node[2], cell_status, DIRECTION::Z_DIRECTION, WALL_SLIP);
@@ -1586,6 +1604,7 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
             new DerivativeFirstOrder("first order derivative in z-direction", d_dim, DIRECTION::Z_DIRECTION, 1));
 
         //mirroring velocity in x direction to compute x-derivative
+        mirrorGhostCell3D(velocity, ghost_cell_maps, DIRECTION::X_DIRECTION, WALL_SLIP);
         mirrorGhostCell(velocity, cell_status, DIRECTION::X_DIRECTION, WALL_SLIP);
 
         // Compute dudx.
@@ -1613,6 +1632,7 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                 2);
 
         //mirroring velocity in y direction to compute y-derivative
+        mirrorGhostCell3D(velocity, ghost_cell_maps, DIRECTION::Y_DIRECTION, WALL_SLIP);
         mirrorGhostCell(velocity, cell_status, DIRECTION::Y_DIRECTION, WALL_SLIP);
 
 
@@ -1641,6 +1661,7 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                 2);
 
         //mirroring velocity in z direction to compute z-derivative
+        mirrorGhostCell3D(velocity, ghost_cell_maps, DIRECTION::Z_DIRECTION, WALL_SLIP);
         mirrorGhostCell(velocity, cell_status, DIRECTION::Z_DIRECTION, WALL_SLIP);
 
         // Compute dudz.
@@ -1875,6 +1896,7 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
              * populate ghost nodes in this direction by mirroring
              */
             for (int vi = 0; vi < static_cast<int>(primitive_variables.size()); vi++) {
+                mirrorGhostCell3D(primitive_variables[vi], ghost_cell_maps, static_cast<DIRECTION::TYPE>(d_direction), WALL_SLIP);
                 mirrorGhostCell(primitive_variables[vi], cell_status, static_cast<DIRECTION::TYPE>(d_direction),
                                 WALL_SLIP);
             }
@@ -1961,6 +1983,7 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
         * populate ghost nodes in x direction by mirroring, todo!!!!!
         */
         for (int vi = 0; vi < static_cast<int>(primitive_variables.size()); vi++) {
+            mirrorGhostCell3D(primitive_variables[vi], ghost_cell_maps, DIRECTION::X_DIRECTION, WALL_SLIP);
             mirrorGhostCell(primitive_variables[vi], cell_status, DIRECTION::X_DIRECTION, WALL_SLIP);
         }
         
@@ -2025,6 +2048,7 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
         * populate ghost nodes in y direction by mirroring, todo!!!!!
         */
         for (int vi = 0; vi < static_cast<int>(primitive_variables.size()); vi++) {
+            mirrorGhostCell3D(primitive_variables[vi], ghost_cell_maps, DIRECTION::Y_DIRECTION, WALL_SLIP);
             mirrorGhostCell(primitive_variables[vi], cell_status, DIRECTION::Y_DIRECTION, WALL_SLIP);
         }
         
@@ -2089,6 +2113,7 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
         * populate ghost nodes in z direction by mirroring, todo!!!!!
         */
         for (int vi = 0; vi < static_cast<int>(primitive_variables.size()); vi++) {
+            mirrorGhostCell3D(primitive_variables[vi], ghost_cell_maps, DIRECTION::Z_DIRECTION, WALL_SLIP);
             mirrorGhostCell(primitive_variables[vi], cell_status, DIRECTION::Z_DIRECTION, WALL_SLIP);
         }
         
@@ -2167,7 +2192,8 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
             RIEMANN_SOLVER::HLLC_HLL);
         
         // Compute the Ducros-like shock sensor.
-
+        mirrorGhostCell3D(dilatation, ghost_cell_maps, DIRECTION::X_DIRECTION, WALL_SLIP);
+        mirrorGhostCell3D(vorticity_magnitude, ghost_cell_maps, DIRECTION::X_DIRECTION, WALL_SLIP);
         mirrorGhostCell(dilatation, cell_status, DIRECTION::X_DIRECTION, WALL_SLIP);
         mirrorGhostCell(vorticity_magnitude, cell_status, DIRECTION::X_DIRECTION, WALL_SLIP);
 
@@ -2266,6 +2292,8 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
             RIEMANN_SOLVER::HLLC_HLL);
         
         // Compute the Ducros-like shock sensor.
+        mirrorGhostCell3D(dilatation, ghost_cell_maps, DIRECTION::Y_DIRECTION, WALL_SLIP);
+        mirrorGhostCell3D(vorticity_magnitude, ghost_cell_maps, DIRECTION::Y_DIRECTION, WALL_SLIP);
         mirrorGhostCell(dilatation, cell_status, DIRECTION::Y_DIRECTION, WALL_SLIP);
         mirrorGhostCell(vorticity_magnitude, cell_status, DIRECTION::Y_DIRECTION, WALL_SLIP);
 
@@ -2364,7 +2392,8 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
             RIEMANN_SOLVER::HLLC_HLL);
         
         // Compute the Ducros-like shock sensor.
-
+        mirrorGhostCell3D(dilatation, ghost_cell_maps, DIRECTION::Z_DIRECTION, WALL_SLIP);
+        mirrorGhostCell3D(vorticity_magnitude, ghost_cell_maps, DIRECTION::Z_DIRECTION, WALL_SLIP);
         mirrorGhostCell(dilatation, cell_status, DIRECTION::Z_DIRECTION, WALL_SLIP);
         mirrorGhostCell(vorticity_magnitude, cell_status, DIRECTION::Z_DIRECTION, WALL_SLIP);
 

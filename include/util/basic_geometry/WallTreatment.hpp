@@ -55,12 +55,12 @@ void
                         const WALL_TREATMENT_CONDITION d_condition = WALL_SLIP);
 void
         buildGhostCellMap2D(const boost::shared_ptr<pdat::CellData<double> > &cell_status,
-                            std::vector<std::array<int,3> > & ghost_cell_maps);
+                            std::vector<std::vector<std::array<int,3> > >& ghost_cell_maps);
 
 
 void
         buildGhostCellMap3D(const boost::shared_ptr<pdat::CellData<double> > &cell_status,
-                            std::vector<std::array<int,4> > & ghost_cell_maps);
+                            std::vector<std::vector<std::array<int,4> > >& ghost_cell_maps);
 
 
 void
@@ -73,13 +73,13 @@ void
         mirrorGhostCell2D(boost::shared_ptr<pdat::CellData<double> > &variables,
                           const std::vector<std::vector<std::array<int,3> > > & ghost_cell_maps,
                           const DIRECTION::TYPE d_direction,
-                          const WALL_TREATMENT_CONDITION d_condition);
+                          const WALL_TREATMENT_CONDITION d_condition = WALL_SLIP);
 
 void
         mirrorGhostCell3D(boost::shared_ptr<pdat::CellData<double> > &variables,
                           const std::vector<std::vector<std::array<int,4> > > & ghost_cell_maps,
                           const DIRECTION::TYPE d_direction,
-                          const WALL_TREATMENT_CONDITION d_condition);
+                          const WALL_TREATMENT_CONDITION d_condition = WALL_SLIP);
 
 
 void
