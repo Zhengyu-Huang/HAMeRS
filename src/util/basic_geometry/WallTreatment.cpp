@@ -360,8 +360,6 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                         const int idx_mirr =
                                 (i - 2 * ghost_count + 1) + j * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
 
-                        std::vector<double> test;
-                        for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
 
                         if (depth == 1) {
                             V[0][idx] = V[0][idx_mirr];
@@ -383,11 +381,6 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                             V[2][idx] = V[2][idx_mirr];
                             V[3][idx] = -V[3][idx_mirr];
                         }
-
-                        for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) { std::cout << "2-X-1 " << test[tid] << " " << V[tid][idx] << " tid " << tid << " depth " << depth
-                                                                                                                   <<  " " << i << " " << j << std::endl; exit(1);};
-
-
                     }
                 }
 
@@ -409,8 +402,6 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                         const int idx_mirr =
                                 (i + 2 * ghost_count - 1) + j * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
 
-                        std::vector<double> test;
-                        for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
 
                         if (depth == 1) {
                             V[0][idx] = V[0][idx_mirr];
@@ -432,8 +423,6 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                             V[2][idx] = V[2][idx_mirr];
                             V[3][idx] = -V[3][idx_mirr];
                         }
-
-                        for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) { std::cout << "2-X-2 " << test[tid] << " " << V[tid][idx] <<  std::endl; exit(1);};
 
                     }
 
@@ -469,8 +458,6 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                                     k * (interior_dims[0] + 2 * d_num_var_ghosts[0]) *
                                     (interior_dims[1] + 2 * d_num_var_ghosts[1]);
 
-                            std::vector<double> test;
-                            for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
 
                             if (depth == 1) {
                                 V[0][idx] = V[0][idx_mirr];
@@ -496,9 +483,6 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                                 V[3][idx] = V[3][idx_mirr];
                                 V[4][idx] = -V[4][idx_mirr];
                             }
-
-                            for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) { std::cout << "3-X-1 " << test[tid] << " " << V[tid][idx] <<  std::endl; exit(1);};
-
 
                         }
                     }
@@ -528,9 +512,6 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                                     k * (interior_dims[0] + 2 * d_num_var_ghosts[0]) *
                                     (interior_dims[1] + 2 * d_num_var_ghosts[1]);
 
-                            std::vector<double> test;
-                            for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
-
                             if (depth == 1) {
                                 V[0][idx] = V[0][idx_mirr];
                             } else if (depth == 3 && d_condition == WALL_SLIP) {   //velocity u, v
@@ -555,8 +536,6 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                                 V[3][idx] = V[3][idx_mirr];
                                 V[4][idx] = -V[4][idx_mirr];
                             }
-
-                            for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) { std::cout << "3-X-2 " << test[tid] << " " << V[tid][idx] <<  std::endl; exit(1);};
 
                         }
 
@@ -591,9 +570,6 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                         const int idx_mirr =
                                 i + (j - 2 * ghost_count + 1) * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
 
-                        std::vector<double> test;
-                        for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
-
                         if (depth == 1) {
                             V[0][idx] = V[0][idx_mirr];
                         } else if (depth == 2 && d_condition == WALL_SLIP) {
@@ -614,9 +590,6 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                             V[2][idx] = V[2][idx_mirr];
                             V[3][idx] = -V[3][idx_mirr];
                         }
-
-                        for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) { std::cout << "2-Y-1 " << test[tid] << " " << V[tid][idx] <<  std::endl; exit(1);};
-
                     }
                 }
                 ghost_count = std::numeric_limits<int>::min();
@@ -638,9 +611,6 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                         const int idx_mirr =
                                 i + (j + 2 * ghost_count - 1) * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
 
-                        std::vector<double> test;
-                        for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
-
                         if (depth == 1) {
                             V[0][idx] = V[0][idx_mirr];
                         } else if (depth == 2 && d_condition == WALL_SLIP) {
@@ -661,8 +631,6 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                             V[2][idx] = V[2][idx_mirr];
                             V[3][idx] = -V[3][idx_mirr];
                         }
-
-                        for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) { std::cout << "2-Y-2 " << test[tid] << " " << V[tid][idx] <<  std::endl; exit(1);};
 
                     }
 
@@ -700,9 +668,6 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                                                  k * (interior_dims[0] + 2 * d_num_var_ghosts[0]) *
                                                  (interior_dims[1] + 2 * d_num_var_ghosts[1]);
 
-                            std::vector<double> test;
-                            for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
-
                             if (depth == 1) {
                                 V[0][idx] = V[0][idx_mirr];
                             } else if (depth == 3 && d_condition == WALL_SLIP) {
@@ -727,11 +692,6 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                                 V[3][idx] = V[3][idx_mirr];
                                 V[4][idx] = -V[4][idx_mirr];
                             }
-
-                            for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) { std::cout << "3-Y-1 " << test[tid] << " " << V[tid][idx]
-                                                                                                                       << " tid " << tid << " depth " << depth
-                                                                                                                       <<  " " << i << " " << j  << " " << k << " " << (j - 2 * ghost_count + 1) << std::endl;  exit(1);};
-
                         }
                     }
                     ghost_count = std::numeric_limits<int>::min();
@@ -760,9 +720,6 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                                     k * (interior_dims[0] + 2 * d_num_var_ghosts[0]) *
                                     (interior_dims[1] + 2 * d_num_var_ghosts[1]);
 
-                            std::vector<double> test;
-                            for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
-
                             if (depth == 1) {
                                 V[0][idx] = V[0][idx_mirr];
                             } else if (depth == 3 && d_condition == WALL_SLIP) {
@@ -787,11 +744,7 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                                 V[3][idx] = V[3][idx_mirr];
                                 V[4][idx] = -V[4][idx_mirr];
                             }
-
-                            for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) { std::cout << "3-Y-2 " << test[tid] << " " << V[tid][idx] <<  std::endl; exit(1);};
-
                         }
-
                     }
                 }
             }
@@ -830,9 +783,6 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                                                  (interior_dims[0] + 2 * d_num_var_ghosts[0]) *
                                                  (interior_dims[1] + 2 * d_num_var_ghosts[1]);
 
-                            std::vector<double> test;
-                            for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
-
                             if (depth == 1) {
                                 V[0][idx] = V[0][idx_mirr];
                             } else if (depth == 3 && d_condition == WALL_SLIP) {
@@ -857,11 +807,6 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                                 V[3][idx] = V[3][idx_mirr];
                                 V[4][idx] = -V[4][idx_mirr];
                             }
-
-                            for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) { std::cout << "3-Z-1 " << test[tid] << " " << V[tid][idx] <<" "
-                                                                                                             << i << " "  << j << " " << k <<  " " << (k - 2 * ghost_count + 1)  << " "
-                                                                                                             << interior_dims[0] << " " << interior_dims[1] << " "<<  interior_dims[2] << std::endl; exit(1);};
-
                         }
                     }
                     ghost_count = std::numeric_limits<int>::min();
@@ -890,9 +835,6 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                                     (k + 2 * ghost_count - 1) * (interior_dims[0] + 2 * d_num_var_ghosts[0]) *
                                     (interior_dims[1] + 2 * d_num_var_ghosts[1]);
 
-                            std::vector<double> test;
-                            for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
-
                             if (depth == 1) {
                                 V[0][idx] = V[0][idx_mirr];
                             } else if (depth == 3 && d_condition == WALL_SLIP) {
@@ -917,11 +859,7 @@ mirrorGhostCell(boost::shared_ptr<pdat::CellData<double> > &variables,
                                 V[3][idx] = V[3][idx_mirr];
                                 V[4][idx] = -V[4][idx_mirr];
                             }
-
-                            for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) { std::cout << "3-Z-2 " << test[tid] << " " << V[tid][idx] <<  std::endl; exit(1);};
-
                         }
-
                     }
                 }
             }
@@ -977,9 +915,6 @@ mirrorGhostCellDerivative(std::vector<boost::shared_ptr<pdat::CellData<double> >
                         const int idx_mirr =
                                 (i - 2 * ghost_count + 1) + j * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
 
-std::vector<double> test;
-for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
-
                         if (depth == 5) {   // du/dx, dv/dx, dT/dx,  du/dy, dv/dy
                             V[0][idx] = V[0][idx_mirr];
                             V[1][idx] = V[1][idx_mirr];
@@ -987,11 +922,6 @@ for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
                             V[3][idx] = -V[3][idx_mirr];
                             V[4][idx] = -V[4][idx_mirr];
                         }
-
-for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) { std::cout << "2-X-1 " << test[tid] << " " << V[tid][idx] <<  std::endl; exit(1);};
-
-
-
                     }
                 }
 
@@ -1012,11 +942,6 @@ for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) {
                         (i + 2 * ghost_count - 1) <= interior_dims[0] + 2 * d_num_var_ghosts[0] - 1) {
                         const int idx_mirr =
                                 (i + 2 * ghost_count - 1) + j * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
-
-std::vector<double> test;
-for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
-
-
                         if (depth == 5) {   // du/dx, dv/dx, dT/dx,  du/dy, dv/dy
                             V[0][idx] = V[0][idx_mirr];
                             V[1][idx] = V[1][idx_mirr];
@@ -1024,12 +949,7 @@ for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
                             V[3][idx] = -V[3][idx_mirr];
                             V[4][idx] = -V[4][idx_mirr];
                         }
-
-for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) { std::cout << "2-X-2 " << test[tid] << " " << V[tid][idx] <<  std::endl; exit(1);};
-
-
                     }
-
                 }
             }
         } else if (d_dim == tbox::Dimension(3)) {
@@ -1060,10 +980,7 @@ for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) {
                             const int idx_mirr =
                                     (i - 2 * ghost_count + 1) + j * (interior_dims[0] + 2 * d_num_var_ghosts[0]) +
                                     k * (interior_dims[0] + 2 * d_num_var_ghosts[0]) *
-                                    (interior_dims[1] + 2 * d_num_var_ghosts[1]);;
-
-std::vector<double> test;
-for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
+                                    (interior_dims[1] + 2 * d_num_var_ghosts[1]);
 
                             if (depth == 8) { // du/dx, dv/dx, dw/x, dT/dx,  du/dy, dv/dy, du/dz, dw/dz
                                 V[0][idx] = V[0][idx_mirr];
@@ -1075,11 +992,7 @@ for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
                                 V[6][idx] = -V[6][idx_mirr];
                                 V[7][idx] = -V[7][idx_mirr];
                             }
-for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) { std::cout << "3-X-1 " << test[tid] << " " << V[tid][idx] <<  std::endl; exit(1);};
-
-
-
-                        }
+                       }
                     }
 
                     ghost_count = std::numeric_limits<int>::min();
@@ -1107,9 +1020,6 @@ for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) {
                                     k * (interior_dims[0] + 2 * d_num_var_ghosts[0]) *
                                     (interior_dims[1] + 2 * d_num_var_ghosts[1]);
 
-std::vector<double> test;
-for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
-
                             if (depth == 8) { // du/dx, dv/dx, dw/x, dT/dx,  du/dy, dv/dy, du/dz, dw/dz
                                 V[0][idx] = V[0][idx_mirr];
                                 V[1][idx] = V[1][idx_mirr];
@@ -1120,11 +1030,7 @@ for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
                                 V[6][idx] = -V[6][idx_mirr];
                                 V[7][idx] = -V[7][idx_mirr];
                             }
-for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) { std::cout << "3-X-2 " << test[tid] << " " << V[tid][idx] <<  std::endl; exit(1);};
-
-
-                        }
-
+                       }
                     }
                 }
             }
@@ -1155,9 +1061,6 @@ for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) {
                         const int idx_mirr =
                                 i + (j - 2 * ghost_count + 1) * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
 
-std::vector<double> test;
-for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
-
                         if (depth == 5) {   // du/dx, dv/dx,  du/dy, dv/dy, dT/dy
                             V[0][idx] = -V[0][idx_mirr];
                             V[1][idx] = -V[1][idx_mirr];
@@ -1165,10 +1068,6 @@ for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
                             V[3][idx] = V[3][idx_mirr];
                             V[4][idx] = -V[4][idx_mirr];
                         }
-for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) { std::cout << "2-Y-1 visco " << tid <<  " "  << idx << " " << test[tid] << " " << V[tid][idx] << " " <<
-i << " " << j << " " << (j - 2 * ghost_count + 1) << " dim " <<
-interior_dims[0] << " " << interior_dims[1] << " cell "<<  cell_status_data[idx_status] << std::endl; exit(1);};
-
                     }
                 }
                 ghost_count = std::numeric_limits<int>::min();
@@ -1190,9 +1089,6 @@ interior_dims[0] << " " << interior_dims[1] << " cell "<<  cell_status_data[idx_
                         const int idx_mirr =
                                 i + (j + 2 * ghost_count - 1) * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
 
-std::vector<double> test;
-for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
-
                         if (depth == 5) {   // du/dx, dv/dx,  du/dy, dv/dy, dT/dy
                             V[0][idx] = -V[0][idx_mirr];
                             V[1][idx] = -V[1][idx_mirr];
@@ -1200,9 +1096,6 @@ for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
                             V[3][idx] = V[3][idx_mirr];
                             V[4][idx] = -V[4][idx_mirr];
                         }
-for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) { std::cout << "2-Y-2 " << test[tid] << " " << V[tid][idx] <<  std::endl; exit(1);};
-
-
                     }
 
                 }
@@ -1240,9 +1133,6 @@ for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) {
                                                  k * (interior_dims[0] + 2 * d_num_var_ghosts[0]) *
                                                  (interior_dims[1] + 2 * d_num_var_ghosts[1]);
 
-std::vector<double> test;
-for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
-
                             if (depth == 8) { // du/dx, dv/dx, du/dy, dv/dy, dw/dy, dT/dy, dv/dz, dw/dz
                                 V[0][idx] = -V[0][idx_mirr];
                                 V[1][idx] = -V[1][idx_mirr];
@@ -1253,9 +1143,6 @@ for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
                                 V[6][idx] = -V[6][idx_mirr];
                                 V[7][idx] = -V[7][idx_mirr];
                             }
-for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) { std::cout << "3-Y-1 " << test[tid] << " " << V[tid][idx] <<  std::endl; exit(1);};
-
-
                         }
                     }
                     ghost_count = std::numeric_limits<int>::min();
@@ -1284,8 +1171,6 @@ for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) {
                                     k * (interior_dims[0] + 2 * d_num_var_ghosts[0]) *
                                     (interior_dims[1] + 2 * d_num_var_ghosts[1]);
 
-std::vector<double> test;
-for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
 
                             if (depth == 8) { // du/dx, dv/dx, du/dy, dv/dy, dw/dy, dT/dy, dv/dz, dw/dz
                                 V[0][idx] = -V[0][idx_mirr];
@@ -1297,10 +1182,7 @@ for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
                                 V[6][idx] = -V[6][idx_mirr];
                                 V[7][idx] = -V[7][idx_mirr];
                             }
-for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) { std::cout << "3-Y-2 " << test[tid] << " " << V[tid][idx] <<  std::endl; exit(1);};
-
-
-                        }
+                       }
 
                     }
                 }
@@ -1342,8 +1224,6 @@ for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) {
                                                  (interior_dims[0] + 2 * d_num_var_ghosts[0]) *
                                                  (interior_dims[1] + 2 * d_num_var_ghosts[1]);
 
-std::vector<double> test;
-for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
 
                             if (depth == 8) { // du/dx, dw/dx, dv/dy, dw/dy, du/dz, dv/dz, dw/dz, dT/dz
                                 V[0][idx] = -V[0][idx_mirr];
@@ -1355,8 +1235,6 @@ for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
                                 V[6][idx] = V[6][idx_mirr];
                                 V[7][idx] = -V[7][idx_mirr];
                             }
-for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) { std::cout << "3-Z-1 " << test[tid] << " " << V[tid][idx] <<  std::endl; exit(1);};
-
                         }
 
                     }
@@ -1387,9 +1265,6 @@ for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) {
                                     (k + 2 * ghost_count - 1) * (interior_dims[0] + 2 * d_num_var_ghosts[0]) *
                                     (interior_dims[1] + 2 * d_num_var_ghosts[1]);
 
-std::vector<double> test;
-for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
-
                             if (depth == 8) { // du/dx, dw/dx, dv/dy, dw/dy, du/dz, dv/dz, dw/dz, dT/dz
                                 V[0][idx] = -V[0][idx_mirr];
                                 V[1][idx] = -V[1][idx_mirr];
@@ -1400,7 +1275,6 @@ for(int tid =0; tid < depth; tid++) test.push_back(V[tid][idx]);
                                 V[6][idx] = V[6][idx_mirr];
                                 V[7][idx] = -V[7][idx_mirr];
                             }
-for(int tid =0; tid < depth; tid++) if(fabs(test[tid] - V[tid][idx]) > 1e-15 ) { std::cout << "3-Z-2 " << test[tid] << " " << V[tid][idx] <<  std::endl; exit(1);};
 
                         }
                     }
