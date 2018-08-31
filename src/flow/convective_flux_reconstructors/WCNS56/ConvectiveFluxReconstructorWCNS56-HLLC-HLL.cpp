@@ -2482,20 +2482,6 @@ ConvectiveFluxReconstructorWCNS56::computeConvectiveFluxAndSourceOnPatch(
                                 F_node_x[ei][idx_node_L]) +
                             double(23)/double(15)*F_midpoint_x[ei][idx_midpoint_x]);
 
-//                        if ((cell_status_data[idx_node_L] < 0.5 && cell_status_data[idx_node_R] > 0.5) ||
-//                                    (cell_status_data[idx_node_L] > 0.5 && cell_status_data[idx_node_R] < 0.5)) {
-//                            std::cout << "Pressure" << V[4][idx_node_L] << " " << V[4][idx_node_L] << std::endl;
-//                            std::cout <<i << " " << j << " " << k << " ijk " <<  F_face_x[idx_face_x] << " " << F_midpoint_x[ei][idx_midpoint_x_R] << " "
-//                                      << F_midpoint_x[ei][idx_midpoint_x_L]
-//                                      << " " << F_node_x[ei][idx_node_R] << " " << F_node_x[ei][idx_node_L] << " "
-//                                      << F_midpoint_x[ei][idx_midpoint_x] << " " << (
-//                                              double(1) / double(30) * (F_midpoint_x[ei][idx_midpoint_x_R] +
-//                                                                        F_midpoint_x[ei][idx_midpoint_x_L]) -
-//                                              double(3) / double(10) * (F_node_x[ei][idx_node_R] +
-//                                                                        F_node_x[ei][idx_node_L]) +
-//                                              double(23) / double(15) * F_midpoint_x[ei][idx_midpoint_x]) << std::endl;
-//                        }
-
 
                     }
                 }

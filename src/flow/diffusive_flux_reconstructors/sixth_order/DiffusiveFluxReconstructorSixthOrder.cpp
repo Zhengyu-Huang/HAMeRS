@@ -1079,48 +1079,6 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
                                 double(1)/double(60)*(mu[idx_node_LLL]*dudx[idx_node_LLL] + mu[idx_node_RRR]*dudx[idx_node_RRR]));
 
 
-                            if ((cell_status_data[idx_node_L] < 0.5 && cell_status_data[idx_node_R] > 0.5) ||
-                                (cell_status_data[idx_node_L] > 0.5 && cell_status_data[idx_node_R] < 0.5)) {
-                                if ((ei <= d_num_eqn - 2) &&(fabs(mu[idx_node_L]*dudx[idx_node_L] - mu[idx_node_R]*dudx[idx_node_R]) > 1e-8 ||
-                                                             fabs(mu[idx_node_LL]*dudx[idx_node_LL] - mu[idx_node_RR]*dudx[idx_node_RR]) > 1e-8 ||
-                                                             fabs(mu[idx_node_LLL]*dudx[idx_node_LLL] - mu[idx_node_LLL]*dudx[idx_node_RRR]) > 1e-8)) {
-                                    std::cout << "num_ghosts_cell_status[0] " << num_ghosts_cell_status[0] << std::endl;
-                                    std::cout << dudx[idx_node_L] << " " << dudx[idx_node_R] << " " << dudx[idx_node_LL]
-                                              << " " << dudx[idx_node_RR] << " " << dudx[idx_node_LLL] << " "
-                                              << dudx[idx_node_RRR] << std::endl;
-
-                                    std::cout << mu[idx_node_L] << " " << mu[idx_node_R] << " " << mu[idx_node_LL]
-                                              << " " << mu[idx_node_RR] << " " << mu[idx_node_LLL] << " "
-                                              << mu[idx_node_RRR] << std::endl;
-
-
-                                    std::cout << "dudx wrong!!!" << " ei " << ei << " vi " << vi  << std::endl;
-                                    exit(1);
-                                }
-
-
-                                if ((ei == d_num_eqn - 1) &&(fabs(mu[idx_node_L]*dudx[idx_node_L] + mu[idx_node_R]*dudx[idx_node_R]) > 1e-8 ||
-                                                             fabs(mu[idx_node_LL]*dudx[idx_node_LL] + mu[idx_node_RR]*dudx[idx_node_RR]) > 1e-8 ||
-                                                             fabs(mu[idx_node_LLL]*dudx[idx_node_LLL] + mu[idx_node_RRR]*dudx[idx_node_RRR]) > 1e-8)) {
-                                    std::cout << "num_ghosts_cell_status[0] " << num_ghosts_cell_status[0] << std::endl;
-                                    std::cout << "dudx " << dudx[idx_node_L] << " " << dudx[idx_node_R] << " " << dudx[idx_node_LL]
-                                              << " " << dudx[idx_node_RR] << " " << dudx[idx_node_LLL] << " "
-                                              << dudx[idx_node_RRR] << std::endl;
-
-                                    std::cout << "mu " << mu[idx_node_L] << " " << mu[idx_node_R] << " " << mu[idx_node_LL]
-                                              << " " << mu[idx_node_RR] << " " << mu[idx_node_LLL] << " "
-                                              << mu[idx_node_RRR] << std::endl;
-
-                                    std::cout << mu[idx_node_L]*dudx[idx_node_L] + mu[idx_node_R]*dudx[idx_node_R]  << " "
-                                              << mu[idx_node_LL]*dudx[idx_node_LL] + mu[idx_node_RR]*dudx[idx_node_RR] << " "
-                                              << mu[idx_node_LLL]*dudx[idx_node_LLL] + mu[idx_node_RRR]*dudx[idx_node_RRR] << std::endl;
-
-                                    std::cout << "dudx wrong!!!" << " ei " << ei << " vi " << vi  << std::endl;
-                                    exit(1);
-                                }
-                            }
-
-
                         }
                     }
                 }
@@ -2132,58 +2090,6 @@ DiffusiveFluxReconstructorSixthOrder::computeDiffusiveFluxOnPatch(
                                 double(37)/double(60)*(mu[idx_node_B]*dudz[idx_node_B] + mu[idx_node_F]*dudz[idx_node_F]) +
                                 double(-2)/double(15)*(mu[idx_node_BB]*dudz[idx_node_BB] + mu[idx_node_FF]*dudz[idx_node_FF]) +
                                 double(1)/double(60)*(mu[idx_node_BBB]*dudz[idx_node_BBB] + mu[idx_node_FFF]*dudz[idx_node_FFF]));
-
-
-                            if((cell_status_data[idx_node_B] < 0.5 && cell_status_data[idx_node_F] > 0.5)||
-                               (cell_status_data[idx_node_B] > 0.5 && cell_status_data[idx_node_F] < 0.5))
-                            {
-
-
-                                if((ei <= d_num_eqn - 2) &&
-                                   (fabs(mu[idx_node_B]*dudz[idx_node_B] - mu[idx_node_F]*dudz[idx_node_F]) > 1e-8 ||
-                                    fabs(mu[idx_node_BB]*dudz[idx_node_BB] - mu[idx_node_FF]*dudz[idx_node_FF]) > 1e-8 ||
-                                    fabs(mu[idx_node_BBB]*dudz[idx_node_BBB] - mu[idx_node_FFF]*dudz[idx_node_FFF]) > 1e-8)) {
-                                    std::cout << "num_ghosts_cell_status[0] " << num_ghosts_cell_status[0] << std::endl;
-                                    std::cout << mu[idx_node_B] << " " << mu[idx_node_F] << " " << mu[idx_node_BB] << " "
-                                              << mu[idx_node_FF] << " " << mu[idx_node_BBB] << " " << mu[idx_node_FFF]
-                                              << std::endl;
-
-                                    std::cout << dudz[idx_node_B] << " " <<  dudz[idx_node_F] << " " <<  dudz[idx_node_BB] << " "
-                                              <<  dudz[idx_node_FF] << " " <<  dudz[idx_node_BBB] << " " <<  dudz[idx_node_FFF]
-                                              << std::endl;
-
-                                    std::cout << "dudz2 mu wrong!!!" << " ei " << ei << " vi " << vi << std::endl;
-                                    exit(1);
-                                }
-                                if((ei == d_num_eqn - 1) &&
-                                   (fabs(mu[idx_node_B]*dudz[idx_node_B] + mu[idx_node_F]*dudz[idx_node_F]) > 1e-8 ||
-                                    fabs(mu[idx_node_BB]*dudz[idx_node_BB] + mu[idx_node_FF]*dudz[idx_node_FF]) > 1e-8 ||
-                                    fabs(mu[idx_node_BBB]*dudz[idx_node_BBB] + mu[idx_node_FFF]*dudz[idx_node_FFF]) > 1e-8)) {
-                                    std::cout << "num_ghosts_cell_status[0] " << num_ghosts_cell_status[0] << std::endl;
-                                    std::cout << mu[idx_node_B] << " " << mu[idx_node_F] << " " << mu[idx_node_BB] << " "
-                                              << mu[idx_node_FF] << " " << mu[idx_node_BBB] << " " << mu[idx_node_FFF]
-                                              << std::endl;
-
-                                    std::cout << "vx " << (velocity->getPointer(0))[idx_node_B] << " " << (velocity->getPointer(0))[idx_node_F] << " " << (velocity->getPointer(0))[idx_node_BB] << " "
-                                              << (velocity->getPointer(0))[idx_node_FF] << " " << (velocity->getPointer(0))[idx_node_BBB] << " " << (velocity->getPointer(0))[idx_node_FFF]
-                                              << std::endl;
-
-                                    std::cout << "vy " << (velocity->getPointer(1))[idx_node_B] << " " << (velocity->getPointer(1))[idx_node_F] << " " << (velocity->getPointer(1))[idx_node_BB] << " "
-                                              << (velocity->getPointer(1))[idx_node_FF] << " " << (velocity->getPointer(1))[idx_node_BBB] << " " << (velocity->getPointer(1))[idx_node_FFF]
-                                              << std::endl;
-
-                                    std::cout << "vz " << (velocity->getPointer(2))[idx_node_B] << " " << (velocity->getPointer(2))[idx_node_F] << " " << (velocity->getPointer(2))[idx_node_BB] << " "
-                                              << (velocity->getPointer(2))[idx_node_FF] << " " << (velocity->getPointer(2))[idx_node_BBB] << " " << (velocity->getPointer(2))[idx_node_FFF]
-                                              << std::endl;
-
-                                    std::cout << dudz[idx_node_B] << " " <<  dudz[idx_node_F] << " " <<  dudz[idx_node_BB] << " "
-                                              <<  dudz[idx_node_FF] << " " <<  dudz[idx_node_BBB] << " " <<  dudz[idx_node_FFF]
-                                              << std::endl;
-                                    std::cout << "dudz2 mu wrong!!!" << " ei " << ei << " vi " << vi  << " in " << static_cast<int>(var_data_z[ei].size()) <<  " mu_idx " << mu_idx << std::endl;
-                                    std::cout << " i " << i <<  " j "  << j  << " k " << k <<  std::endl;
-                                    exit(1);
-                                }
-                            }
 
                         }
                     }

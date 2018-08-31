@@ -4969,9 +4969,6 @@ FlowModelSingleSpecies::getDiffusiveFluxDiffusivities(
                     D_08[idx_diffusivities] = -v[idx_velocity]*mu[idx_diffusivities];
                     D_09[idx_diffusivities] = -kappa[idx_diffusivities];
 
-		    // if(i  == 60 && j  == 24) std::cout << "FFFFFF " << " " << (i + d_num_subghosts_velocity[0]) << " " <<  (j + d_num_subghosts_velocity[1]) << " " << d_subghostcell_dims_velocity[0]   << " " << u[idx_velocity]<< " " << idx_diffusivities << " "<< mu[idx_diffusivities] << "  " <<u[(i + d_num_subghosts_velocity[0]) +(j + d_num_subghosts_velocity[1] - 1)*d_subghostcell_dims_velocity[0]] << "  "<<mu[(i + d_num_subghosts_velocity[0]) +(j + d_num_subghosts_velocity[1] - 1)*d_subghostcell_dims_velocity[0]]  << std::endl;
-
-
                 }
             }
         }

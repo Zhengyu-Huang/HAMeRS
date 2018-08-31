@@ -430,8 +430,6 @@ ConvectiveFluxReconstructorFirstOrderHLLC::computeConvectiveFluxAndSourceOnPatch
                      */
 
                     if(cell_status_data[idx_L] < 0.5){
-//                        if(Q[ei][idx_L] != 0 && Q[ei][idx_L] != 1 && Q[ei][idx_L] != 2.5)
-//                            std::cout <<" ei L" << ei << " " << Q[ei][idx_L] << std::endl;
                         if(ei == 1)
                             Q_minus[ei][idx_face_x] = -Q_plus[ei][idx_face_x];
                         else
@@ -439,8 +437,6 @@ ConvectiveFluxReconstructorFirstOrderHLLC::computeConvectiveFluxAndSourceOnPatch
 
                     } else if(cell_status_data[idx_R] < 0.5)
                     {
-//                        if(Q[ei][idx_R] != 0 && Q[ei][idx_R] != 1 && Q[ei][idx_R] != 2.5)
-//                        std::cout <<" ei R" << ei << " " << Q[ei][idx_R] << std::endl;
                         if(ei == 1)
                             Q_plus[ei][idx_face_x] = -Q_minus[ei][idx_face_x];
                         else
@@ -532,16 +528,12 @@ ConvectiveFluxReconstructorFirstOrderHLLC::computeConvectiveFluxAndSourceOnPatch
                         else
                             Q_minus[ei][idx_face_y] = Q_plus[ei][idx_face_y];
 
-                        //std::cout << "B(i,j)=( " <<i << " , " << j << " ) " << "(x,yc) " << x_lo[0] + (i + 0.5)*dx[0]  <<  " , " <<  x_lo[1] + j*dx[1]  << " ei " << ei << std::endl;
-
                     } else if(cell_status_data[idx_T] < 0.5)
                     {
                         if(ei == 2)
                             Q_plus[ei][idx_face_y] = -Q_minus[ei][idx_face_y];
                         else
                             Q_plus[ei][idx_face_y]  = Q_minus[ei][idx_face_y];
-
-                        //std::cout << "T(i,j)=( " <<i << " , " << j << " ) " << "(x,yc) " << x_lo[0] + (i + 0.5)*dx[0]  <<  " , " <<  x_lo[1] + j*dx[1]  << " ei " << ei << std::endl;
 
                     }
                 }
