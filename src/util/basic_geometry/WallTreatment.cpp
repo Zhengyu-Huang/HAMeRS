@@ -1867,7 +1867,10 @@ void mirrorGhostCellDerivative2D(std::vector<boost::shared_ptr<pdat::CellData<do
             idx = (i + d_num_var_ghosts[0]) + (j + d_num_var_ghosts[1]) * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
             idx_mirr = (i_mirr + d_num_var_ghosts[0]) +
                        (j + d_num_var_ghosts[1]) * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
-            if (depth == 5) {   // du/dx, dv/dx, dT/dx,  du/dy, dv/dy
+            if (depth == 2) {   //du/dy, dv/dy
+                V[0][idx] = -V[0][idx_mirr];
+                V[1][idx] = -V[1][idx_mirr];
+            }else if (depth == 5) {   // du/dx, dv/dx, dT/dx,  du/dy, dv/dy
                 V[0][idx] = V[0][idx_mirr];
                 V[1][idx] = V[1][idx_mirr];
                 V[2][idx] = -V[2][idx_mirr];
@@ -1893,7 +1896,10 @@ void mirrorGhostCellDerivative2D(std::vector<boost::shared_ptr<pdat::CellData<do
             idx = (i + d_num_var_ghosts[0]) + (j + d_num_var_ghosts[1]) * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
             idx_mirr = (i + d_num_var_ghosts[0]) +
                        (j_mirr + d_num_var_ghosts[1]) * (interior_dims[0] + 2 * d_num_var_ghosts[0]);
-            if (depth == 5) {   // du/dx, dv/dx,  du/dy, dv/dy, dT/dy
+            if (depth == 2) {   //du/dx, dv/dx
+                V[0][idx] = -V[0][idx_mirr];
+                V[1][idx] = -V[1][idx_mirr];
+            }else if (depth == 5) {   // du/dx, dv/dx,  du/dy, dv/dy, dT/dy
                 V[0][idx] = -V[0][idx_mirr];
                 V[1][idx] = -V[1][idx_mirr];
                 V[2][idx] = V[2][idx_mirr];
@@ -1946,7 +1952,10 @@ void mirrorGhostCellDerivative3D(std::vector<boost::shared_ptr<pdat::CellData<do
                        (j + d_num_var_ghosts[1]) * (interior_dims[0] + 2 * d_num_var_ghosts[0]) +
                        (k + d_num_var_ghosts[2]) * (interior_dims[0] + 2 * d_num_var_ghosts[0]) *
                        (interior_dims[1] + 2 * d_num_var_ghosts[1]);
-            if (depth == 8) { // du/dx, dv/dx, dw/x, dT/dx,  du/dy, dv/dy, du/dz, dw/dz
+            if (depth == 2) {   //du/dy, dv/dy or du/dz, dw/dz
+                V[0][idx] = -V[0][idx_mirr];
+                V[1][idx] = -V[1][idx_mirr];
+            }else if (depth == 8) { // du/dx, dv/dx, dw/x, dT/dx,  du/dy, dv/dy, du/dz, dw/dz
                 V[0][idx] = V[0][idx_mirr];
                 V[1][idx] = V[1][idx_mirr];
                 V[2][idx] = V[2][idx_mirr];
@@ -1982,7 +1991,10 @@ void mirrorGhostCellDerivative3D(std::vector<boost::shared_ptr<pdat::CellData<do
                        (k + d_num_var_ghosts[2]) * (interior_dims[0] + 2 * d_num_var_ghosts[0]) *
                        (interior_dims[1] + 2 * d_num_var_ghosts[1]);
 
-            if (depth == 8) { // du/dx, dv/dx, du/dy, dv/dy, dw/dy, dT/dy, dv/dz, dw/dz
+            if (depth == 2) {   //du/dx, dv/dx or dv/dz, dw/dz
+                V[0][idx] = -V[0][idx_mirr];
+                V[1][idx] = -V[1][idx_mirr];
+            }else if (depth == 8) { // du/dx, dv/dx, du/dy, dv/dy, dw/dy, dT/dy, dv/dz, dw/dz
                 V[0][idx] = -V[0][idx_mirr];
                 V[1][idx] = -V[1][idx_mirr];
                 V[2][idx] = V[2][idx_mirr];
@@ -2016,7 +2028,10 @@ void mirrorGhostCellDerivative3D(std::vector<boost::shared_ptr<pdat::CellData<do
                        (k_mirr + d_num_var_ghosts[2]) * (interior_dims[0] + 2 * d_num_var_ghosts[0]) *
                        (interior_dims[1] + 2 * d_num_var_ghosts[1]);
 
-            if (depth == 8) { // du/dx, dw/dx, dv/dy, dw/dy, du/dz, dv/dz, dw/dz, dT/dz
+            if (depth == 2) {   //du/dx, dw/dx or dv/dy, dw/dy
+                V[0][idx] = -V[0][idx_mirr];
+                V[1][idx] = -V[1][idx_mirr];
+            }else if (depth == 8) { // du/dx, dw/dx, dv/dy, dw/dy, du/dz, dv/dz, dw/dz, dT/dz
                 V[0][idx] = -V[0][idx_mirr];
                 V[1][idx] = -V[1][idx_mirr];
                 V[2][idx] = -V[2][idx_mirr];

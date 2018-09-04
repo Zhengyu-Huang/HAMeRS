@@ -1,7 +1,7 @@
 #include "flow/nonconservative_diffusive_flux_divergence_operators/sixth_order/NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder.hpp"
 
 #include "SAMRAI/geom/CartesianPatchGeometry.h"
-
+#include "util/basic_geometry/WallTreatment.hpp"
 #include <map>
 
 NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder(
@@ -97,6 +97,32 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
     
     // Initialize the data of diffusive flux to zero.
     diffusive_flux_divergence->fillAll(double(0));
+
+    /*
+     * Register the patch and derived cell variables in the flow model and compute the corresponding cell data.
+     */
+
+    d_flow_model->registerPatchWithDataContext(patch, data_context);
+
+    /*
+     * Compute the cell status.
+     */
+
+    boost::shared_ptr<pdat::CellData<double> > cell_status
+            = d_flow_model->getGlobalCellStatus();
+
+
+    d_flow_model->registerDiffusiveFlux(d_num_diff_ghosts);
+
+    d_flow_model->computeGlobalDerivedCellData();
+
+    boost::shared_ptr<pdat::CellData<double> > velocity =
+            d_flow_model->getGlobalCellData("VELOCITY");
+
+    boost::shared_ptr<pdat::CellData<double> > temperature =
+            d_flow_model->getGlobalCellData("TEMPERATURE");
+
+
     
     if (d_dim == tbox::Dimension(1))
     {
@@ -108,15 +134,7 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
         
         const int num_diff_ghosts_0 = d_num_diff_ghosts[0];
         
-        /*
-         * Register the patch and derived cell variables in the flow model and compute the corresponding cell data.
-         */
-        
-        d_flow_model->registerPatchWithDataContext(patch, data_context);
-        
-        d_flow_model->registerDiffusiveFlux(d_num_diff_ghosts);
-        
-        d_flow_model->computeGlobalDerivedCellData();
+
         
         /*
          * Delcare containers for computing flux derivatives in different directions.
@@ -262,11 +280,11 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
         diffusivities_derivative_x.clear();
         var_derivative_xx.clear();
         
-        /*
-         * Unregister the patch and data of all registered derived cell variables in the flow model.
-         */
-        
-        d_flow_model->unregisterPatch();
+//        /*
+//         * Unregister the patch and data of all registered derived cell variables in the flow model.
+//         */
+//
+//        d_flow_model->unregisterPatch();
     }
     else if (d_dim == tbox::Dimension(2))
     {
@@ -281,16 +299,7 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
         const int num_diff_ghosts_1 = d_num_diff_ghosts[1];
         
         const int diff_ghostcell_dim_0 = diff_ghostcell_dims[0];
-        
-        /*
-         * Register the patch and derived cell variables in the flow model and compute the corresponding cell data.
-         */
-        
-        d_flow_model->registerPatchWithDataContext(patch, data_context);
-        
-        d_flow_model->registerDiffusiveFlux(d_num_diff_ghosts);
-        
-        d_flow_model->computeGlobalDerivedCellData();
+
         
         /*
          * Delcare containers for computing flux derivatives in different directions.
@@ -329,6 +338,13 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
         std::map<double*, boost::shared_ptr<pdat::CellData<double> > > derivative_xy_computed;
         std::map<double*, boost::shared_ptr<pdat::CellData<double> > > derivative_yx_computed;
         std::map<double*, boost::shared_ptr<pdat::CellData<double> > > derivative_yy_computed;
+
+        /*
+         * Build ghost cell map
+         */
+        std::vector<std::vector<std::array<int,3> > > ghost_cell_maps;
+        ghost_cell_maps.resize(2);
+        buildGhostCellMap2D(cell_status, ghost_cell_maps);
         
         /*
          * (1) Compute the derivatives for diffusive flux in x-direction.
@@ -340,18 +356,37 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
             var_component_idx_x,
             DIRECTION::X_DIRECTION,
             DIRECTION::X_DIRECTION);
+
+        /*
+         * mirror ghost cell data for computing the direvative in the x-direction.
+         */
+        mirrorGhostCell2D(velocity, ghost_cell_maps, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
         
         // Get the diffusivities for the terms in x-direction in the diffusive flux in x-direction.
         d_flow_model->getDiffusiveFluxDiffusivities(
             diffusivities_data_x,
             diffusivities_component_idx_x,
             DIRECTION::X_DIRECTION,
-            DIRECTION::X_DIRECTION);
+            DIRECTION::X_DIRECTION, true);
         
         TBOX_ASSERT(static_cast<int>(var_data_x.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(var_component_idx_x.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(diffusivities_data_x.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(diffusivities_component_idx_x.size()) == d_num_eqn);
+
+        // Compute the first derivatives of diffusivities in x-direction.
+        computeFirstDerivativesInX(
+            patch,
+            diffusivities_derivative_x,
+            derivative_x_computed,
+            diffusivities_data_x,
+            diffusivities_component_idx_x);
+
+        /*
+         * mirror ghost cell data for computing the direvative in the x-direction.
+         */
+        mirrorGhostCell2D(velocity, ghost_cell_maps, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
+        mirrorGhostCell2D(temperature, ghost_cell_maps, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
         
         //Compute the first derivatives of variables in x-direction.
         computeFirstDerivativesInX(
@@ -360,14 +395,7 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
             derivative_x_computed,
             var_data_x,
             var_component_idx_x);
-        
-        // Compute the first derivatives of diffusivities in x-direction.
-        computeFirstDerivativesInX(
-            patch,
-            diffusivities_derivative_x,
-            derivative_x_computed,
-            diffusivities_data_x,
-            diffusivities_component_idx_x);
+
         
         // Compute the second derivatives of variables in x-direction.
         computeSecondDerivativesInX(
@@ -469,27 +497,24 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
             var_component_idx_y,
             DIRECTION::X_DIRECTION,
             DIRECTION::Y_DIRECTION);
+
+        /*
+        * mirror ghost cell data for computing the direvative in the x-direction.
+        */
+        mirrorGhostCell2D(velocity, ghost_cell_maps, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
         
         // Get the diffusivities for the terms in y-direction in the diffusive flux in x-direction.
         d_flow_model->getDiffusiveFluxDiffusivities(
             diffusivities_data_y,
             diffusivities_component_idx_y,
             DIRECTION::X_DIRECTION,
-            DIRECTION::Y_DIRECTION);
+            DIRECTION::Y_DIRECTION, true);//todo need recompute???
         
         TBOX_ASSERT(static_cast<int>(var_data_y.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(var_component_idx_y.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(diffusivities_data_y.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(diffusivities_component_idx_y.size()) == d_num_eqn);
-        
-        //Compute the first derivatives of variables in y-direction.
-        computeFirstDerivativesInY(
-            patch,
-            var_derivative_y,
-            derivative_y_computed,
-            var_data_y,
-            var_component_idx_y);
-        
+
         // Compute the first derivatives of diffusivities in x-direction.
         computeFirstDerivativesInX(
             patch,
@@ -497,6 +522,22 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
             derivative_x_computed,
             diffusivities_data_y,
             diffusivities_component_idx_y);
+
+
+        /*
+        * mirror ghost cell data for computing the direvative in the y-direction.
+        */
+        mirrorGhostCell2D(velocity, ghost_cell_maps, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
+        mirrorGhostCell2D(temperature, ghost_cell_maps, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
+
+        //Compute the first derivatives of variables in y-direction.
+        computeFirstDerivativesInY(
+            patch,
+            var_derivative_y,
+            derivative_y_computed,
+            var_data_y,
+            var_component_idx_y);
+
         
         // Compute the mixed derivatives of variables.
         var_derivative_component_idx_y.resize(d_num_eqn);
@@ -507,6 +548,18 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
             {
                 var_derivative_component_idx_y[ei][vi] = 0;
             }
+        }
+
+        {
+            /*
+             * Mirror the derivatives in x-direction to compute du/dydx in the x direction.
+             */
+            std::vector<boost::shared_ptr<pdat::CellData<double> > > du_y;
+            du_y.reserve(2); //du/dy, dv/dy
+            int ei = d_num_eqn - 1;
+            for(int vi = 0; vi < static_cast<int>(var_data_y[ei].size()); vi++)
+                du_y.push_back(var_derivative_y[ei][vi]);
+            mirrorGhostCellDerivative2D(du_y, ghost_cell_maps, DIRECTION::X_DIRECTION);
         }
         
         computeFirstDerivativesInX(
@@ -603,6 +656,7 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
         var_derivative_y.clear();
         diffusivities_derivative_x.clear();
         var_derivative_xy.clear();
+
         
         /*
          * (2) Compute the derivatives for diffusive flux in y-direction.
@@ -614,18 +668,42 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
             var_component_idx_x,
             DIRECTION::Y_DIRECTION,
             DIRECTION::X_DIRECTION);
-        
+
+        /*
+         * mirror ghost cell data for computing the direvative in the x-direction.
+         */
+        mirrorGhostCell2D(velocity, ghost_cell_maps, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
+
+
         // Get the diffusivities for the terms in x-direction in the diffusive flux in y-direction.
         d_flow_model->getDiffusiveFluxDiffusivities(
             diffusivities_data_x,
             diffusivities_component_idx_x,
             DIRECTION::Y_DIRECTION,
-            DIRECTION::X_DIRECTION);
+            DIRECTION::X_DIRECTION, true);
+
         
         TBOX_ASSERT(static_cast<int>(var_data_x.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(var_component_idx_x.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(diffusivities_data_x.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(diffusivities_component_idx_x.size()) == d_num_eqn);
+
+        // Compute the first derivatives of diffusivities in y-direction.
+        computeFirstDerivativesInY(
+             patch,
+             diffusivities_derivative_y,
+             derivative_y_computed,
+             diffusivities_data_x,
+             diffusivities_component_idx_x);
+
+
+
+        /*
+         * mirror ghost cell data for computing the direvative in the x-direction.
+         */
+        mirrorGhostCell2D(velocity, ghost_cell_maps, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
+        mirrorGhostCell2D(temperature, ghost_cell_maps, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
+
         
         //Compute the first derivatives of variables in x-direction.
         computeFirstDerivativesInX(
@@ -634,14 +712,7 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
             derivative_x_computed,
             var_data_x,
             var_component_idx_x);
-        
-        // Compute the first derivatives of diffusivities in y-direction.
-        computeFirstDerivativesInY(
-            patch,
-            diffusivities_derivative_y,
-            derivative_y_computed,
-            diffusivities_data_x,
-            diffusivities_component_idx_x);
+
         
         // Compute the mixed derivatives of variables.
         var_derivative_component_idx_x.resize(d_num_eqn);
@@ -652,6 +723,17 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
             {
                 var_derivative_component_idx_x[ei][vi] = 0;
             }
+        }
+        {
+            /*
+             * Mirror the derivatives in y-direction to compute flux du/dxdy in the y direction.
+             */
+            std::vector<boost::shared_ptr<pdat::CellData<double> > > du_x;
+            du_x.reserve(2); //du/dx, dv/dx
+            int ei = d_num_eqn - 1;
+            for(int vi = 0; vi < static_cast<int>(var_data_x[ei].size()); vi++)
+                du_x.push_back(var_derivative_x[ei][vi]);
+            mirrorGhostCellDerivative2D(du_x, ghost_cell_maps, DIRECTION::Y_DIRECTION);
         }
         
         computeFirstDerivativesInY(
@@ -755,18 +837,38 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
             var_component_idx_y,
             DIRECTION::Y_DIRECTION,
             DIRECTION::Y_DIRECTION);
+
+        /*
+        * mirror ghost cell data for computing the direvative in the x-direction.
+        */
+        mirrorGhostCell2D(velocity, ghost_cell_maps, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
         
         // Get the diffusivities for the terms in y-direction in the diffusive flux in y-direction.
         d_flow_model->getDiffusiveFluxDiffusivities(
             diffusivities_data_y,
             diffusivities_component_idx_y,
             DIRECTION::Y_DIRECTION,
-            DIRECTION::Y_DIRECTION);
+            DIRECTION::Y_DIRECTION, true);
         
         TBOX_ASSERT(static_cast<int>(var_data_y.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(var_component_idx_y.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(diffusivities_data_y.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(diffusivities_component_idx_y.size()) == d_num_eqn);
+
+
+        // Compute the first derivatives of diffusivities in y-direction.
+        computeFirstDerivativesInY(
+            patch,
+            diffusivities_derivative_y,
+            derivative_y_computed,
+            diffusivities_data_y,
+            diffusivities_component_idx_y);
+
+        /*
+        * mirror ghost cell data for computing the direvative in the y-direction.
+        */
+        mirrorGhostCell2D(velocity, ghost_cell_maps, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
+        mirrorGhostCell2D(temperature, ghost_cell_maps, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
         
         //Compute the first derivatives of variables in y-direction.
         computeFirstDerivativesInY(
@@ -775,15 +877,7 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
             derivative_y_computed,
             var_data_y,
             var_component_idx_y);
-        
-        // Compute the first derivatives of diffusivities in y-direction.
-        computeFirstDerivativesInY(
-            patch,
-            diffusivities_derivative_y,
-            derivative_y_computed,
-            diffusivities_data_y,
-            diffusivities_component_idx_y);
-        
+
         // Compute the second derivatives of variables in y-direction.
         computeSecondDerivativesInY(
             patch,
@@ -877,12 +971,13 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
         var_derivative_y.clear();
         diffusivities_derivative_y.clear();
         var_derivative_yy.clear();
+
         
-        /*
-         * Unregister the patch and data of all registered derived cell variables in the flow model.
-         */
-        
-        d_flow_model->unregisterPatch();
+//        /*
+//         * Unregister the patch and data of all registered derived cell variables in the flow model.
+//         */
+//
+//        d_flow_model->unregisterPatch();
     }
     else if (d_dim == tbox::Dimension(3))
     {
@@ -900,16 +995,6 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
         
         const int diff_ghostcell_dim_0 = diff_ghostcell_dims[0];
         const int diff_ghostcell_dim_1 = diff_ghostcell_dims[1];
-        
-        /*
-         * Register the patch and derived cell variables in the flow model and compute the corresponding cell data.
-         */
-        
-        d_flow_model->registerPatchWithDataContext(patch, data_context);
-        
-        d_flow_model->registerDiffusiveFlux(d_num_diff_ghosts);
-        
-        d_flow_model->computeGlobalDerivedCellData();
         
         /*
          * Delcare containers for computing flux derivatives in different directions.
@@ -966,6 +1051,13 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
         std::map<double*, boost::shared_ptr<pdat::CellData<double> > > derivative_zx_computed;
         std::map<double*, boost::shared_ptr<pdat::CellData<double> > > derivative_zy_computed;
         std::map<double*, boost::shared_ptr<pdat::CellData<double> > > derivative_zz_computed;
+
+        /*
+         * Build ghost cell map
+         */
+        std::vector<std::vector<std::array<int,4> > > ghost_cell_maps;
+        ghost_cell_maps.resize(3);
+        buildGhostCellMap3D(cell_status, ghost_cell_maps);
         
         /*
          * (1) Compute the derivatives for diffusive flux in x-direction.
@@ -977,18 +1069,37 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
             var_component_idx_x,
             DIRECTION::X_DIRECTION,
             DIRECTION::X_DIRECTION);
+
+        /*
+        * mirror ghost cell data for computing the derivative of diffusivities in the x-direction.
+        */
+        mirrorGhostCell3D(velocity, ghost_cell_maps, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
         
         // Get the diffusivities for the terms in x-direction in the diffusive flux in x-direction.
         d_flow_model->getDiffusiveFluxDiffusivities(
             diffusivities_data_x,
             diffusivities_component_idx_x,
             DIRECTION::X_DIRECTION,
-            DIRECTION::X_DIRECTION);
+            DIRECTION::X_DIRECTION,true);
         
         TBOX_ASSERT(static_cast<int>(var_data_x.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(var_component_idx_x.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(diffusivities_data_x.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(diffusivities_component_idx_x.size()) == d_num_eqn);
+
+        // Compute the first derivatives of diffusivities in x-direction.
+        computeFirstDerivativesInX(
+            patch,
+            diffusivities_derivative_x,
+            derivative_x_computed,
+            diffusivities_data_x,
+            diffusivities_component_idx_x);
+
+        /*
+       * mirror ghost cell data for computing the derivative in the x-direction.
+       */
+        mirrorGhostCell3D(velocity, ghost_cell_maps, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
+        mirrorGhostCell3D(temperature, ghost_cell_maps, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
         
         //Compute the first derivatives of variables in x-direction.
         computeFirstDerivativesInX(
@@ -997,14 +1108,6 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
             derivative_x_computed,
             var_data_x,
             var_component_idx_x);
-        
-        // Compute the first derivatives of diffusivities in x-direction.
-        computeFirstDerivativesInX(
-            patch,
-            diffusivities_derivative_x,
-            derivative_x_computed,
-            diffusivities_data_x,
-            diffusivities_component_idx_x);
         
         // Compute the second derivatives of variables in x-direction.
         computeSecondDerivativesInX(
@@ -1116,27 +1219,24 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
             var_component_idx_y,
             DIRECTION::X_DIRECTION,
             DIRECTION::Y_DIRECTION);
+
+        /*
+        * mirror ghost cell data for computing the derivative in the x-direction.
+        */
+        mirrorGhostCell3D(velocity, ghost_cell_maps, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
         
         // Get the diffusivities for the terms in y-direction in the diffusive flux in x-direction.
         d_flow_model->getDiffusiveFluxDiffusivities(
             diffusivities_data_y,
             diffusivities_component_idx_y,
             DIRECTION::X_DIRECTION,
-            DIRECTION::Y_DIRECTION);
+            DIRECTION::Y_DIRECTION, true);
         
         TBOX_ASSERT(static_cast<int>(var_data_y.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(var_component_idx_y.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(diffusivities_data_y.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(diffusivities_component_idx_y.size()) == d_num_eqn);
-        
-        //Compute the first derivatives of variables in y-direction.
-        computeFirstDerivativesInY(
-            patch,
-            var_derivative_y,
-            derivative_y_computed,
-            var_data_y,
-            var_component_idx_y);
-        
+
         // Compute the first derivatives of diffusivities in x-direction.
         computeFirstDerivativesInX(
             patch,
@@ -1144,6 +1244,21 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
             derivative_x_computed,
             diffusivities_data_y,
             diffusivities_component_idx_y);
+
+        /*
+         * mirror ghost cell data for computing the derivative in the x-direction.
+         */
+        mirrorGhostCell3D(velocity, ghost_cell_maps, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
+        mirrorGhostCell3D(temperature, ghost_cell_maps, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
+
+
+        //Compute the first derivatives of variables in y-direction.
+        computeFirstDerivativesInY(
+            patch,
+            var_derivative_y,
+            derivative_y_computed,
+            var_data_y,
+            var_component_idx_y);
         
         // Compute the mixed derivatives of variables.
         var_derivative_component_idx_y.resize(d_num_eqn);
@@ -1154,6 +1269,19 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
             {
                 var_derivative_component_idx_y[ei][vi] = 0;
             }
+        }
+
+        {
+            /*
+             * Mirror the derivatives in x-direction to compute ddu/dydx in the x direction.
+             */
+            std::vector<boost::shared_ptr<pdat::CellData<double> > > du_y;
+            du_y.reserve(2); //du/dy, dv/dy
+            int ei = d_num_eqn - 1;
+            for(int vi = 0; vi < static_cast<int>(var_data_y[ei].size()); vi++)
+                du_y.push_back(var_derivative_y[d_num_eqn - 1][vi]);
+            std::cout << "3D XFlux mirror 2 var_derivative_y " << du_y.size() << std::endl;
+            mirrorGhostCellDerivative3D(du_y, ghost_cell_maps, DIRECTION::X_DIRECTION);
         }
         
         computeFirstDerivativesInX(
@@ -1267,19 +1395,39 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
             var_component_idx_z,
             DIRECTION::X_DIRECTION,
             DIRECTION::Z_DIRECTION);
-        
+
+        /*
+         * mirror ghost cell data for computing the direvative in the x-direction.
+         */
+        mirrorGhostCell3D(velocity, ghost_cell_maps, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
+
         // Get the diffusivities for the terms in z-direction in the diffusive flux in x-direction.
         d_flow_model->getDiffusiveFluxDiffusivities(
             diffusivities_data_z,
             diffusivities_component_idx_z,
             DIRECTION::X_DIRECTION,
-            DIRECTION::Z_DIRECTION);
+            DIRECTION::Z_DIRECTION, true);
         
         TBOX_ASSERT(static_cast<int>(var_data_z.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(var_component_idx_z.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(diffusivities_data_z.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(diffusivities_component_idx_z.size()) == d_num_eqn);
-        
+
+        // Compute the first derivatives of diffusivities in x-direction.
+        computeFirstDerivativesInX(
+            patch,
+            diffusivities_derivative_x,
+            derivative_x_computed,
+            diffusivities_data_z,
+            diffusivities_component_idx_z);
+
+        /*
+         * mirror ghost cell data for computing the direvative in the x-direction.
+         */
+        mirrorGhostCell3D(velocity, ghost_cell_maps, DIRECTION::Z_DIRECTION, WALL_NO_SLIP);
+        mirrorGhostCell3D(temperature, ghost_cell_maps, DIRECTION::Z_DIRECTION, WALL_NO_SLIP);
+
+
         //Compute the first derivatives of variables in z-direction.
         computeFirstDerivativesInZ(
             patch,
@@ -1288,13 +1436,7 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
             var_data_z,
             var_component_idx_z);
         
-        // Compute the first derivatives of diffusivities in x-direction.
-        computeFirstDerivativesInX(
-            patch,
-            diffusivities_derivative_x,
-            derivative_x_computed,
-            diffusivities_data_z,
-            diffusivities_component_idx_z);
+
         
         // Compute the mixed derivatives of variables.
         var_derivative_component_idx_z.resize(d_num_eqn);
@@ -1305,6 +1447,19 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
             {
                 var_derivative_component_idx_z[ei][vi] = 0;
             }
+        }
+
+        {
+            /*
+             * Mirror the derivatives in x-direction to compute ddu/dzdx in the x direction.
+             */
+            std::vector<boost::shared_ptr<pdat::CellData<double> > > du_z;
+            du_z.reserve(2); //du/dz, dw/dz
+            int ei = d_num_eqn - 1;
+            for(int vi = 0; vi < static_cast<int>(var_data_z[ei].size()); vi++)
+                du_z.push_back(var_derivative_z[d_num_eqn - 1][vi]);
+            std::cout << "3D XFlux mirror 2 var_derivative_z " << du_z.size() << std::endl;
+            mirrorGhostCellDerivative3D(du_z, ghost_cell_maps, DIRECTION::X_DIRECTION);
         }
         
         computeFirstDerivativesInX(
@@ -1422,19 +1577,37 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
             var_component_idx_x,
             DIRECTION::Y_DIRECTION,
             DIRECTION::X_DIRECTION);
-        
+        /*
+         * mirror ghost cell data for computing the direvative in the x-direction.
+         */
+        mirrorGhostCell3D(velocity, ghost_cell_maps, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
+
         // Get the diffusivities for the terms in x-direction in the diffusive flux in y-direction.
         d_flow_model->getDiffusiveFluxDiffusivities(
             diffusivities_data_x,
             diffusivities_component_idx_x,
             DIRECTION::Y_DIRECTION,
-            DIRECTION::X_DIRECTION);
+            DIRECTION::X_DIRECTION, true);
         
         TBOX_ASSERT(static_cast<int>(var_data_x.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(var_component_idx_x.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(diffusivities_data_x.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(diffusivities_component_idx_x.size()) == d_num_eqn);
-        
+
+        // Compute the first derivatives of diffusivities in y-direction.
+        computeFirstDerivativesInY(
+                patch,
+                diffusivities_derivative_y,
+                derivative_y_computed,
+                diffusivities_data_x,
+                diffusivities_component_idx_x);
+
+        /*
+         * mirror ghost cell data for computing the direvative in the x-direction.
+         */
+        mirrorGhostCell3D(velocity, ghost_cell_maps, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
+        mirrorGhostCell3D(temperature, ghost_cell_maps, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
+
         //Compute the first derivatives of variables in x-direction.
         computeFirstDerivativesInX(
             patch,
@@ -1442,14 +1615,6 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
             derivative_x_computed,
             var_data_x,
             var_component_idx_x);
-        
-        // Compute the first derivatives of diffusivities in y-direction.
-        computeFirstDerivativesInY(
-            patch,
-            diffusivities_derivative_y,
-            derivative_y_computed,
-            diffusivities_data_x,
-            diffusivities_component_idx_x);
         
         // Compute the mixed derivatives of variables.
         var_derivative_component_idx_x.resize(d_num_eqn);
@@ -1460,6 +1625,19 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
             {
                 var_derivative_component_idx_x[ei][vi] = 0;
             }
+        }
+
+        {
+            /*
+             * Mirror the derivatives in y-direction to compute ddu/dxdy in the y direction.
+             */
+            std::vector<boost::shared_ptr<pdat::CellData<double> > > du_x;
+            du_x.reserve(2); //du/dy, dv/dy
+            int ei = d_num_eqn - 1;
+            for(int vi = 0; vi < static_cast<int>(var_data_x[ei].size()); vi++)
+                du_x.push_back(var_derivative_x[d_num_eqn - 1][vi]);
+            std::cout << "3D YFlux mirror 2 var_derivative_x " << du_x.size() << std::endl;
+            mirrorGhostCellDerivative3D(du_x, ghost_cell_maps, DIRECTION::Y_DIRECTION);
         }
         
         computeFirstDerivativesInY(
@@ -1566,26 +1744,45 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
         var_derivative_x.clear();
         diffusivities_derivative_y.clear();
         var_derivative_yx.clear();
-        
+
         // Get the variables for the terms in y-direction in the diffusive flux in y-direction.
         d_flow_model->getDiffusiveFluxVariablesForDerivative(
             var_data_y,
             var_component_idx_y,
             DIRECTION::Y_DIRECTION,
             DIRECTION::Y_DIRECTION);
+
+        /*
+         * mirror ghost cell data for computing the direvative in the x-direction.
+         */
+        mirrorGhostCell3D(velocity, ghost_cell_maps, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
         
         // Get the diffusivities for the terms in y-direction in the diffusive flux in y-direction.
         d_flow_model->getDiffusiveFluxDiffusivities(
             diffusivities_data_y,
             diffusivities_component_idx_y,
             DIRECTION::Y_DIRECTION,
-            DIRECTION::Y_DIRECTION);
+            DIRECTION::Y_DIRECTION, true);
         
         TBOX_ASSERT(static_cast<int>(var_data_y.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(var_component_idx_y.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(diffusivities_data_y.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(diffusivities_component_idx_y.size()) == d_num_eqn);
-        
+
+        // Compute the first derivatives of diffusivities in y-direction.
+        computeFirstDerivativesInY(
+                patch,
+                diffusivities_derivative_y,
+                derivative_y_computed,
+                diffusivities_data_y,
+                diffusivities_component_idx_y);
+
+        /*
+        * mirror ghost cell data for computing the direvative in the x-direction.
+        */
+        mirrorGhostCell3D(velocity, ghost_cell_maps, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
+        mirrorGhostCell3D(temperature, ghost_cell_maps, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
+
         //Compute the first derivatives of variables in y-direction.
         computeFirstDerivativesInY(
             patch,
@@ -1593,14 +1790,6 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
             derivative_y_computed,
             var_data_y,
             var_component_idx_y);
-        
-        // Compute the first derivatives of diffusivities in y-direction.
-        computeFirstDerivativesInY(
-            patch,
-            diffusivities_derivative_y,
-            derivative_y_computed,
-            diffusivities_data_y,
-            diffusivities_component_idx_y);
         
         // Compute the second derivatives of variables in y-direction.
         computeSecondDerivativesInY(
@@ -1712,19 +1901,40 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
             var_component_idx_z,
             DIRECTION::Y_DIRECTION,
             DIRECTION::Z_DIRECTION);
-        
+
+        /*
+        * mirror ghost cell data for computing the direvative in the x-direction.
+        */
+        mirrorGhostCell3D(velocity, ghost_cell_maps, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
+
         // Get the diffusivities for the terms in z-direction in the diffusive flux in y-direction.
         d_flow_model->getDiffusiveFluxDiffusivities(
             diffusivities_data_z,
             diffusivities_component_idx_z,
             DIRECTION::Y_DIRECTION,
-            DIRECTION::Z_DIRECTION);
+            DIRECTION::Z_DIRECTION,true);
         
         TBOX_ASSERT(static_cast<int>(var_data_z.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(var_component_idx_z.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(diffusivities_data_z.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(diffusivities_component_idx_z.size()) == d_num_eqn);
-        
+
+        // Compute the first derivatives of diffusivities in y-direction.
+        computeFirstDerivativesInY(
+            patch,
+            diffusivities_derivative_y,
+            derivative_y_computed,
+            diffusivities_data_z,
+            diffusivities_component_idx_z);
+
+
+        /*
+         * mirror ghost cell data for computing the direvative in the x-direction.
+         */
+        mirrorGhostCell3D(velocity, ghost_cell_maps, DIRECTION::Z_DIRECTION, WALL_NO_SLIP);
+        mirrorGhostCell3D(temperature, ghost_cell_maps, DIRECTION::Z_DIRECTION, WALL_NO_SLIP);
+
+
         //Compute the first derivatives of variables in z-direction.
         computeFirstDerivativesInZ(
             patch,
@@ -1733,13 +1943,7 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
             var_data_z,
             var_component_idx_z);
         
-        // Compute the first derivatives of diffusivities in y-direction.
-        computeFirstDerivativesInY(
-            patch,
-            diffusivities_derivative_y,
-            derivative_y_computed,
-            diffusivities_data_z,
-            diffusivities_component_idx_z);
+
         
         // Compute the mixed derivatives of variables.
         var_derivative_component_idx_z.resize(d_num_eqn);
@@ -1750,6 +1954,19 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
             {
                 var_derivative_component_idx_z[ei][vi] = 0;
             }
+        }
+
+        {
+            /*
+             * Mirror the derivatives in y-direction to compute ddu/dzdy in the y direction.
+             */
+            std::vector<boost::shared_ptr<pdat::CellData<double> > > du_z;
+            du_z.reserve(2); //dv/dz, dw/dz
+            int ei = d_num_eqn - 1;
+            for(int vi = 0; vi < static_cast<int>(var_data_z[ei].size()); vi++)
+                du_z.push_back(var_derivative_z[d_num_eqn - 1][vi]);
+            std::cout << "3D XFlux mirror 2 var_derivative_z " << du_z.size() << std::endl;
+            mirrorGhostCellDerivative3D(du_z, ghost_cell_maps, DIRECTION::Y_DIRECTION);
         }
         
         computeFirstDerivativesInY(
@@ -1867,27 +2084,24 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
             var_component_idx_x,
             DIRECTION::Z_DIRECTION,
             DIRECTION::X_DIRECTION);
-        
+
+        /*
+         * mirror ghost cell data for computing the direvative in the x-direction.
+         */
+        mirrorGhostCell3D(velocity, ghost_cell_maps, DIRECTION::Z_DIRECTION, WALL_NO_SLIP);
+
         // Get the diffusivities for the terms in x-direction in the diffusive flux in z-direction.
         d_flow_model->getDiffusiveFluxDiffusivities(
             diffusivities_data_x,
             diffusivities_component_idx_x,
             DIRECTION::Z_DIRECTION,
-            DIRECTION::X_DIRECTION);
+            DIRECTION::X_DIRECTION, true);
         
         TBOX_ASSERT(static_cast<int>(var_data_x.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(var_component_idx_x.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(diffusivities_data_x.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(diffusivities_component_idx_x.size()) == d_num_eqn);
-        
-        //Compute the first derivatives of variables in x-direction.
-        computeFirstDerivativesInX(
-            patch,
-            var_derivative_x,
-            derivative_x_computed,
-            var_data_x,
-            var_component_idx_x);
-        
+
         // Compute the first derivatives of diffusivities in z-direction.
         computeFirstDerivativesInZ(
             patch,
@@ -1895,6 +2109,21 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
             derivative_z_computed,
             diffusivities_data_x,
             diffusivities_component_idx_x);
+
+        /*
+         * mirror ghost cell data for computing the direvative in the x-direction.
+         */
+        mirrorGhostCell3D(velocity, ghost_cell_maps, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
+        mirrorGhostCell3D(temperature, ghost_cell_maps, DIRECTION::X_DIRECTION, WALL_NO_SLIP);
+
+        //Compute the first derivatives of variables in x-direction.
+        computeFirstDerivativesInX(
+            patch,
+            var_derivative_x,
+            derivative_x_computed,
+            var_data_x,
+            var_component_idx_x);
+
         
         // Compute the mixed derivatives of variables.
         var_derivative_component_idx_x.resize(d_num_eqn);
@@ -1905,6 +2134,19 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
             {
                 var_derivative_component_idx_x[ei][vi] = 0;
             }
+        }
+
+        {
+            /*
+             * Mirror the derivatives in z-direction to compute ddu/dxdz in the z direction.
+             */
+            std::vector<boost::shared_ptr<pdat::CellData<double> > > du_x;
+            du_x.reserve(2); //du/dx, dw/dx
+            int ei = d_num_eqn - 1;
+            for(int vi = 0; vi < static_cast<int>(var_data_x[ei].size()); vi++)
+                du_x.push_back(var_derivative_x[d_num_eqn - 1][vi]);
+            std::cout << "3D ZFlux mirror 2 var_derivative_x " << du_x.size() << std::endl;
+            mirrorGhostCellDerivative3D(du_x, ghost_cell_maps, DIRECTION::X_DIRECTION);
         }
         
         computeFirstDerivativesInZ(
@@ -2018,27 +2260,24 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
             var_component_idx_y,
             DIRECTION::Z_DIRECTION,
             DIRECTION::Y_DIRECTION);
-        
+
+        /*
+         * mirror ghost cell data for computing the direvative in the x-direction.
+         */
+        mirrorGhostCell3D(velocity, ghost_cell_maps, DIRECTION::Z_DIRECTION, WALL_NO_SLIP);
+
         // Get the diffusivities for the terms in y-direction in the diffusive flux in z-direction.
         d_flow_model->getDiffusiveFluxDiffusivities(
             diffusivities_data_y,
             diffusivities_component_idx_y,
             DIRECTION::Z_DIRECTION,
-            DIRECTION::Y_DIRECTION);
+            DIRECTION::Y_DIRECTION, true);
         
         TBOX_ASSERT(static_cast<int>(var_data_y.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(var_component_idx_y.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(diffusivities_data_y.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(diffusivities_component_idx_y.size()) == d_num_eqn);
-        
-        //Compute the first derivatives of variables in y-direction.
-        computeFirstDerivativesInY(
-            patch,
-            var_derivative_y,
-            derivative_y_computed,
-            var_data_y,
-            var_component_idx_y);
-        
+
         // Compute the first derivatives of diffusivities in z-direction.
         computeFirstDerivativesInZ(
             patch,
@@ -2046,6 +2285,22 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
             derivative_z_computed,
             diffusivities_data_y,
             diffusivities_component_idx_y);
+
+
+        /*
+         * mirror ghost cell data for computing the direvative in the x-direction.
+         */
+        mirrorGhostCell3D(velocity, ghost_cell_maps, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
+        mirrorGhostCell3D(temperature, ghost_cell_maps, DIRECTION::Y_DIRECTION, WALL_NO_SLIP);
+
+
+        //Compute the first derivatives of variables in y-direction.
+        computeFirstDerivativesInY(
+            patch,
+            var_derivative_y,
+            derivative_y_computed,
+            var_data_y,
+            var_component_idx_y);
         
         // Compute the mixed derivatives of variables.
         var_derivative_component_idx_y.resize(d_num_eqn);
@@ -2056,6 +2311,19 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
             {
                 var_derivative_component_idx_y[ei][vi] = 0;
             }
+        }
+
+        {
+            /*
+             * Mirror the derivatives in z-direction to compute ddu/dydz in the z direction.
+             */
+            std::vector<boost::shared_ptr<pdat::CellData<double> > > du_y;
+            du_y.reserve(2); //dv/dy, dw/dy
+            int ei = d_num_eqn - 1;
+            for(int vi = 0; vi < static_cast<int>(var_data_y[ei].size()); vi++)
+                du_y.push_back(var_derivative_y[d_num_eqn - 1][vi]);
+            std::cout << "3D ZFlux mirror 2 var_derivative_y " << du_y.size() << std::endl;
+            mirrorGhostCellDerivative3D(du_y, ghost_cell_maps, DIRECTION::Z_DIRECTION);
         }
         
         computeFirstDerivativesInZ(
@@ -2169,27 +2437,25 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
             var_component_idx_z,
             DIRECTION::Z_DIRECTION,
             DIRECTION::Z_DIRECTION);
-        
+
+        /*
+         * mirror ghost cell data for computing the direvative in the x-direction.
+         */
+        mirrorGhostCell3D(velocity, ghost_cell_maps, DIRECTION::Z_DIRECTION, WALL_NO_SLIP);
+
+
         // Get the diffusivities for the terms in z-direction in the diffusive flux in z-direction.
         d_flow_model->getDiffusiveFluxDiffusivities(
             diffusivities_data_z,
             diffusivities_component_idx_z,
             DIRECTION::Z_DIRECTION,
-            DIRECTION::Z_DIRECTION);
+            DIRECTION::Z_DIRECTION, true);
         
         TBOX_ASSERT(static_cast<int>(var_data_z.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(var_component_idx_z.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(diffusivities_data_z.size()) == d_num_eqn);
         TBOX_ASSERT(static_cast<int>(diffusivities_component_idx_z.size()) == d_num_eqn);
-        
-        //Compute the first derivatives of variables in z-direction.
-        computeFirstDerivativesInZ(
-            patch,
-            var_derivative_z,
-            derivative_z_computed,
-            var_data_z,
-            var_component_idx_z);
-        
+
         // Compute the first derivatives of diffusivities in z-direction.
         computeFirstDerivativesInZ(
             patch,
@@ -2197,6 +2463,20 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
             derivative_z_computed,
             diffusivities_data_z,
             diffusivities_component_idx_z);
+
+        /*
+        * mirror ghost cell data for computing the direvative in the x-direction.
+        */
+        mirrorGhostCell3D(velocity, ghost_cell_maps, DIRECTION::Z_DIRECTION, WALL_NO_SLIP);
+        mirrorGhostCell3D(temperature, ghost_cell_maps, DIRECTION::Z_DIRECTION, WALL_NO_SLIP);
+
+        //Compute the first derivatives of variables in z-direction.
+        computeFirstDerivativesInZ(
+            patch,
+            var_derivative_z,
+            derivative_z_computed,
+            var_data_z,
+            var_component_idx_z);
         
         // Compute the second derivatives of variables in z-direction.
         computeSecondDerivativesInZ(
@@ -2302,12 +2582,17 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
         diffusivities_derivative_z.clear();
         var_derivative_zz.clear();
         
-        /*
-         * Unregister the patch and data of all registered derived cell variables in the flow model.
-         */
-        
-        d_flow_model->unregisterPatch();
+//        /*
+//         * Unregister the patch and data of all registered derived cell variables in the flow model.
+//         */
+//
+//        d_flow_model->unregisterPatch();
     }
+    /*
+     * Unregister the patch and data of all registered derived cell variables in the flow model.
+     */
+
+    d_flow_model->unregisterPatch();
 }
 
 
