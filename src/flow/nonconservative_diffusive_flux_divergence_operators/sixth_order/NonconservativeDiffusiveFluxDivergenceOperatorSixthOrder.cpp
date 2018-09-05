@@ -1279,8 +1279,7 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
             du_y.reserve(2); //du/dy, dv/dy
             int ei = d_num_eqn - 1;
             for(int vi = 0; vi < static_cast<int>(var_data_y[ei].size()); vi++)
-                du_y.push_back(var_derivative_y[d_num_eqn - 1][vi]);
-            std::cout << "3D XFlux mirror 2 var_derivative_y " << du_y.size() << std::endl;
+                du_y.push_back(var_derivative_y[ei][vi]);
             mirrorGhostCellDerivative3D(du_y, ghost_cell_maps, DIRECTION::X_DIRECTION);
         }
         
@@ -1457,8 +1456,7 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
             du_z.reserve(2); //du/dz, dw/dz
             int ei = d_num_eqn - 1;
             for(int vi = 0; vi < static_cast<int>(var_data_z[ei].size()); vi++)
-                du_z.push_back(var_derivative_z[d_num_eqn - 1][vi]);
-            std::cout << "3D XFlux mirror 2 var_derivative_z " << du_z.size() << std::endl;
+                du_z.push_back(var_derivative_z[ei][vi]);
             mirrorGhostCellDerivative3D(du_z, ghost_cell_maps, DIRECTION::X_DIRECTION);
         }
         
@@ -1635,8 +1633,7 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
             du_x.reserve(2); //du/dy, dv/dy
             int ei = d_num_eqn - 1;
             for(int vi = 0; vi < static_cast<int>(var_data_x[ei].size()); vi++)
-                du_x.push_back(var_derivative_x[d_num_eqn - 1][vi]);
-            std::cout << "3D YFlux mirror 2 var_derivative_x " << du_x.size() << std::endl;
+                du_x.push_back(var_derivative_x[ei][vi]);
             mirrorGhostCellDerivative3D(du_x, ghost_cell_maps, DIRECTION::Y_DIRECTION);
         }
         
@@ -1964,8 +1961,7 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
             du_z.reserve(2); //dv/dz, dw/dz
             int ei = d_num_eqn - 1;
             for(int vi = 0; vi < static_cast<int>(var_data_z[ei].size()); vi++)
-                du_z.push_back(var_derivative_z[d_num_eqn - 1][vi]);
-            std::cout << "3D XFlux mirror 2 var_derivative_z " << du_z.size() << std::endl;
+                du_z.push_back(var_derivative_z[ei][vi]);
             mirrorGhostCellDerivative3D(du_z, ghost_cell_maps, DIRECTION::Y_DIRECTION);
         }
         
@@ -2144,9 +2140,8 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
             du_x.reserve(2); //du/dx, dw/dx
             int ei = d_num_eqn - 1;
             for(int vi = 0; vi < static_cast<int>(var_data_x[ei].size()); vi++)
-                du_x.push_back(var_derivative_x[d_num_eqn - 1][vi]);
-            std::cout << "3D ZFlux mirror 2 var_derivative_x " << du_x.size() << std::endl;
-            mirrorGhostCellDerivative3D(du_x, ghost_cell_maps, DIRECTION::X_DIRECTION);
+                du_x.push_back(var_derivative_x[ei][vi]);
+            mirrorGhostCellDerivative3D(du_x, ghost_cell_maps, DIRECTION::Z_DIRECTION);
         }
         
         computeFirstDerivativesInZ(
@@ -2321,8 +2316,7 @@ NonconservativeDiffusiveFluxDivergenceOperatorSixthOrder::computeNonconservative
             du_y.reserve(2); //dv/dy, dw/dy
             int ei = d_num_eqn - 1;
             for(int vi = 0; vi < static_cast<int>(var_data_y[ei].size()); vi++)
-                du_y.push_back(var_derivative_y[d_num_eqn - 1][vi]);
-            std::cout << "3D ZFlux mirror 2 var_derivative_y " << du_y.size() << std::endl;
+                du_y.push_back(var_derivative_y[ei][vi]);
             mirrorGhostCellDerivative3D(du_y, ghost_cell_maps, DIRECTION::Z_DIRECTION);
         }
         
