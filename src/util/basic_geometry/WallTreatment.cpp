@@ -285,7 +285,7 @@ initializeCellStatus(hier::Patch& patch,
                 const double x = x_lo[0] + (i + 0.5) * dx[0],
                         y = x_lo[1] + (j + 0.5) * dx[1];
                 const int idx = i + j * patch_dims[0];
-                cell_status_data[idx] = isOutsidePorousWall2X(2, x, y);
+                cell_status_data[idx] = isOutsidePorousWall3Y(2, x, y);
             }
         }
 
@@ -301,7 +301,7 @@ initializeCellStatus(hier::Patch& patch,
                                  y = x_lo[1] + (j + 0.5) * dx[1],
                                  z = x_lo[2] + (k + 0.5) * dx[2];
                     const int idx = i + j * patch_dims[0] + k*patch_dims[0]*patch_dims[1];
-                    cell_status_data[idx] = isOutsidePorousWall3Y(3, x, y, z);
+                    cell_status_data[idx] = isOutsidePorousWall3Z(3, x, y, z);
                 }
             }
         }

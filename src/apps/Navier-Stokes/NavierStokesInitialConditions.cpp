@@ -1,1 +1,1 @@
-/home/zhengyuh/HAMeRS/problems/Navier-Stokes/initial_conditions/ChannelFlow.cpp
+/home/zhengyuh/HAMeRS/problems/Navier-Stokes/initial_conditions/ChannelFlow2D.cpp
