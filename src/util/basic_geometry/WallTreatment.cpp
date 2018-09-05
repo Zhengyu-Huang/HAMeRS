@@ -164,7 +164,6 @@ int isOutsidePorousWall4X(int dim, double x, double y, double z)
      * 3 2 3
      */
 
-    return 1;
     double x0 = 0.0, r_hole = 1./8;
     if(fabs(x - x0) > r_hole) return 1;
     if(dim == 2 || dim == 3){
@@ -302,7 +301,7 @@ initializeCellStatus(hier::Patch& patch,
                                  y = x_lo[1] + (j + 0.5) * dx[1],
                                  z = x_lo[2] + (k + 0.5) * dx[2];
                     const int idx = i + j * patch_dims[0] + k*patch_dims[0]*patch_dims[1];
-                    cell_status_data[idx] = isOutsidePorousWall4X(3, x, y, z);
+                    cell_status_data[idx] = isOutsidePorousWall3Y(3, x, y, z);
                 }
             }
         }
@@ -1955,7 +1954,7 @@ void mirrorGhostCellDerivative3D(std::vector<boost::shared_ptr<pdat::CellData<do
             if (depth == 2) {   //du/dy, dv/dy or du/dz, dw/dz
                 V[0][idx] = -V[0][idx_mirr];
                 V[1][idx] = -V[1][idx_mirr];
-            }else if (depth == 8) { // du/dx, dv/dx, dw/x, dT/dx,  du/dy, dv/dy, du/dz, dw/dz
+            } else if (depth == 8) { // du/dx, dv/dx, dw/x, dT/dx,  du/dy, dv/dy, du/dz, dw/dz
                 V[0][idx] = V[0][idx_mirr];
                 V[1][idx] = V[1][idx_mirr];
                 V[2][idx] = V[2][idx_mirr];
@@ -1994,7 +1993,7 @@ void mirrorGhostCellDerivative3D(std::vector<boost::shared_ptr<pdat::CellData<do
             if (depth == 2) {   //du/dx, dv/dx or dv/dz, dw/dz
                 V[0][idx] = -V[0][idx_mirr];
                 V[1][idx] = -V[1][idx_mirr];
-            }else if (depth == 8) { // du/dx, dv/dx, du/dy, dv/dy, dw/dy, dT/dy, dv/dz, dw/dz
+            } else if (depth == 8) { // du/dx, dv/dx, du/dy, dv/dy, dw/dy, dT/dy, dv/dz, dw/dz
                 V[0][idx] = -V[0][idx_mirr];
                 V[1][idx] = -V[1][idx_mirr];
                 V[2][idx] = V[2][idx_mirr];
@@ -2031,7 +2030,7 @@ void mirrorGhostCellDerivative3D(std::vector<boost::shared_ptr<pdat::CellData<do
             if (depth == 2) {   //du/dx, dw/dx or dv/dy, dw/dy
                 V[0][idx] = -V[0][idx_mirr];
                 V[1][idx] = -V[1][idx_mirr];
-            }else if (depth == 8) { // du/dx, dw/dx, dv/dy, dw/dy, du/dz, dv/dz, dw/dz, dT/dz
+            } else if (depth == 8) { // du/dx, dw/dx, dv/dy, dw/dy, du/dz, dv/dz, dw/dz, dT/dz
                 V[0][idx] = -V[0][idx_mirr];
                 V[1][idx] = -V[1][idx_mirr];
                 V[2][idx] = -V[2][idx_mirr];
