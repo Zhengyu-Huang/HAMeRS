@@ -45,19 +45,18 @@ int isOutsidePorousWall1(int dim, double x, double y, double z)
  */
 int isOutsidePorousWall2X(int dim, double x, double y, double z)
 {
-    /*
+    /* 8 percents!!!!
      * The porous wall is centered at x0. and this is a QUASI 2D structure
-     * The computational domain is at least is 8 by 8 by 8
-     * There are 1 holes in x directions at x=0.0, of size 2,
-     *           2 solid in x directions, each of size 3;
-     * 3 2 3
+     * The computational domain is at least is 100 by 100
+     * There are 1 square holes in x-y directions at x=0.0,y=0.0 of size 8,
+     *           2 solid in y directions, each of size 46;
+     * 46 8 46 ()
      */
 
-    double x0 = 0.0, r_hole = 1./8;
+    double x0 = 0.0, r_hole = 4./100;
     if(fabs(x - x0) > r_hole) return 1;
     if(dim == 2 || dim == 3){
-        double yy = y/r_hole;
-        if(yy < 3 || (yy > 5))
+        if(y < 46./100 || (y > 54./100))
             return 0;
         else
             return 1;
@@ -149,10 +148,10 @@ int isOutsidePorousWall3Z(int dim, double x, double y, double z)
  */
 int isOutsidePorousWall4X(int dim, double x, double y, double z)
 {
-    /*
+    /* 8.16 percents = (4./14)**2
      * The porous wall is centered at x0. and this is a 3D structure
-     * The computational domain is at least is 8 by 8 by 8
-     * There are 1 holes in x direction at x = 0.0, of size 2,
+     * The computational domain is at least is 14 by 14 by 14
+     * There are 1 holes in x direction at x = 0.0, of size 4,
      *                ########
      *                ########
      *                ########
@@ -161,14 +160,13 @@ int isOutsidePorousWall4X(int dim, double x, double y, double z)
      *                ########
      *                ########
      *                ########
-     * 3 2 3
+     * 5 4 5
      */
 
-    double x0 = 0.0, r_hole = 1./8;
+    double x0 = 0.0, r_hole = 1./7;
     if(fabs(x - x0) > r_hole) return 1;
     if(dim == 2 || dim == 3){
-        double yy = y/r_hole, zz = z/r_hole;
-        if((yy < 3 || yy > 5) || (zz < 3 || zz > 5))
+        if((y < 5./14. || y > 9./14.) || (z < 5./14. || z > 9./14.))
             return 0;
         else
             return 1;
@@ -285,7 +283,7 @@ initializeCellStatus(hier::Patch& patch,
                 const double x = x_lo[0] + (i + 0.5) * dx[0],
                         y = x_lo[1] + (j + 0.5) * dx[1];
                 const int idx = i + j * patch_dims[0];
-                cell_status_data[idx] = isOutsidePorousWall3Y(2, x, y);
+                cell_status_data[idx] = isOutsidePorousWall2X(2, x, y);
             }
         }
 
@@ -301,7 +299,7 @@ initializeCellStatus(hier::Patch& patch,
                                  y = x_lo[1] + (j + 0.5) * dx[1],
                                  z = x_lo[2] + (k + 0.5) * dx[2];
                     const int idx = i + j * patch_dims[0] + k*patch_dims[0]*patch_dims[1];
-                    cell_status_data[idx] = isOutsidePorousWall3Z(3, x, y, z);
+                    cell_status_data[idx] = isOutsidePorousWall4X(3, x, y, z);
                 }
             }
         }
