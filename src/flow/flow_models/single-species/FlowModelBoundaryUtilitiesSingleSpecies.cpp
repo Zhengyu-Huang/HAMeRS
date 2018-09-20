@@ -51,6 +51,12 @@ FlowModelBoundaryUtilitiesSingleSpecies::FlowModelBoundaryUtilitiesSingleSpecies
         
         d_bdry_node_isothermal_no_slip_T.resize(NUM_1D_NODES);
         d_bdry_node_isothermal_no_slip_vel.resize(NUM_1D_NODES);
+
+        d_bdry_node_pressure_outflow_p.resize(NUM_1D_NODES);
+
+        d_bdry_node_pressure_inflow_rho.resize(NUM_1D_NODES);
+        d_bdry_node_pressure_inflow_p.resize(NUM_1D_NODES);
+        d_bdry_node_pressure_inflow_vel.resize(NUM_1D_NODES);
     }
     else if (d_dim == tbox::Dimension(2))
     {
@@ -58,6 +64,12 @@ FlowModelBoundaryUtilitiesSingleSpecies::FlowModelBoundaryUtilitiesSingleSpecies
         
         d_bdry_edge_isothermal_no_slip_T.resize(NUM_2D_EDGES);
         d_bdry_edge_isothermal_no_slip_vel.resize(NUM_2D_EDGES*2);
+
+        d_bdry_edge_pressure_outflow_p.resize(NUM_2D_EDGES*2);
+
+        d_bdry_edge_pressure_inflow_rho.resize(NUM_2D_EDGES);
+        d_bdry_edge_pressure_inflow_p.resize(NUM_2D_EDGES);
+        d_bdry_edge_pressure_inflow_vel.resize(NUM_2D_EDGES*2);
     }
     else if (d_dim == tbox::Dimension(3))
     {
@@ -65,6 +77,12 @@ FlowModelBoundaryUtilitiesSingleSpecies::FlowModelBoundaryUtilitiesSingleSpecies
         
         d_bdry_face_isothermal_no_slip_T.resize(NUM_3D_FACES);
         d_bdry_face_isothermal_no_slip_vel.resize(NUM_3D_FACES*3);
+
+        d_bdry_face_pressure_outflow_p.resize(NUM_3D_FACES*3);
+
+        d_bdry_face_pressure_inflow_rho.resize(NUM_3D_FACES);
+        d_bdry_face_pressure_inflow_p.resize(NUM_3D_FACES);
+        d_bdry_face_pressure_inflow_vel.resize(NUM_3D_FACES*3);
     }
 }
 
@@ -646,7 +664,9 @@ FlowModelBoundaryUtilitiesSingleSpecies::fill2dEdgeBoundaryData(
             fill_box_hi_idx = fill_box_hi_idx - interior_box.lower();
             
             if ((bdry_edge_conds[edge_loc] == BDRY_COND::FLOW_MODEL::ADIABATIC_NO_SLIP) ||
-                (bdry_edge_conds[edge_loc] == BDRY_COND::FLOW_MODEL::ISOTHERMAL_NO_SLIP))
+                (bdry_edge_conds[edge_loc] == BDRY_COND::FLOW_MODEL::ISOTHERMAL_NO_SLIP)||
+                (bdry_edge_conds[edge_loc] == BDRY_COND::FLOW_MODEL::PRESSURE_OUTFLOW) ||
+                (bdry_edge_conds[edge_loc] == BDRY_COND::FLOW_MODEL::PRESSURE_INFLOW))
             {
                 /*
                  * Get the pointers to the conservative variables.
@@ -844,147 +864,333 @@ FlowModelBoundaryUtilitiesSingleSpecies::fill2dEdgeBoundaryData(
                         for (int j = fill_box_lo_idx[1]; j <= fill_box_hi_idx[1]; j++)
                         {
                             const int idx_cell_rho = (i + num_subghosts_conservative_var[0][0]) +
-                                (j + num_subghosts_conservative_var[0][1])*
-                                    subghostcell_dims_conservative_var[0][0];
-                            
+                                                     (j + num_subghosts_conservative_var[0][1])*
+                                                     subghostcell_dims_conservative_var[0][0];
+
                             const int idx_cell_mom = (i + num_subghosts_conservative_var[1][0]) +
-                                (j + num_subghosts_conservative_var[1][1])*
-                                    subghostcell_dims_conservative_var[1][0];
-                            
+                                                     (j + num_subghosts_conservative_var[1][1])*
+                                                     subghostcell_dims_conservative_var[1][0];
+
                             const int idx_cell_E = (i + num_subghosts_conservative_var[2][0]) +
-                                (j + num_subghosts_conservative_var[2][1])*
-                                    subghostcell_dims_conservative_var[2][0];
-                            
+                                                   (j + num_subghosts_conservative_var[2][1])*
+                                                   subghostcell_dims_conservative_var[2][0];
+
                             int idx_cell_pivot_rho = idx_cell_rho;
                             int idx_cell_pivot_mom = idx_cell_mom;
                             int idx_cell_pivot_E = idx_cell_E;
-                            
+
                             if (edge_loc == BDRY_LOC::XLO)
                             {
                                 idx_cell_pivot_rho = (interior_box_lo_idx[0] + (fill_box_hi_idx[0] - i) +
-                                        num_subghosts_conservative_var[0][0]) +
-                                    (j + num_subghosts_conservative_var[0][1])*
-                                        subghostcell_dims_conservative_var[0][0];
-                                
+                                                      num_subghosts_conservative_var[0][0]) +
+                                                     (j + num_subghosts_conservative_var[0][1])*
+                                                     subghostcell_dims_conservative_var[0][0];
+
                                 idx_cell_pivot_mom = (interior_box_lo_idx[0] + (fill_box_hi_idx[0] - i) +
-                                        num_subghosts_conservative_var[1][0]) +
-                                    (j + num_subghosts_conservative_var[1][1])*
-                                        subghostcell_dims_conservative_var[1][0];
-                                
+                                                      num_subghosts_conservative_var[1][0]) +
+                                                     (j + num_subghosts_conservative_var[1][1])*
+                                                     subghostcell_dims_conservative_var[1][0];
+
                                 idx_cell_pivot_E = (interior_box_lo_idx[0] + (fill_box_hi_idx[0] - i) +
-                                        num_subghosts_conservative_var[2][0]) +
-                                    (j + num_subghosts_conservative_var[2][1])*
-                                        subghostcell_dims_conservative_var[2][0];
+                                                    num_subghosts_conservative_var[2][0]) +
+                                                   (j + num_subghosts_conservative_var[2][1])*
+                                                   subghostcell_dims_conservative_var[2][0];
                             }
                             else if (edge_loc == BDRY_LOC::XHI)
                             {
                                 idx_cell_pivot_rho = (interior_box_hi_idx[0] - (i - fill_box_lo_idx[0]) +
-                                        num_subghosts_conservative_var[0][0]) +
-                                    (j + num_subghosts_conservative_var[0][1])*
-                                        subghostcell_dims_conservative_var[0][0];
-                                
+                                                      num_subghosts_conservative_var[0][0]) +
+                                                     (j + num_subghosts_conservative_var[0][1])*
+                                                     subghostcell_dims_conservative_var[0][0];
+
                                 idx_cell_pivot_mom = (interior_box_hi_idx[0] - (i - fill_box_lo_idx[0]) +
-                                        num_subghosts_conservative_var[1][0]) +
-                                    (j + num_subghosts_conservative_var[1][1])*
-                                        subghostcell_dims_conservative_var[1][0];
-                                
+                                                      num_subghosts_conservative_var[1][0]) +
+                                                     (j + num_subghosts_conservative_var[1][1])*
+                                                     subghostcell_dims_conservative_var[1][0];
+
                                 idx_cell_pivot_E = (interior_box_hi_idx[0] - (i - fill_box_lo_idx[0]) +
-                                        num_subghosts_conservative_var[2][0]) +
-                                    (j + num_subghosts_conservative_var[2][1])*
-                                        subghostcell_dims_conservative_var[2][0];
+                                                    num_subghosts_conservative_var[2][0]) +
+                                                   (j + num_subghosts_conservative_var[2][1])*
+                                                   subghostcell_dims_conservative_var[2][0];
                             }
                             else if (edge_loc == BDRY_LOC::YLO)
                             {
                                 idx_cell_pivot_rho = (i + num_subghosts_conservative_var[0][0]) +
-                                    (interior_box_lo_idx[1] + (fill_box_hi_idx[1] - j) +
-                                        num_subghosts_conservative_var[0][1])*
-                                        subghostcell_dims_conservative_var[0][0];
-                                
+                                                     (interior_box_lo_idx[1] + (fill_box_hi_idx[1] - j) +
+                                                      num_subghosts_conservative_var[0][1])*
+                                                     subghostcell_dims_conservative_var[0][0];
+
                                 idx_cell_pivot_mom = (i + num_subghosts_conservative_var[1][0]) +
-                                    (interior_box_lo_idx[1] + (fill_box_hi_idx[1] - j) +
-                                        num_subghosts_conservative_var[1][1])*
-                                        subghostcell_dims_conservative_var[1][0];
-                                
+                                                     (interior_box_lo_idx[1] + (fill_box_hi_idx[1] - j) +
+                                                      num_subghosts_conservative_var[1][1])*
+                                                     subghostcell_dims_conservative_var[1][0];
+
                                 idx_cell_pivot_E = (i + num_subghosts_conservative_var[2][0]) +
-                                    (interior_box_lo_idx[1] + (fill_box_hi_idx[1] - j) +
-                                        num_subghosts_conservative_var[2][1])*
-                                        subghostcell_dims_conservative_var[2][0];
+                                                   (interior_box_lo_idx[1] + (fill_box_hi_idx[1] - j) +
+                                                    num_subghosts_conservative_var[2][1])*
+                                                   subghostcell_dims_conservative_var[2][0];
                             }
                             else if (edge_loc == BDRY_LOC::YHI)
                             {
                                 idx_cell_pivot_rho = (i + num_subghosts_conservative_var[0][0]) +
-                                    (interior_box_hi_idx[1] - (j - fill_box_lo_idx[1]) +
-                                        num_subghosts_conservative_var[0][1])*
-                                            subghostcell_dims_conservative_var[0][0];
-                                
+                                                     (interior_box_hi_idx[1] - (j - fill_box_lo_idx[1]) +
+                                                      num_subghosts_conservative_var[0][1])*
+                                                     subghostcell_dims_conservative_var[0][0];
+
                                 idx_cell_pivot_mom = (i + num_subghosts_conservative_var[1][0]) +
-                                    (interior_box_hi_idx[1] - (j - fill_box_lo_idx[1]) +
-                                        num_subghosts_conservative_var[1][1])*
-                                            subghostcell_dims_conservative_var[1][0];
-                                
+                                                     (interior_box_hi_idx[1] - (j - fill_box_lo_idx[1]) +
+                                                      num_subghosts_conservative_var[1][1])*
+                                                     subghostcell_dims_conservative_var[1][0];
+
                                 idx_cell_pivot_E = (i + num_subghosts_conservative_var[2][0]) +
-                                    (interior_box_hi_idx[1] - (j - fill_box_lo_idx[1]) +
-                                        num_subghosts_conservative_var[2][1])*
-                                            subghostcell_dims_conservative_var[2][0];
+                                                   (interior_box_hi_idx[1] - (j - fill_box_lo_idx[1]) +
+                                                    num_subghosts_conservative_var[2][1])*
+                                                   subghostcell_dims_conservative_var[2][0];
                             }
-                            
+
                             /*
                              * Set the values for density, momentum and total internal energy.
                              */
-                            
+
                             double epsilon_pivot = (Q[3][idx_cell_pivot_E] -
-                                0.5*(Q[1][idx_cell_pivot_mom]*Q[1][idx_cell_pivot_mom] +
-                                     Q[2][idx_cell_pivot_mom]*Q[2][idx_cell_pivot_mom])/
-                                Q[0][idx_cell_pivot_rho])/Q[0][idx_cell_pivot_rho];
-                            
+                                                    0.5*(Q[1][idx_cell_pivot_mom]*Q[1][idx_cell_pivot_mom] +
+                                                         Q[2][idx_cell_pivot_mom]*Q[2][idx_cell_pivot_mom])/
+                                                    Q[0][idx_cell_pivot_rho])/Q[0][idx_cell_pivot_rho];
+
                             double p_pivot = d_equation_of_state_mixing_rules->getEquationOfState()->
-                                getPressure(
+                                    getPressure(
                                     &Q[0][idx_cell_pivot_rho],
                                     &epsilon_pivot,
                                     thermo_properties_ptr);
-                            
+
                             double p = p_pivot;
-                            
+
                             double T_pivot = d_equation_of_state_mixing_rules->getEquationOfState()->
-                                getTemperature(
+                                    getTemperature(
                                     &Q[0][idx_cell_pivot_rho],
                                     &p_pivot,
                                     thermo_properties_ptr);
-                            
+
                             double T = -T_pivot + 2.0*d_bdry_edge_isothermal_no_slip_T[edge_loc];
-                            
+
                             double rho = d_equation_of_state_mixing_rules->getEquationOfState()->
-                                getDensity(
+                                    getDensity(
                                     &p,
                                     &T,
                                     thermo_properties_ptr);
-                            
+
                             double u = -Q[1][idx_cell_pivot_mom]/Q[0][idx_cell_pivot_rho] +
-                                2.0*d_bdry_edge_isothermal_no_slip_vel[edge_loc*2];
+                                       2.0*d_bdry_edge_isothermal_no_slip_vel[edge_loc*2];
                             double v = -Q[2][idx_cell_pivot_mom]/Q[0][idx_cell_pivot_rho] +
-                                2.0*d_bdry_edge_isothermal_no_slip_vel[edge_loc*2 + 1];
-                            
+                                       2.0*d_bdry_edge_isothermal_no_slip_vel[edge_loc*2 + 1];
+
                             Q[0][idx_cell_rho] = rho;
                             Q[1][idx_cell_mom] = rho*u;
                             Q[2][idx_cell_mom] = rho*v;
-                            
+
                             double epsilon = d_equation_of_state_mixing_rules->getEquationOfState()->
-                                getInternalEnergyFromTemperature(
+                                    getInternalEnergyFromTemperature(
                                     &rho,
                                     &T,
                                     thermo_properties_ptr);
-                            
+
                             double E = rho*epsilon +
-                                0.5*(Q[1][idx_cell_mom]*Q[1][idx_cell_mom] + Q[2][idx_cell_mom]*Q[2][idx_cell_mom])/
-                                    rho;
-                            
+                                       0.5*(Q[1][idx_cell_mom]*Q[1][idx_cell_mom] + Q[2][idx_cell_mom]*Q[2][idx_cell_mom])/
+                                       rho;
+
                             Q[3][idx_cell_E] = E;
                         }
                     }
-                    
+
                     // Remove edge locations that have boundary conditions identified.
                     bdry_edge_locs.erase(std::remove(bdry_edge_locs.begin(), bdry_edge_locs.end(), edge_loc),
-                        bdry_edge_locs.end());
+                                         bdry_edge_locs.end());
+                }
+                else if ((bdry_edge_conds[edge_loc] == BDRY_COND::FLOW_MODEL::PRESSURE_OUTFLOW)||
+                         (bdry_edge_conds[edge_loc] == BDRY_COND::FLOW_MODEL::PRESSURE_INFLOW))
+                {   //pivot is the first node
+                    for (int i = fill_box_lo_idx[0]; i <= fill_box_hi_idx[0]; i++)
+                    {
+                        for (int j = fill_box_lo_idx[1]; j <= fill_box_hi_idx[1]; j++) {
+                            const int idx_cell_rho = (i + num_subghosts_conservative_var[0][0]) +
+                                                     (j + num_subghosts_conservative_var[0][1]) *
+                                                     subghostcell_dims_conservative_var[0][0];
+
+                            const int idx_cell_mom = (i + num_subghosts_conservative_var[1][0]) +
+                                                     (j + num_subghosts_conservative_var[1][1]) *
+                                                     subghostcell_dims_conservative_var[1][0];
+
+                            const int idx_cell_E = (i + num_subghosts_conservative_var[2][0]) +
+                                                   (j + num_subghosts_conservative_var[2][1]) *
+                                                   subghostcell_dims_conservative_var[2][0];
+
+                            int idx_cell_pivot_rho = idx_cell_rho;
+                            int idx_cell_pivot_mom = idx_cell_mom;
+                            int idx_cell_pivot_E = idx_cell_E;
+
+                            if (edge_loc == BDRY_LOC::XLO) {
+                                idx_cell_pivot_rho = (interior_box_lo_idx[0] +
+                                                      num_subghosts_conservative_var[0][0]) +
+                                                     (j + num_subghosts_conservative_var[0][1]) *
+                                                     subghostcell_dims_conservative_var[0][0];
+
+                                idx_cell_pivot_mom = (interior_box_lo_idx[0] +
+                                                      num_subghosts_conservative_var[1][0]) +
+                                                     (j + num_subghosts_conservative_var[1][1]) *
+                                                     subghostcell_dims_conservative_var[1][0];
+
+                                idx_cell_pivot_E = (interior_box_lo_idx[0] +
+                                                    num_subghosts_conservative_var[2][0]) +
+                                                   (j + num_subghosts_conservative_var[2][1]) *
+                                                   subghostcell_dims_conservative_var[2][0];
+                            }
+                            else if (edge_loc == BDRY_LOC::XHI) {
+                                idx_cell_pivot_rho = (interior_box_hi_idx[0] +
+                                                      num_subghosts_conservative_var[0][0]) +
+                                                     (j + num_subghosts_conservative_var[0][1]) *
+                                                     subghostcell_dims_conservative_var[0][0];
+
+                                idx_cell_pivot_mom = (interior_box_hi_idx[0] +
+                                                      num_subghosts_conservative_var[1][0]) +
+                                                     (j + num_subghosts_conservative_var[1][1]) *
+                                                     subghostcell_dims_conservative_var[1][0];
+
+                                idx_cell_pivot_E = (interior_box_hi_idx[0] +
+                                                    num_subghosts_conservative_var[2][0]) +
+                                                   (j + num_subghosts_conservative_var[2][1]) *
+                                                   subghostcell_dims_conservative_var[2][0];
+                            }
+                            else if (edge_loc == BDRY_LOC::YLO) {
+                                idx_cell_pivot_rho = (i + num_subghosts_conservative_var[0][0]) +
+                                                     (interior_box_lo_idx[1] +
+                                                      num_subghosts_conservative_var[0][1]) *
+                                                     subghostcell_dims_conservative_var[0][0];
+
+                                idx_cell_pivot_mom = (i + num_subghosts_conservative_var[1][0]) +
+                                                     (interior_box_lo_idx[1] +
+                                                      num_subghosts_conservative_var[1][1]) *
+                                                     subghostcell_dims_conservative_var[1][0];
+
+                                idx_cell_pivot_E = (i + num_subghosts_conservative_var[2][0]) +
+                                                   (interior_box_lo_idx[1] +
+                                                    num_subghosts_conservative_var[2][1]) *
+                                                   subghostcell_dims_conservative_var[2][0];
+                            }
+                            else if (edge_loc == BDRY_LOC::YHI) {
+                                idx_cell_pivot_rho = (i + num_subghosts_conservative_var[0][0]) +
+                                                     (interior_box_hi_idx[1] +
+                                                      num_subghosts_conservative_var[0][1]) *
+                                                     subghostcell_dims_conservative_var[0][0];
+
+                                idx_cell_pivot_mom = (i + num_subghosts_conservative_var[1][0]) +
+                                                     (interior_box_hi_idx[1] +
+                                                      num_subghosts_conservative_var[1][1]) *
+                                                     subghostcell_dims_conservative_var[1][0];
+
+                                idx_cell_pivot_E = (i + num_subghosts_conservative_var[2][0]) +
+                                                   (interior_box_hi_idx[1] +
+                                                    num_subghosts_conservative_var[2][1]) *
+                                                   subghostcell_dims_conservative_var[2][0];
+                            }
+                            if (bdry_edge_conds[edge_loc] == BDRY_COND::FLOW_MODEL::PRESSURE_OUTFLOW) {
+
+                                /*
+                                 * Set the values for density, momentum and total internal energy.
+                                 * Supersonic, rho = rho_in, rhou = rho_in*u_in, rhov = rho_in*v_in, E = E_in
+                                 * Subsonic,   rho = rho_in, rhou = rho_in*u_in, rhov = rho_in*v_in, E = E(rho_in, u_in, v_in, p)
+                                 */
+                                Q[0][idx_cell_rho] = Q[0][idx_cell_pivot_rho];
+                                Q[1][idx_cell_mom] = Q[1][idx_cell_pivot_mom];
+                                Q[2][idx_cell_mom] = Q[2][idx_cell_pivot_mom];
+                                Q[3][idx_cell_E] = Q[3][idx_cell_pivot_E];
+
+                                double rho_pivot = Q[0][idx_cell_pivot_rho];
+                                double epsilon_pivot = (Q[3][idx_cell_pivot_E] -
+                                                        0.5 * (Q[1][idx_cell_pivot_mom] * Q[1][idx_cell_pivot_mom] +
+                                                               Q[2][idx_cell_pivot_mom] * Q[2][idx_cell_pivot_mom]) /
+                                                        Q[0][idx_cell_pivot_rho]) / Q[0][idx_cell_pivot_rho];
+
+                                double p_pivot = d_equation_of_state_mixing_rules->getEquationOfState()->
+                                        getPressure(&rho_pivot, &epsilon_pivot, thermo_properties_ptr);
+                                double c_pivot = d_equation_of_state_mixing_rules->getEquationOfState()->
+                                        getSoundSpeed(&rho_pivot, &p_pivot, thermo_properties_ptr);
+                                double M_pivot = sqrt(Q[1][idx_cell_pivot_mom] * Q[1][idx_cell_pivot_mom] +
+                                                      Q[2][idx_cell_pivot_mom] * Q[2][idx_cell_pivot_mom]) /
+                                                 (rho_pivot * c_pivot);
+                                //subsonic case
+                                if (M_pivot < 1.0) {
+
+                                    double p_inf = d_bdry_edge_pressure_outflow_p[edge_loc];
+
+                                    double epsilon = d_equation_of_state_mixing_rules->getEquationOfState()->
+                                            getInternalEnergy(&rho_pivot, &p_inf, thermo_properties_ptr);
+                                    double E = Q[0][idx_cell_pivot_rho] * epsilon +
+                                               0.5 * (Q[1][idx_cell_pivot_mom] * Q[1][idx_cell_pivot_mom]
+                                                      + Q[2][idx_cell_pivot_mom] * Q[2][idx_cell_pivot_mom]) /
+                                               rho_pivot;
+                                    Q[3][idx_cell_E] = E;
+                                }
+                            }
+                            else if(bdry_edge_conds[edge_loc] == BDRY_COND::FLOW_MODEL::PRESSURE_INFLOW) {
+
+                                /*
+                                 * Set the values for density, momentum and total internal energy.
+                                 * Supersonic, rho = rho, rhou = rho*u, rhov = rho*v, E = E
+                                 * Subsonic,   rho = rho_in, rhou = rho_in*u, rhov = rho_in*v, E = E(rho_in, u, v, p)
+                                 */
+
+                                double rho_pivot = Q[0][idx_cell_pivot_rho];
+                                double epsilon_pivot = (Q[3][idx_cell_pivot_E] -
+                                                        0.5 * (Q[1][idx_cell_pivot_mom] * Q[1][idx_cell_pivot_mom] +
+                                                               Q[2][idx_cell_pivot_mom] * Q[2][idx_cell_pivot_mom]) /
+                                                        Q[0][idx_cell_pivot_rho]) / Q[0][idx_cell_pivot_rho];
+
+                                double p_pivot = d_equation_of_state_mixing_rules->getEquationOfState()->
+                                        getPressure(&rho_pivot, &epsilon_pivot, thermo_properties_ptr);
+                                double c_pivot = d_equation_of_state_mixing_rules->getEquationOfState()->
+                                        getSoundSpeed(&rho_pivot, &p_pivot, thermo_properties_ptr);
+                                double M_pivot = sqrt(Q[1][idx_cell_pivot_mom] * Q[1][idx_cell_pivot_mom] +
+                                                      Q[2][idx_cell_pivot_mom] * Q[2][idx_cell_pivot_mom]) /
+                                                 (rho_pivot * c_pivot);
+                                //subsonic case
+                                if (M_pivot < 1.0) {
+                                    double p_inf = d_bdry_edge_pressure_inflow_p[edge_loc];
+                                    double u_inf = d_bdry_edge_pressure_inflow_vel[edge_loc*2];
+                                    double v_inf = d_bdry_edge_pressure_inflow_vel[edge_loc*2 + 1];
+
+                                    double epsilon = d_equation_of_state_mixing_rules->getEquationOfState()->
+                                            getInternalEnergy(&rho_pivot, &p_inf, thermo_properties_ptr);
+                                    double E = rho_pivot * (epsilon + 0.5*(u_inf*u_inf + v_inf*v_inf));
+
+                                    Q[0][idx_cell_rho] = rho_pivot;
+                                    Q[1][idx_cell_mom] = rho_pivot*u_inf;
+                                    Q[2][idx_cell_mom] = rho_pivot*v_inf;
+                                    Q[3][idx_cell_E] = E;
+                                }
+                                else{
+                                    double rho_inf = d_bdry_edge_pressure_inflow_rho[edge_loc];
+                                    double p_inf = d_bdry_edge_pressure_inflow_p[edge_loc];
+                                    double u_inf = d_bdry_edge_pressure_inflow_vel[edge_loc*2];
+                                    double v_inf = d_bdry_edge_pressure_inflow_vel[edge_loc*2 + 1];
+
+                                    double epsilon_inf = d_equation_of_state_mixing_rules->getEquationOfState()->
+                                            getInternalEnergy(&rho_inf, &p_inf, thermo_properties_ptr);
+                                    double E_inf = rho_inf * (epsilon_inf + 0.5*(u_inf*u_inf + v_inf*v_inf));
+
+                                    Q[0][idx_cell_rho] = rho_inf;
+                                    Q[1][idx_cell_mom] = rho_inf*u_inf;
+                                    Q[2][idx_cell_mom] = rho_inf*v_inf;
+                                    Q[3][idx_cell_E] = E_inf;
+
+                                }
+                            }
+
+                        }
+                    }
+
+                    // Remove edge locations that have boundary conditions identified.
+                    bdry_edge_locs.erase(std::remove(bdry_edge_locs.begin(), bdry_edge_locs.end(), edge_loc),
+                                         bdry_edge_locs.end());
                 }
             }
         }
@@ -1744,7 +1950,9 @@ FlowModelBoundaryUtilitiesSingleSpecies::fill3dFaceBoundaryData(
             fill_box_hi_idx = fill_box_hi_idx - interior_box.lower();
             
             if ((bdry_face_conds[face_loc] == BDRY_COND::FLOW_MODEL::ADIABATIC_NO_SLIP) ||
-                (bdry_face_conds[face_loc] == BDRY_COND::FLOW_MODEL::ISOTHERMAL_NO_SLIP))
+                (bdry_face_conds[face_loc] == BDRY_COND::FLOW_MODEL::ISOTHERMAL_NO_SLIP) ||
+                (bdry_face_conds[face_loc] == BDRY_COND::FLOW_MODEL::PRESSURE_OUTFLOW) ||
+                (bdry_face_conds[face_loc] == BDRY_COND::FLOW_MODEL::PRESSURE_INFLOW))
             {
                 /*
                  * Get the pointers to the conservative variables.
@@ -2048,249 +2256,552 @@ FlowModelBoundaryUtilitiesSingleSpecies::fill3dFaceBoundaryData(
                             for (int k = fill_box_lo_idx[2]; k <= fill_box_hi_idx[2]; k++)
                             {
                                 const int idx_cell_rho = (i + num_subghosts_conservative_var[0][0]) +
-                                    (j + num_subghosts_conservative_var[0][1])*
-                                        subghostcell_dims_conservative_var[0][0] +
-                                    (k + num_subghosts_conservative_var[0][2])*
-                                        subghostcell_dims_conservative_var[0][0]*
-                                            subghostcell_dims_conservative_var[0][1];
-                                
+                                                         (j + num_subghosts_conservative_var[0][1])*
+                                                         subghostcell_dims_conservative_var[0][0] +
+                                                         (k + num_subghosts_conservative_var[0][2])*
+                                                         subghostcell_dims_conservative_var[0][0]*
+                                                         subghostcell_dims_conservative_var[0][1];
+
                                 const int idx_cell_mom = (i + num_subghosts_conservative_var[1][0]) +
-                                    (j + num_subghosts_conservative_var[1][1])*
-                                        subghostcell_dims_conservative_var[1][0] +
-                                    (k + num_subghosts_conservative_var[1][2])*
-                                        subghostcell_dims_conservative_var[1][0]*
-                                            subghostcell_dims_conservative_var[1][1];
-                                
+                                                         (j + num_subghosts_conservative_var[1][1])*
+                                                         subghostcell_dims_conservative_var[1][0] +
+                                                         (k + num_subghosts_conservative_var[1][2])*
+                                                         subghostcell_dims_conservative_var[1][0]*
+                                                         subghostcell_dims_conservative_var[1][1];
+
                                 const int idx_cell_E = (i + num_subghosts_conservative_var[2][0]) +
-                                    (j + num_subghosts_conservative_var[2][1])*
-                                        subghostcell_dims_conservative_var[2][0] +
-                                    (k + num_subghosts_conservative_var[2][2])*
-                                        subghostcell_dims_conservative_var[2][0]*
-                                            subghostcell_dims_conservative_var[2][1];
-                                
+                                                       (j + num_subghosts_conservative_var[2][1])*
+                                                       subghostcell_dims_conservative_var[2][0] +
+                                                       (k + num_subghosts_conservative_var[2][2])*
+                                                       subghostcell_dims_conservative_var[2][0]*
+                                                       subghostcell_dims_conservative_var[2][1];
+
                                 int idx_cell_pivot_rho = idx_cell_rho;
                                 int idx_cell_pivot_mom = idx_cell_mom;
                                 int idx_cell_pivot_E = idx_cell_E;
-                                
+
                                 if (face_loc == BDRY_LOC::XLO)
                                 {
                                     idx_cell_pivot_rho = (interior_box_lo_idx[0] + (fill_box_hi_idx[0] - i) +
-                                            num_subghosts_conservative_var[0][0]) +
-                                        (j + num_subghosts_conservative_var[0][1])*
-                                            subghostcell_dims_conservative_var[0][0] +
-                                        (k + num_subghosts_conservative_var[0][2])*
-                                            subghostcell_dims_conservative_var[0][0]*
-                                                subghostcell_dims_conservative_var[0][1];
-                                    
+                                                          num_subghosts_conservative_var[0][0]) +
+                                                         (j + num_subghosts_conservative_var[0][1])*
+                                                         subghostcell_dims_conservative_var[0][0] +
+                                                         (k + num_subghosts_conservative_var[0][2])*
+                                                         subghostcell_dims_conservative_var[0][0]*
+                                                         subghostcell_dims_conservative_var[0][1];
+
                                     idx_cell_pivot_mom = (interior_box_lo_idx[0] + (fill_box_hi_idx[0] - i) +
-                                            num_subghosts_conservative_var[1][0]) +
-                                        (j + num_subghosts_conservative_var[1][1])*
-                                            subghostcell_dims_conservative_var[1][0] +
-                                        (k + num_subghosts_conservative_var[1][2])*
-                                            subghostcell_dims_conservative_var[1][0]*
-                                                subghostcell_dims_conservative_var[1][1];
-                                    
+                                                          num_subghosts_conservative_var[1][0]) +
+                                                         (j + num_subghosts_conservative_var[1][1])*
+                                                         subghostcell_dims_conservative_var[1][0] +
+                                                         (k + num_subghosts_conservative_var[1][2])*
+                                                         subghostcell_dims_conservative_var[1][0]*
+                                                         subghostcell_dims_conservative_var[1][1];
+
                                     idx_cell_pivot_E = (interior_box_lo_idx[0] + (fill_box_hi_idx[0] - i) +
-                                            num_subghosts_conservative_var[2][0]) +
-                                        (j + num_subghosts_conservative_var[2][1])*
-                                            subghostcell_dims_conservative_var[2][0] +
-                                        (k + num_subghosts_conservative_var[2][2])*
-                                            subghostcell_dims_conservative_var[2][0]*
-                                                subghostcell_dims_conservative_var[2][1];
+                                                        num_subghosts_conservative_var[2][0]) +
+                                                       (j + num_subghosts_conservative_var[2][1])*
+                                                       subghostcell_dims_conservative_var[2][0] +
+                                                       (k + num_subghosts_conservative_var[2][2])*
+                                                       subghostcell_dims_conservative_var[2][0]*
+                                                       subghostcell_dims_conservative_var[2][1];
                                 }
                                 else if (face_loc == BDRY_LOC::XHI)
                                 {
                                     idx_cell_pivot_rho = (interior_box_hi_idx[0] - (i - fill_box_lo_idx[0]) +
-                                            num_subghosts_conservative_var[0][0]) +
-                                        (j + num_subghosts_conservative_var[0][1])*
-                                            subghostcell_dims_conservative_var[0][0] +
-                                        (k + num_subghosts_conservative_var[0][2])*
-                                            subghostcell_dims_conservative_var[0][0]*
-                                                subghostcell_dims_conservative_var[0][1];
-                                    
+                                                          num_subghosts_conservative_var[0][0]) +
+                                                         (j + num_subghosts_conservative_var[0][1])*
+                                                         subghostcell_dims_conservative_var[0][0] +
+                                                         (k + num_subghosts_conservative_var[0][2])*
+                                                         subghostcell_dims_conservative_var[0][0]*
+                                                         subghostcell_dims_conservative_var[0][1];
+
                                     idx_cell_pivot_mom = (interior_box_hi_idx[0] - (i - fill_box_lo_idx[0]) +
-                                            num_subghosts_conservative_var[1][0]) +
-                                        (j + num_subghosts_conservative_var[1][1])*
-                                            subghostcell_dims_conservative_var[1][0] +
-                                        (k + num_subghosts_conservative_var[1][2])*
-                                            subghostcell_dims_conservative_var[1][0]*
-                                                subghostcell_dims_conservative_var[1][1];
-                                    
+                                                          num_subghosts_conservative_var[1][0]) +
+                                                         (j + num_subghosts_conservative_var[1][1])*
+                                                         subghostcell_dims_conservative_var[1][0] +
+                                                         (k + num_subghosts_conservative_var[1][2])*
+                                                         subghostcell_dims_conservative_var[1][0]*
+                                                         subghostcell_dims_conservative_var[1][1];
+
                                     idx_cell_pivot_E = (interior_box_hi_idx[0] - (i - fill_box_lo_idx[0]) +
-                                            num_subghosts_conservative_var[2][0]) +
-                                        (j + num_subghosts_conservative_var[2][1])*
-                                            subghostcell_dims_conservative_var[2][0] +
-                                        (k + num_subghosts_conservative_var[2][2])*
-                                            subghostcell_dims_conservative_var[2][0]*
-                                                subghostcell_dims_conservative_var[2][1];
+                                                        num_subghosts_conservative_var[2][0]) +
+                                                       (j + num_subghosts_conservative_var[2][1])*
+                                                       subghostcell_dims_conservative_var[2][0] +
+                                                       (k + num_subghosts_conservative_var[2][2])*
+                                                       subghostcell_dims_conservative_var[2][0]*
+                                                       subghostcell_dims_conservative_var[2][1];
                                 }
                                 else if (face_loc == BDRY_LOC::YLO)
                                 {
                                     idx_cell_pivot_rho = (i + num_subghosts_conservative_var[0][0]) +
-                                        (interior_box_lo_idx[1] + (fill_box_hi_idx[1] - j) +
-                                            num_subghosts_conservative_var[0][1])*
-                                                subghostcell_dims_conservative_var[0][0] +
-                                        (k + num_subghosts_conservative_var[0][2])*
-                                            subghostcell_dims_conservative_var[0][0]*
-                                                subghostcell_dims_conservative_var[0][1];
-                                    
+                                                         (interior_box_lo_idx[1] + (fill_box_hi_idx[1] - j) +
+                                                          num_subghosts_conservative_var[0][1])*
+                                                         subghostcell_dims_conservative_var[0][0] +
+                                                         (k + num_subghosts_conservative_var[0][2])*
+                                                         subghostcell_dims_conservative_var[0][0]*
+                                                         subghostcell_dims_conservative_var[0][1];
+
                                     idx_cell_pivot_mom = (i + num_subghosts_conservative_var[1][0]) +
-                                        (interior_box_lo_idx[1] + (fill_box_hi_idx[1] - j) +
-                                            num_subghosts_conservative_var[1][1])*
-                                                subghostcell_dims_conservative_var[1][0] +
-                                        (k + num_subghosts_conservative_var[1][2])*
-                                            subghostcell_dims_conservative_var[1][0]*
-                                                subghostcell_dims_conservative_var[1][1];
-                                    
+                                                         (interior_box_lo_idx[1] + (fill_box_hi_idx[1] - j) +
+                                                          num_subghosts_conservative_var[1][1])*
+                                                         subghostcell_dims_conservative_var[1][0] +
+                                                         (k + num_subghosts_conservative_var[1][2])*
+                                                         subghostcell_dims_conservative_var[1][0]*
+                                                         subghostcell_dims_conservative_var[1][1];
+
                                     idx_cell_pivot_E = (i + num_subghosts_conservative_var[2][0]) +
-                                        (interior_box_lo_idx[1] + (fill_box_hi_idx[1] - j) +
-                                            num_subghosts_conservative_var[2][1])*
-                                                subghostcell_dims_conservative_var[2][0] +
-                                        (k + num_subghosts_conservative_var[2][2])*
-                                            subghostcell_dims_conservative_var[2][0]*
-                                                subghostcell_dims_conservative_var[2][1];
+                                                       (interior_box_lo_idx[1] + (fill_box_hi_idx[1] - j) +
+                                                        num_subghosts_conservative_var[2][1])*
+                                                       subghostcell_dims_conservative_var[2][0] +
+                                                       (k + num_subghosts_conservative_var[2][2])*
+                                                       subghostcell_dims_conservative_var[2][0]*
+                                                       subghostcell_dims_conservative_var[2][1];
                                 }
                                 else if (face_loc == BDRY_LOC::YHI)
                                 {
                                     idx_cell_pivot_rho = (i + num_subghosts_conservative_var[0][0]) +
-                                        (interior_box_hi_idx[1] - (j - fill_box_lo_idx[1]) +
-                                            num_subghosts_conservative_var[0][1])*
-                                                subghostcell_dims_conservative_var[0][0] +
-                                        (k + num_subghosts_conservative_var[0][2])*
-                                            subghostcell_dims_conservative_var[0][0]*
-                                                subghostcell_dims_conservative_var[0][1];
-                                    
+                                                         (interior_box_hi_idx[1] - (j - fill_box_lo_idx[1]) +
+                                                          num_subghosts_conservative_var[0][1])*
+                                                         subghostcell_dims_conservative_var[0][0] +
+                                                         (k + num_subghosts_conservative_var[0][2])*
+                                                         subghostcell_dims_conservative_var[0][0]*
+                                                         subghostcell_dims_conservative_var[0][1];
+
                                     idx_cell_pivot_mom = (i + num_subghosts_conservative_var[1][0]) +
-                                        (interior_box_hi_idx[1] - (j - fill_box_lo_idx[1]) +
-                                            num_subghosts_conservative_var[1][1])*
-                                                subghostcell_dims_conservative_var[1][0] +
-                                        (k + num_subghosts_conservative_var[1][2])*
-                                            subghostcell_dims_conservative_var[1][0]*
-                                                subghostcell_dims_conservative_var[1][1];
-                                    
+                                                         (interior_box_hi_idx[1] - (j - fill_box_lo_idx[1]) +
+                                                          num_subghosts_conservative_var[1][1])*
+                                                         subghostcell_dims_conservative_var[1][0] +
+                                                         (k + num_subghosts_conservative_var[1][2])*
+                                                         subghostcell_dims_conservative_var[1][0]*
+                                                         subghostcell_dims_conservative_var[1][1];
+
                                     idx_cell_pivot_E = (i + num_subghosts_conservative_var[2][0]) +
-                                        (interior_box_hi_idx[1] - (j - fill_box_lo_idx[1]) +
-                                            num_subghosts_conservative_var[2][1])*
-                                                subghostcell_dims_conservative_var[2][0] +
-                                        (k + num_subghosts_conservative_var[2][2])*
-                                            subghostcell_dims_conservative_var[2][0]*
-                                                subghostcell_dims_conservative_var[2][1];
+                                                       (interior_box_hi_idx[1] - (j - fill_box_lo_idx[1]) +
+                                                        num_subghosts_conservative_var[2][1])*
+                                                       subghostcell_dims_conservative_var[2][0] +
+                                                       (k + num_subghosts_conservative_var[2][2])*
+                                                       subghostcell_dims_conservative_var[2][0]*
+                                                       subghostcell_dims_conservative_var[2][1];
                                 }
                                 else if (face_loc == BDRY_LOC::ZLO)
                                 {
                                     idx_cell_pivot_rho = (i + num_subghosts_conservative_var[0][0]) +
-                                        (j + num_subghosts_conservative_var[0][1])*
-                                            subghostcell_dims_conservative_var[0][0] +
-                                        (interior_box_lo_idx[2] + (fill_box_hi_idx[2] - k) +
-                                            num_subghosts_conservative_var[0][2])*
-                                                subghostcell_dims_conservative_var[0][0]*
-                                                    subghostcell_dims_conservative_var[0][1];
-                                    
+                                                         (j + num_subghosts_conservative_var[0][1])*
+                                                         subghostcell_dims_conservative_var[0][0] +
+                                                         (interior_box_lo_idx[2] + (fill_box_hi_idx[2] - k) +
+                                                          num_subghosts_conservative_var[0][2])*
+                                                         subghostcell_dims_conservative_var[0][0]*
+                                                         subghostcell_dims_conservative_var[0][1];
+
                                     idx_cell_pivot_mom = (i + num_subghosts_conservative_var[1][0]) +
-                                        (j + num_subghosts_conservative_var[1][1])*
-                                            subghostcell_dims_conservative_var[1][0] +
-                                        (interior_box_lo_idx[2] + (fill_box_hi_idx[2] - k) +
-                                            num_subghosts_conservative_var[1][2])*
-                                                subghostcell_dims_conservative_var[1][0]*
-                                                    subghostcell_dims_conservative_var[1][1];
-                                    
+                                                         (j + num_subghosts_conservative_var[1][1])*
+                                                         subghostcell_dims_conservative_var[1][0] +
+                                                         (interior_box_lo_idx[2] + (fill_box_hi_idx[2] - k) +
+                                                          num_subghosts_conservative_var[1][2])*
+                                                         subghostcell_dims_conservative_var[1][0]*
+                                                         subghostcell_dims_conservative_var[1][1];
+
                                     idx_cell_pivot_E = (i + num_subghosts_conservative_var[2][0]) +
-                                        (j + num_subghosts_conservative_var[2][1])*
-                                            subghostcell_dims_conservative_var[2][0] +
-                                        (interior_box_lo_idx[2] + (fill_box_hi_idx[2] - k) +
-                                            num_subghosts_conservative_var[2][2])*
-                                                subghostcell_dims_conservative_var[2][0]*
-                                                    subghostcell_dims_conservative_var[2][1];
+                                                       (j + num_subghosts_conservative_var[2][1])*
+                                                       subghostcell_dims_conservative_var[2][0] +
+                                                       (interior_box_lo_idx[2] + (fill_box_hi_idx[2] - k) +
+                                                        num_subghosts_conservative_var[2][2])*
+                                                       subghostcell_dims_conservative_var[2][0]*
+                                                       subghostcell_dims_conservative_var[2][1];
                                 }
                                 else if (face_loc == BDRY_LOC::ZHI)
                                 {
                                     idx_cell_pivot_rho = (i + num_subghosts_conservative_var[0][0]) +
-                                        (j + num_subghosts_conservative_var[0][1])*
-                                            subghostcell_dims_conservative_var[0][0] +
-                                        (interior_box_hi_idx[2] - (k - fill_box_lo_idx[2]) +
-                                            num_subghosts_conservative_var[0][2])*
-                                                subghostcell_dims_conservative_var[0][0]*
-                                                    subghostcell_dims_conservative_var[0][1];
-                                    
+                                                         (j + num_subghosts_conservative_var[0][1])*
+                                                         subghostcell_dims_conservative_var[0][0] +
+                                                         (interior_box_hi_idx[2] - (k - fill_box_lo_idx[2]) +
+                                                          num_subghosts_conservative_var[0][2])*
+                                                         subghostcell_dims_conservative_var[0][0]*
+                                                         subghostcell_dims_conservative_var[0][1];
+
                                     idx_cell_pivot_mom = (i + num_subghosts_conservative_var[1][0]) +
-                                        (j + num_subghosts_conservative_var[1][1])*
-                                            subghostcell_dims_conservative_var[1][0] +
-                                        (interior_box_hi_idx[2] - (k - fill_box_lo_idx[2]) +
-                                            num_subghosts_conservative_var[1][2])*
-                                                subghostcell_dims_conservative_var[1][0]*
-                                                    subghostcell_dims_conservative_var[1][1];
-                                    
+                                                         (j + num_subghosts_conservative_var[1][1])*
+                                                         subghostcell_dims_conservative_var[1][0] +
+                                                         (interior_box_hi_idx[2] - (k - fill_box_lo_idx[2]) +
+                                                          num_subghosts_conservative_var[1][2])*
+                                                         subghostcell_dims_conservative_var[1][0]*
+                                                         subghostcell_dims_conservative_var[1][1];
+
                                     idx_cell_pivot_E = (i + num_subghosts_conservative_var[2][0]) +
-                                        (j + num_subghosts_conservative_var[2][1])*
-                                            subghostcell_dims_conservative_var[2][0] +
-                                        (interior_box_hi_idx[2] - (k - fill_box_lo_idx[2]) +
-                                            num_subghosts_conservative_var[2][2])*
-                                                subghostcell_dims_conservative_var[2][0]*
-                                                    subghostcell_dims_conservative_var[2][1];
+                                                       (j + num_subghosts_conservative_var[2][1])*
+                                                       subghostcell_dims_conservative_var[2][0] +
+                                                       (interior_box_hi_idx[2] - (k - fill_box_lo_idx[2]) +
+                                                        num_subghosts_conservative_var[2][2])*
+                                                       subghostcell_dims_conservative_var[2][0]*
+                                                       subghostcell_dims_conservative_var[2][1];
                                 }
-                                
+
                                 /*
                                  * Set the values for density, momentum and total internal energy.
                                  */
-                                
+
                                 double epsilon_pivot = (Q[4][idx_cell_pivot_E] -
-                                    0.5*(Q[1][idx_cell_pivot_mom]*Q[1][idx_cell_pivot_mom] +
-                                         Q[2][idx_cell_pivot_mom]*Q[2][idx_cell_pivot_mom] +
-                                         Q[3][idx_cell_pivot_mom]*Q[3][idx_cell_pivot_mom])/
-                                    Q[0][idx_cell_pivot_rho])/Q[0][idx_cell_pivot_rho];
-                                
+                                                        0.5*(Q[1][idx_cell_pivot_mom]*Q[1][idx_cell_pivot_mom] +
+                                                             Q[2][idx_cell_pivot_mom]*Q[2][idx_cell_pivot_mom] +
+                                                             Q[3][idx_cell_pivot_mom]*Q[3][idx_cell_pivot_mom])/
+                                                        Q[0][idx_cell_pivot_rho])/Q[0][idx_cell_pivot_rho];
+
                                 double p_pivot = d_equation_of_state_mixing_rules->getEquationOfState()->
-                                    getPressure(
+                                        getPressure(
                                         &Q[0][idx_cell_pivot_rho],
                                         &epsilon_pivot,
                                         thermo_properties_ptr);
-                                
+
                                 double p = p_pivot;
-                                
+
                                 double T_pivot = d_equation_of_state_mixing_rules->getEquationOfState()->
-                                    getTemperature(
+                                        getTemperature(
                                         &Q[0][idx_cell_pivot_rho],
                                         &p_pivot,
                                         thermo_properties_ptr);
-                                
+
                                 double T = -T_pivot + 2.0*d_bdry_face_isothermal_no_slip_T[face_loc];
-                                
+
                                 double rho = d_equation_of_state_mixing_rules->getEquationOfState()->
-                                    getDensity(
+                                        getDensity(
                                         &p,
                                         &T,
                                         thermo_properties_ptr);
-                                
+
                                 double u = -Q[1][idx_cell_pivot_mom]/Q[0][idx_cell_pivot_rho] +
-                                    2.0*d_bdry_face_isothermal_no_slip_vel[face_loc*3];
+                                           2.0*d_bdry_face_isothermal_no_slip_vel[face_loc*3];
                                 double v = -Q[2][idx_cell_pivot_mom]/Q[0][idx_cell_pivot_rho] +
-                                    2.0*d_bdry_face_isothermal_no_slip_vel[face_loc*3 + 1];
+                                           2.0*d_bdry_face_isothermal_no_slip_vel[face_loc*3 + 1];
                                 double w = -Q[3][idx_cell_pivot_mom]/Q[0][idx_cell_pivot_rho] +
-                                    2.0*d_bdry_face_isothermal_no_slip_vel[face_loc*3 + 2];
-                                
+                                           2.0*d_bdry_face_isothermal_no_slip_vel[face_loc*3 + 2];
+
                                 Q[0][idx_cell_rho] = rho;
                                 Q[1][idx_cell_mom] = rho*u;
                                 Q[2][idx_cell_mom] = rho*v;
                                 Q[3][idx_cell_mom] = rho*w;
-                                
+
                                 double epsilon = d_equation_of_state_mixing_rules->getEquationOfState()->
-                                    getInternalEnergyFromTemperature(
+                                        getInternalEnergyFromTemperature(
                                         &rho,
                                         &T,
                                         thermo_properties_ptr);
-                                
+
                                 double E = rho*epsilon +
-                                    0.5*(Q[1][idx_cell_mom]*Q[1][idx_cell_mom] + Q[2][idx_cell_mom]*Q[2][idx_cell_mom] +
-                                         Q[3][idx_cell_mom]*Q[3][idx_cell_mom])/rho;
-                                
+                                           0.5*(Q[1][idx_cell_mom]*Q[1][idx_cell_mom] + Q[2][idx_cell_mom]*Q[2][idx_cell_mom] +
+                                                Q[3][idx_cell_mom]*Q[3][idx_cell_mom])/rho;
+
                                 Q[4][idx_cell_E] = E;
                             }
                         }
                     }
-                    
+
                     // Remove face locations that have boundary conditions identified.
                     bdry_face_locs.erase(std::remove(bdry_face_locs.begin(), bdry_face_locs.end(), face_loc),
-                        bdry_face_locs.end());
+                                         bdry_face_locs.end());
+                }
+                else if ((bdry_face_conds[face_loc] == BDRY_COND::FLOW_MODEL::PRESSURE_INFLOW) ||
+                            (bdry_face_conds[face_loc] == BDRY_COND::FLOW_MODEL::PRESSURE_OUTFLOW))
+                {
+                    for (int i = fill_box_lo_idx[0]; i <= fill_box_hi_idx[0]; i++)
+                    {
+                        for (int j = fill_box_lo_idx[1]; j <= fill_box_hi_idx[1]; j++)
+                        {
+                            for (int k = fill_box_lo_idx[2]; k <= fill_box_hi_idx[2]; k++)
+                            {
+                                const int idx_cell_rho = (i + num_subghosts_conservative_var[0][0]) +
+                                                         (j + num_subghosts_conservative_var[0][1])*
+                                                         subghostcell_dims_conservative_var[0][0] +
+                                                         (k + num_subghosts_conservative_var[0][2])*
+                                                         subghostcell_dims_conservative_var[0][0]*
+                                                         subghostcell_dims_conservative_var[0][1];
+
+                                const int idx_cell_mom = (i + num_subghosts_conservative_var[1][0]) +
+                                                         (j + num_subghosts_conservative_var[1][1])*
+                                                         subghostcell_dims_conservative_var[1][0] +
+                                                         (k + num_subghosts_conservative_var[1][2])*
+                                                         subghostcell_dims_conservative_var[1][0]*
+                                                         subghostcell_dims_conservative_var[1][1];
+
+                                const int idx_cell_E = (i + num_subghosts_conservative_var[2][0]) +
+                                                       (j + num_subghosts_conservative_var[2][1])*
+                                                       subghostcell_dims_conservative_var[2][0] +
+                                                       (k + num_subghosts_conservative_var[2][2])*
+                                                       subghostcell_dims_conservative_var[2][0]*
+                                                       subghostcell_dims_conservative_var[2][1];
+
+                                int idx_cell_pivot_rho = idx_cell_rho;
+                                int idx_cell_pivot_mom = idx_cell_mom;
+                                int idx_cell_pivot_E = idx_cell_E;
+
+                                if (face_loc == BDRY_LOC::XLO)
+                                {
+                                    idx_cell_pivot_rho = (interior_box_lo_idx[0] +
+                                                          num_subghosts_conservative_var[0][0]) +
+                                                         (j + num_subghosts_conservative_var[0][1])*
+                                                         subghostcell_dims_conservative_var[0][0] +
+                                                         (k + num_subghosts_conservative_var[0][2])*
+                                                         subghostcell_dims_conservative_var[0][0]*
+                                                         subghostcell_dims_conservative_var[0][1];
+
+                                    idx_cell_pivot_mom = (interior_box_lo_idx[0] +
+                                                          num_subghosts_conservative_var[1][0]) +
+                                                         (j + num_subghosts_conservative_var[1][1])*
+                                                         subghostcell_dims_conservative_var[1][0] +
+                                                         (k + num_subghosts_conservative_var[1][2])*
+                                                         subghostcell_dims_conservative_var[1][0]*
+                                                         subghostcell_dims_conservative_var[1][1];
+
+                                    idx_cell_pivot_E = (interior_box_lo_idx[0] +
+                                                        num_subghosts_conservative_var[2][0]) +
+                                                       (j + num_subghosts_conservative_var[2][1])*
+                                                       subghostcell_dims_conservative_var[2][0] +
+                                                       (k + num_subghosts_conservative_var[2][2])*
+                                                       subghostcell_dims_conservative_var[2][0]*
+                                                       subghostcell_dims_conservative_var[2][1];
+                                }
+                                else if (face_loc == BDRY_LOC::XHI)
+                                {
+                                    idx_cell_pivot_rho = (interior_box_hi_idx[0] +
+                                                          num_subghosts_conservative_var[0][0]) +
+                                                         (j + num_subghosts_conservative_var[0][1])*
+                                                         subghostcell_dims_conservative_var[0][0] +
+                                                         (k + num_subghosts_conservative_var[0][2])*
+                                                         subghostcell_dims_conservative_var[0][0]*
+                                                         subghostcell_dims_conservative_var[0][1];
+
+                                    idx_cell_pivot_mom = (interior_box_hi_idx[0] +
+                                                          num_subghosts_conservative_var[1][0]) +
+                                                         (j + num_subghosts_conservative_var[1][1])*
+                                                         subghostcell_dims_conservative_var[1][0] +
+                                                         (k + num_subghosts_conservative_var[1][2])*
+                                                         subghostcell_dims_conservative_var[1][0]*
+                                                         subghostcell_dims_conservative_var[1][1];
+
+                                    idx_cell_pivot_E = (interior_box_hi_idx[0] +
+                                                        num_subghosts_conservative_var[2][0]) +
+                                                       (j + num_subghosts_conservative_var[2][1])*
+                                                       subghostcell_dims_conservative_var[2][0] +
+                                                       (k + num_subghosts_conservative_var[2][2])*
+                                                       subghostcell_dims_conservative_var[2][0]*
+                                                       subghostcell_dims_conservative_var[2][1];
+                                }
+                                else if (face_loc == BDRY_LOC::YLO)
+                                {
+                                    idx_cell_pivot_rho = (i + num_subghosts_conservative_var[0][0]) +
+                                                         (interior_box_lo_idx[1] +
+                                                          num_subghosts_conservative_var[0][1])*
+                                                         subghostcell_dims_conservative_var[0][0] +
+                                                         (k + num_subghosts_conservative_var[0][2])*
+                                                         subghostcell_dims_conservative_var[0][0]*
+                                                         subghostcell_dims_conservative_var[0][1];
+
+                                    idx_cell_pivot_mom = (i + num_subghosts_conservative_var[1][0]) +
+                                                         (interior_box_lo_idx[1] +
+                                                          num_subghosts_conservative_var[1][1])*
+                                                         subghostcell_dims_conservative_var[1][0] +
+                                                         (k + num_subghosts_conservative_var[1][2])*
+                                                         subghostcell_dims_conservative_var[1][0]*
+                                                         subghostcell_dims_conservative_var[1][1];
+
+                                    idx_cell_pivot_E = (i + num_subghosts_conservative_var[2][0]) +
+                                                       (interior_box_lo_idx[1] +
+                                                        num_subghosts_conservative_var[2][1])*
+                                                       subghostcell_dims_conservative_var[2][0] +
+                                                       (k + num_subghosts_conservative_var[2][2])*
+                                                       subghostcell_dims_conservative_var[2][0]*
+                                                       subghostcell_dims_conservative_var[2][1];
+                                }
+                                else if (face_loc == BDRY_LOC::YHI)
+                                {
+                                    idx_cell_pivot_rho = (i + num_subghosts_conservative_var[0][0]) +
+                                                         (interior_box_hi_idx[1] +
+                                                          num_subghosts_conservative_var[0][1])*
+                                                         subghostcell_dims_conservative_var[0][0] +
+                                                         (k + num_subghosts_conservative_var[0][2])*
+                                                         subghostcell_dims_conservative_var[0][0]*
+                                                         subghostcell_dims_conservative_var[0][1];
+
+                                    idx_cell_pivot_mom = (i + num_subghosts_conservative_var[1][0]) +
+                                                         (interior_box_hi_idx[1] +
+                                                          num_subghosts_conservative_var[1][1])*
+                                                         subghostcell_dims_conservative_var[1][0] +
+                                                         (k + num_subghosts_conservative_var[1][2])*
+                                                         subghostcell_dims_conservative_var[1][0]*
+                                                         subghostcell_dims_conservative_var[1][1];
+
+                                    idx_cell_pivot_E = (i + num_subghosts_conservative_var[2][0]) +
+                                                       (interior_box_hi_idx[1] +
+                                                        num_subghosts_conservative_var[2][1])*
+                                                       subghostcell_dims_conservative_var[2][0] +
+                                                       (k + num_subghosts_conservative_var[2][2])*
+                                                       subghostcell_dims_conservative_var[2][0]*
+                                                       subghostcell_dims_conservative_var[2][1];
+                                }
+                                else if (face_loc == BDRY_LOC::ZLO)
+                                {
+                                    idx_cell_pivot_rho = (i + num_subghosts_conservative_var[0][0]) +
+                                                         (j + num_subghosts_conservative_var[0][1])*
+                                                         subghostcell_dims_conservative_var[0][0] +
+                                                         (interior_box_lo_idx[2] +
+                                                          num_subghosts_conservative_var[0][2])*
+                                                         subghostcell_dims_conservative_var[0][0]*
+                                                         subghostcell_dims_conservative_var[0][1];
+
+                                    idx_cell_pivot_mom = (i + num_subghosts_conservative_var[1][0]) +
+                                                         (j + num_subghosts_conservative_var[1][1])*
+                                                         subghostcell_dims_conservative_var[1][0] +
+                                                         (interior_box_lo_idx[2] +
+                                                          num_subghosts_conservative_var[1][2])*
+                                                         subghostcell_dims_conservative_var[1][0]*
+                                                         subghostcell_dims_conservative_var[1][1];
+
+                                    idx_cell_pivot_E = (i + num_subghosts_conservative_var[2][0]) +
+                                                       (j + num_subghosts_conservative_var[2][1])*
+                                                       subghostcell_dims_conservative_var[2][0] +
+                                                       (interior_box_lo_idx[2] +
+                                                        num_subghosts_conservative_var[2][2])*
+                                                       subghostcell_dims_conservative_var[2][0]*
+                                                       subghostcell_dims_conservative_var[2][1];
+                                }
+                                else if (face_loc == BDRY_LOC::ZHI)
+                                {
+                                    idx_cell_pivot_rho = (i + num_subghosts_conservative_var[0][0]) +
+                                                         (j + num_subghosts_conservative_var[0][1])*
+                                                         subghostcell_dims_conservative_var[0][0] +
+                                                         (interior_box_hi_idx[2] +
+                                                          num_subghosts_conservative_var[0][2])*
+                                                         subghostcell_dims_conservative_var[0][0]*
+                                                         subghostcell_dims_conservative_var[0][1];
+
+                                    idx_cell_pivot_mom = (i + num_subghosts_conservative_var[1][0]) +
+                                                         (j + num_subghosts_conservative_var[1][1])*
+                                                         subghostcell_dims_conservative_var[1][0] +
+                                                         (interior_box_hi_idx[2] +
+                                                          num_subghosts_conservative_var[1][2])*
+                                                         subghostcell_dims_conservative_var[1][0]*
+                                                         subghostcell_dims_conservative_var[1][1];
+
+                                    idx_cell_pivot_E = (i + num_subghosts_conservative_var[2][0]) +
+                                                       (j + num_subghosts_conservative_var[2][1])*
+                                                       subghostcell_dims_conservative_var[2][0] +
+                                                       (interior_box_hi_idx[2] +
+                                                        num_subghosts_conservative_var[2][2])*
+                                                       subghostcell_dims_conservative_var[2][0]*
+                                                       subghostcell_dims_conservative_var[2][1];
+                                }
+
+                                /*
+                                 * Set the values for density, momentum and total internal energy.
+                                 */
+                                if (bdry_face_conds[face_loc] == BDRY_COND::FLOW_MODEL::PRESSURE_OUTFLOW){
+                                    /*
+                                     * Set the values for density, momentum and total internal energy.
+                                     * Supersonic, rho = rho, rhou = rho*u, rhov = rho*v, rhow = rho w, E = E
+                                     * Subsonic,   rho = rho, rhou = rho*u, rhov = rho*v, rhow = rho*w,
+                                     *             E = E(rho, u, v, w, p_inf)
+                                     */
+                                    Q[0][idx_cell_rho] = Q[0][idx_cell_pivot_rho];
+                                    Q[1][idx_cell_mom] = Q[1][idx_cell_pivot_mom];
+                                    Q[2][idx_cell_mom] = Q[2][idx_cell_pivot_mom];
+                                    Q[3][idx_cell_mom] = Q[3][idx_cell_pivot_mom];
+                                    Q[4][idx_cell_E] = Q[4][idx_cell_pivot_E];
+
+                                    double rho_pivot = Q[0][idx_cell_pivot_rho];
+                                    double epsilon_pivot = (Q[4][idx_cell_pivot_E] -
+                                                            0.5 * (Q[1][idx_cell_pivot_mom] * Q[1][idx_cell_pivot_mom] +
+                                                                   Q[2][idx_cell_pivot_mom] * Q[2][idx_cell_pivot_mom] +
+                                                                   Q[3][idx_cell_pivot_mom] * Q[3][idx_cell_pivot_mom]) /
+                                                            Q[0][idx_cell_pivot_rho]) / Q[0][idx_cell_pivot_rho];
+
+                                    double p_pivot = d_equation_of_state_mixing_rules->getEquationOfState()->
+                                            getPressure(&rho_pivot, &epsilon_pivot, thermo_properties_ptr);
+                                    double c_pivot = d_equation_of_state_mixing_rules->getEquationOfState()->
+                                            getSoundSpeed(&rho_pivot, &p_pivot, thermo_properties_ptr);
+                                    double M_pivot = sqrt(Q[1][idx_cell_pivot_mom] * Q[1][idx_cell_pivot_mom] +
+                                                          Q[2][idx_cell_pivot_mom] * Q[2][idx_cell_pivot_mom] +
+                                                          Q[3][idx_cell_pivot_mom] * Q[3][idx_cell_pivot_mom]) /
+                                                     (rho_pivot * c_pivot);
+                                    //subsonic case
+                                    if (M_pivot < 1.0) {
+                                        double p_inf = d_bdry_face_pressure_outflow_p[face_loc];
+                                        double epsilon = d_equation_of_state_mixing_rules->getEquationOfState()->
+                                                getInternalEnergy(&rho_pivot, &p_inf, thermo_properties_ptr);
+                                        double E = rho_pivot * epsilon +
+                                                   0.5 * (Q[1][idx_cell_pivot_mom] * Q[1][idx_cell_pivot_mom]
+                                                          + Q[2][idx_cell_pivot_mom] * Q[2][idx_cell_pivot_mom]
+                                                          + Q[3][idx_cell_pivot_mom] * Q[3][idx_cell_pivot_mom]) /
+                                                   rho_pivot;
+                                        Q[4][idx_cell_E] = E;
+                                    }
+                                }
+                                else if (bdry_face_conds[face_loc] == BDRY_COND::FLOW_MODEL::PRESSURE_INFLOW) {
+                                    /*
+                                     * Set the values for density, momentum and total internal energy.
+                                     * Supersonic, rho = rho_inf, rhou = rho_inf*u_inf, rhov = rho_inf*v_inf,
+                                     *                            rhow = rho_inf w_inf, E = E_inf
+                                     * Subsonic,   rho = rho, rhou = rho*u_inf, rhov = rho*v_inf, rhow = rho*w_inf,
+                                     *             E = E(rho, u_inf, v_inf, w_inf, p_inf)
+                                     */
+                                    double rho_pivot = Q[0][idx_cell_pivot_rho];
+                                    double epsilon_pivot = (Q[4][idx_cell_pivot_E] -
+                                                            0.5 * (Q[1][idx_cell_pivot_mom] * Q[1][idx_cell_pivot_mom] +
+                                                                   Q[2][idx_cell_pivot_mom] * Q[2][idx_cell_pivot_mom] +
+                                                                   Q[3][idx_cell_pivot_mom] * Q[3][idx_cell_pivot_mom]) /
+                                                            Q[0][idx_cell_pivot_rho]) / Q[0][idx_cell_pivot_rho];
+
+                                    double p_pivot = d_equation_of_state_mixing_rules->getEquationOfState()->
+                                            getPressure(&rho_pivot, &epsilon_pivot, thermo_properties_ptr);
+                                    double c_pivot = d_equation_of_state_mixing_rules->getEquationOfState()->
+                                            getSoundSpeed(&rho_pivot, &p_pivot, thermo_properties_ptr);
+                                    double M_pivot = sqrt(Q[1][idx_cell_pivot_mom] * Q[1][idx_cell_pivot_mom] +
+                                                          Q[2][idx_cell_pivot_mom] * Q[2][idx_cell_pivot_mom] +
+                                                          Q[3][idx_cell_pivot_mom] * Q[3][idx_cell_pivot_mom]) /
+                                                     (rho_pivot * c_pivot);
+
+                                    //subsonic case
+                                    if (M_pivot < 1.0) {
+                                        double p_inf = d_bdry_face_pressure_inflow_p[face_loc];
+                                        double u_inf = d_bdry_face_pressure_inflow_vel[face_loc*3];
+                                        double v_inf = d_bdry_face_pressure_inflow_vel[face_loc*3 + 1];
+                                        double w_inf = d_bdry_face_pressure_inflow_vel[face_loc*3 + 2];
+
+                                        double epsilon = d_equation_of_state_mixing_rules->getEquationOfState()->
+                                                getInternalEnergy(&rho_pivot, &p_inf, thermo_properties_ptr);
+                                        double E = rho_pivot * (epsilon + 0.5*(u_inf*u_inf + v_inf*v_inf + w_inf*w_inf));
+
+                                        Q[0][idx_cell_rho] = rho_pivot;
+                                        Q[1][idx_cell_mom] = rho_pivot*u_inf;
+                                        Q[2][idx_cell_mom] = rho_pivot*v_inf;
+                                        Q[3][idx_cell_mom] = rho_pivot*w_inf;
+                                        Q[4][idx_cell_E] = E;
+                                    }
+                                    else{
+                                        double rho_inf = d_bdry_face_pressure_inflow_rho[face_loc];
+                                        double p_inf = d_bdry_face_pressure_inflow_p[face_loc];
+                                        double u_inf = d_bdry_face_pressure_inflow_vel[face_loc*3];
+                                        double v_inf = d_bdry_face_pressure_inflow_vel[face_loc*3 + 1];
+                                        double w_inf = d_bdry_face_pressure_inflow_vel[face_loc*3 + 2];
+
+                                        double epsilon_inf = d_equation_of_state_mixing_rules->getEquationOfState()->
+                                                getInternalEnergy(&rho_inf, &p_inf, thermo_properties_ptr);
+                                        double E_inf = rho_inf * (epsilon_inf + 0.5*(u_inf*u_inf + v_inf*v_inf + w_inf*w_inf));
+
+                                        Q[0][idx_cell_rho] = rho_inf;
+                                        Q[1][idx_cell_mom] = rho_inf*u_inf;
+                                        Q[2][idx_cell_mom] = rho_inf*v_inf;
+                                        Q[3][idx_cell_mom] = rho_inf*w_inf;
+                                        Q[4][idx_cell_E] = E_inf;
+
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Remove face locations that have boundary conditions identified.
+                    bdry_face_locs.erase(std::remove(bdry_face_locs.begin(), bdry_face_locs.end(), face_loc),
+                                         bdry_face_locs.end());
                 }
             }
         }
@@ -4622,6 +5133,28 @@ FlowModelBoundaryUtilitiesSingleSpecies::read1dBdryNodes(
                     
                     node_locs[ni] = BOGUS_BDRY_LOC;
                 }
+                else if (bdry_cond_str == "PRESSURE_OUTFLOW")
+                {
+                    node_conds[s] = BDRY_COND::FLOW_MODEL::PRESSURE_OUTFLOW;
+
+                    readPressureOutflow(
+                            bdry_loc_db,
+                            bdry_loc_str,
+                            s);
+
+                    node_locs[ni] = BOGUS_BDRY_LOC;
+                }
+                else if (bdry_cond_str == "PRESSURE_INFLOW")
+                {
+                    node_conds[s] = BDRY_COND::FLOW_MODEL::PRESSURE_INFLOW;
+
+                    readPressureInflow(
+                            bdry_loc_db,
+                            bdry_loc_str,
+                            s);
+
+                    node_locs[ni] = BOGUS_BDRY_LOC;
+                }
             } // if (need_data_read)
         } // for (int ni = 0 ...
     } // if (num_per_dirs < 1)
@@ -4727,6 +5260,27 @@ FlowModelBoundaryUtilitiesSingleSpecies::read2dBdryEdges(
                     
                     edge_locs[ei] = BOGUS_BDRY_LOC;
                 }
+                else if (bdry_cond_str == "PRESSURE_OUTFLOW") {
+                    edge_conds[s] = BDRY_COND::FLOW_MODEL::PRESSURE_OUTFLOW;
+
+                    readPressureOutflow(
+                            bdry_loc_db,
+                            bdry_loc_str,
+                            s);
+
+                    edge_locs[ei] = BOGUS_BDRY_LOC;
+                }
+                else if (bdry_cond_str == "PRESSURE_INFLOW") {
+                    edge_conds[s] = BDRY_COND::FLOW_MODEL::PRESSURE_INFLOW;
+
+                    readPressureInflow(
+                            bdry_loc_db,
+                            bdry_loc_str,
+                            s);
+
+                    edge_locs[ei] = BOGUS_BDRY_LOC;
+                }
+
             } // if (need_data_read)
        } // for (int ei = 0 ...
     } // if (num_per_dirs < 2)
@@ -5025,6 +5579,28 @@ FlowModelBoundaryUtilitiesSingleSpecies::read3dBdryFaces(
                         bdry_loc_str,
                         s);
                     
+                    face_locs[fi] = BOGUS_BDRY_LOC;
+                }
+                else if (bdry_cond_str == "PRESSURE_OUTFLOW")
+                {
+                    face_conds[s] = BDRY_COND::FLOW_MODEL::PRESSURE_OUTFLOW;
+
+                    readPressureOutflow(
+                            bdry_loc_db,
+                            bdry_loc_str,
+                            s);
+
+                    face_locs[fi] = BOGUS_BDRY_LOC;
+                }
+                else if (bdry_cond_str == "PRESSURE_INFLOW")
+                {
+                    face_conds[s] = BDRY_COND::FLOW_MODEL::PRESSURE_INFLOW;
+
+                    readPressureInflow(
+                            bdry_loc_db,
+                            bdry_loc_str,
+                            s);
+
                     face_locs[fi] = BOGUS_BDRY_LOC;
                 }
             } // if (need_data_read)
@@ -5802,5 +6378,152 @@ FlowModelBoundaryUtilitiesSingleSpecies::readIsothermalNoSlip(
         d_bdry_face_isothermal_no_slip_vel[bdry_location_index*3] = data_vel[0];
         d_bdry_face_isothermal_no_slip_vel[bdry_location_index*3 + 1] = data_vel[1];
         d_bdry_face_isothermal_no_slip_vel[bdry_location_index*3 + 2] = data_vel[2];
+    }
+}
+
+void
+FlowModelBoundaryUtilitiesSingleSpecies::readPressureOutflow(
+        const boost::shared_ptr<tbox::Database>& db,
+        std::string& db_name,
+        int bdry_location_index)
+{
+    TBOX_ASSERT(db);
+    TBOX_ASSERT(!db_name.empty());
+
+    double data_p = 0.0;
+
+    if (db->keyExists("pressure"))
+    {
+        data_p = db->getDouble("pressure");
+    }
+    else
+    {
+        TBOX_ERROR(d_object_name
+                   << ": FlowModelBoundaryUtilitiesSingleSpecies::readIsothermalNoSlip()\n"
+                   << "'pressure' entry missing from '"
+                   << db_name
+                   << "' input database."
+                   << std::endl);
+    }
+
+    if (d_dim == tbox::Dimension(1))
+    {
+        d_bdry_node_pressure_outflow_p[bdry_location_index] = data_p;
+    }
+    else if (d_dim == tbox::Dimension(2))
+    {
+        d_bdry_edge_pressure_outflow_p[bdry_location_index] = data_p;
+    }
+    else if (d_dim == tbox::Dimension(3))
+    {
+        d_bdry_face_pressure_outflow_p[bdry_location_index] = data_p;
+    }
+}
+
+
+void
+FlowModelBoundaryUtilitiesSingleSpecies::readPressureInflow(
+        const boost::shared_ptr<tbox::Database>& db,
+        std::string& db_name,
+        int bdry_location_index)
+{
+    TBOX_ASSERT(db);
+    TBOX_ASSERT(!db_name.empty());
+
+    double data_p = 0.0, data_rho = 0.0;
+    std::vector<double> data_vel;
+
+    if (db->keyExists("pressure"))
+    {
+        data_p = db->getDouble("pressure");
+    }
+    else
+    {
+        TBOX_ERROR(d_object_name
+                   << ": FlowModelBoundaryUtilitiesSingleSpecies::readPressureInflow()\n"
+                   << "'pressure' entry missing from '"
+                   << db_name
+                   << "' input database."
+                   << std::endl);
+    }
+
+    if (db->keyExists("density"))
+    {
+        data_rho = db->getDouble("density");
+    }
+    else
+    {
+        TBOX_ERROR(d_object_name
+                   << ": FlowModelBoundaryUtilitiesSingleSpecies::readPressureInflow()\n"
+                   << "'temperature' entry missing from '"
+                   << db_name
+                   << "' input database."
+                   << std::endl);
+    }
+
+    if (db->keyExists("velocity"))
+    {
+        data_vel = db->getDoubleVector("velocity");
+    }
+    else
+    {
+        TBOX_ERROR(d_object_name
+                   << ": FlowModelBoundaryUtilitiesSingleSpecies::readPressureInflow()\n"
+                   << "'velocity' entry missing from '"
+                   << db_name
+                   << "' input database."
+                   << std::endl);
+    }
+
+    if (d_dim == tbox::Dimension(1))
+    {
+        if (static_cast<int>(data_vel.size()) != 1)
+        {
+            TBOX_ERROR(d_object_name
+                       << ": FlowModelBoundaryUtilitiesSingleSpecies::readIsothermalNoSlip()\n"
+                       << "'velocity' entry from '"
+                       << db_name
+                       << "' input database has incorrect size."
+                       << std::endl);
+        }
+
+        d_bdry_node_pressure_inflow_rho[bdry_location_index] = data_rho;
+        d_bdry_node_pressure_inflow_p[bdry_location_index] = data_p;
+        d_bdry_node_pressure_inflow_vel[bdry_location_index] = data_vel[0];
+    }
+    else if (d_dim == tbox::Dimension(2))
+    {
+        if (static_cast<int>(data_vel.size()) != 2)
+        {
+            TBOX_ERROR(d_object_name
+                       << ": FlowModelBoundaryUtilitiesSingleSpecies::readIsothermalNoSlip()\n"
+                       << "'velocity' entry from '"
+                       << db_name
+                       << "' input database has incorrect size."
+                       << std::endl);
+        }
+
+        d_bdry_edge_pressure_inflow_rho[bdry_location_index] = data_rho;
+        d_bdry_edge_pressure_inflow_p[bdry_location_index] = data_p;
+        d_bdry_edge_pressure_inflow_vel[bdry_location_index*2] = data_vel[0];
+        d_bdry_edge_pressure_inflow_vel[bdry_location_index*2 + 1] = data_vel[1];
+    }
+    else if (d_dim == tbox::Dimension(3))
+    {
+        if (static_cast<int>(data_vel.size()) != 3)
+        {
+            TBOX_ERROR(d_object_name
+                       << ": FlowModelBoundaryUtilitiesSingleSpecies::readIsothermalNoSlip()\n"
+                       << "'velocity' entry from '"
+                       << db_name
+                       << "' input database has incorrect size."
+                       << std::endl);
+        }
+
+        d_bdry_face_pressure_inflow_rho[bdry_location_index] = data_rho;
+        d_bdry_face_pressure_inflow_p[bdry_location_index] = data_p;
+        d_bdry_face_pressure_inflow_vel[bdry_location_index*3] = data_vel[0];
+        d_bdry_face_pressure_inflow_vel[bdry_location_index*3 + 1] = data_vel[1];
+        d_bdry_face_pressure_inflow_vel[bdry_location_index*3 + 2] = data_vel[2];
     }
 }

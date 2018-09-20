@@ -191,6 +191,18 @@ class FlowModelBoundaryUtilitiesSingleSpecies: public FlowModelBoundaryUtilities
             const boost::shared_ptr<tbox::Database>& db,
             std::string& db_name,
             int bdry_location_index);
+
+        void
+            readPressureOutflow(
+            const boost::shared_ptr<tbox::Database>& db,
+            std::string& db_name,
+            int bdry_location_index);
+
+        void
+            readPressureInflow(
+            const boost::shared_ptr<tbox::Database>& db,
+            std::string& db_name,
+            int bdry_location_index);
         
         /*
          * Thermodynamic properties of the species.
@@ -213,7 +225,27 @@ class FlowModelBoundaryUtilitiesSingleSpecies: public FlowModelBoundaryUtilities
         std::vector<double> d_bdry_node_isothermal_no_slip_vel;
         std::vector<double> d_bdry_edge_isothermal_no_slip_vel;
         std::vector<double> d_bdry_face_isothermal_no_slip_vel;
-        
+
+        /*
+         * Vectors of node (1D), edge (2D) or face (3D) boundary values for PRSSURE_OUTFLOW case.
+         */
+        std::vector<double> d_bdry_node_pressure_outflow_p;
+        std::vector<double> d_bdry_edge_pressure_outflow_p;
+        std::vector<double> d_bdry_face_pressure_outflow_p;
+
+        /*
+         * Vectors of node (1D), edge (2D) or face (3D) boundary values for PRSSURE_INFLOW case.
+         */
+        std::vector<double>  d_bdry_node_pressure_inflow_rho;
+        std::vector<double>  d_bdry_edge_pressure_inflow_rho;
+        std::vector<double>  d_bdry_face_pressure_inflow_rho;
+        std::vector<double>  d_bdry_node_pressure_inflow_p;
+        std::vector<double>  d_bdry_edge_pressure_inflow_p;
+        std::vector<double>  d_bdry_face_pressure_inflow_p;
+        std::vector<double>  d_bdry_node_pressure_inflow_vel;
+        std::vector<double>  d_bdry_edge_pressure_inflow_vel;
+        std::vector<double>  d_bdry_face_pressure_inflow_vel;
+
 };
 
 #endif /* FLOW_MODEL_BOUNDARY_UTILITIES_SINGLE_SPECIES_HPP */

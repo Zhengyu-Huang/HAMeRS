@@ -679,7 +679,8 @@ NavierStokesBoundaryConditions::readNeumannBoundaryDataEntry(
     const boost::shared_ptr<tbox::Database>& db,
     std::string& db_name,
     int bdry_location_index)
-{
+{   //TODO Daniel Huang
+    //readDirichletBoundaryDataEntry(db, db_name, bdry_location_index);
     NULL_USE(db);
     NULL_USE(db_name);
     NULL_USE(bdry_location_index);
