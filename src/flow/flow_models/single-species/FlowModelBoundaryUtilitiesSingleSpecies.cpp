@@ -1130,6 +1130,9 @@ FlowModelBoundaryUtilitiesSingleSpecies::fill2dEdgeBoundaryData(
                                                rho_pivot;
                                     Q[3][idx_cell_E] = E;
                                 }
+//				             std::cout << " rho "<< Q[0][idx_cell_rho] << " " <<  Q[0][idx_cell_pivot_rho] << " rhoux "  << Q[1][idx_cell_mom]  << " "
+//                                          <<  Q[1][idx_cell_pivot_mom] << " rhouy " << Q[2][idx_cell_mom] << " " <<  Q[2][idx_cell_pivot_mom] << " E "
+//                                          << Q[3][idx_cell_E] << " " <<  Q[3][idx_cell_pivot_E] << " M " << M_pivot << std::endl;
                             }
                             else if(bdry_edge_conds[edge_loc] == BDRY_COND::FLOW_MODEL::PRESSURE_INFLOW) {
 
@@ -1183,6 +1186,10 @@ FlowModelBoundaryUtilitiesSingleSpecies::fill2dEdgeBoundaryData(
                                     Q[3][idx_cell_E] = E_inf;
 
                                 }
+//	                        std::cout << " rho "<< Q[0][idx_cell_rho] << " " <<  Q[0][idx_cell_pivot_rho] << " rhoux "  << Q[1][idx_cell_mom]  << " "
+//                                          <<  Q[1][idx_cell_pivot_mom] << " rhouy " << Q[2][idx_cell_mom] << " " <<  Q[2][idx_cell_pivot_mom] << " E "
+//                                          << Q[3][idx_cell_E] << " " <<  Q[3][idx_cell_pivot_E] << " M " << M_pivot << std::endl;
+                        
                             }
 
                         }
