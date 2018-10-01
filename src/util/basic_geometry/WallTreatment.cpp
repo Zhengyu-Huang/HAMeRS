@@ -45,7 +45,7 @@ int isOutsidePorousWall1(int dim, double x, double y, double z)
  */
 int isOutsidePorousWall2X(int dim, double x, double y, double z)
 {
-    /* 8 percents!!!!
+    /* 10 percents!!!!
      * The porous wall is centered at x0. and this is a QUASI 2D structure
      * The computational domain is at least is 100 by 100
      * There are 1 square holes in x-y directions at x=0.0,y=0.0 of size 8,
@@ -56,7 +56,7 @@ int isOutsidePorousWall2X(int dim, double x, double y, double z)
     double x0 = 0.0, r_hole = 4./100;
     if(fabs(x - x0) > r_hole) return 1;
     if(dim == 2 || dim == 3){
-        if(y < 46./100 || (y > 54./100))
+        if(y < 45./100 || (y > 55./100))
             return 0;
         else
             return 1;

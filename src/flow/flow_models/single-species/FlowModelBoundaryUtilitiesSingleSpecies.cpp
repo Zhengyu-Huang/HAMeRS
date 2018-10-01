@@ -55,9 +55,16 @@ FlowModelBoundaryUtilitiesSingleSpecies::FlowModelBoundaryUtilitiesSingleSpecies
 
         d_bdry_node_pressure_outflow_p.resize(NUM_1D_NODES);
 
-        d_bdry_node_pressure_inflow_rho.resize(NUM_1D_NODES);
-        d_bdry_node_pressure_inflow_p.resize(NUM_1D_NODES);
+        d_bdry_node_inflow_rho.resize(NUM_1D_NODES);
+        d_bdry_node_inflow_p.resize(NUM_1D_NODES);
+        d_bdry_node_inflow_T.resize(NUM_1D_NODES);
+        d_bdry_node_inflow_vel.resize(NUM_1D_NODES);
+
+
+        d_bdry_node_pressure_inflow_p_tot.resize(NUM_1D_NODES);
+        d_bdry_node_pressure_inflow_T_tot.resize(NUM_1D_NODES);
         d_bdry_node_pressure_inflow_vel.resize(NUM_1D_NODES);
+
     }
     else if (d_dim == tbox::Dimension(2))
     {
@@ -68,8 +75,13 @@ FlowModelBoundaryUtilitiesSingleSpecies::FlowModelBoundaryUtilitiesSingleSpecies
 
         d_bdry_edge_pressure_outflow_p.resize(NUM_2D_EDGES*2);
 
-        d_bdry_edge_pressure_inflow_rho.resize(NUM_2D_EDGES);
-        d_bdry_edge_pressure_inflow_p.resize(NUM_2D_EDGES);
+        d_bdry_edge_inflow_rho.resize(NUM_2D_EDGES);
+        d_bdry_edge_inflow_p.resize(NUM_2D_EDGES);
+        d_bdry_edge_inflow_T.resize(NUM_2D_EDGES);
+        d_bdry_edge_inflow_vel.resize(NUM_2D_EDGES*2);
+
+        d_bdry_edge_pressure_inflow_p_tot.resize(NUM_2D_EDGES);
+        d_bdry_edge_pressure_inflow_T_tot.resize(NUM_2D_EDGES);
         d_bdry_edge_pressure_inflow_vel.resize(NUM_2D_EDGES*2);
     }
     else if (d_dim == tbox::Dimension(3))
@@ -81,8 +93,13 @@ FlowModelBoundaryUtilitiesSingleSpecies::FlowModelBoundaryUtilitiesSingleSpecies
 
         d_bdry_face_pressure_outflow_p.resize(NUM_3D_FACES*3);
 
-        d_bdry_face_pressure_inflow_rho.resize(NUM_3D_FACES);
-        d_bdry_face_pressure_inflow_p.resize(NUM_3D_FACES);
+        d_bdry_face_inflow_rho.resize(NUM_3D_FACES);
+        d_bdry_face_inflow_p.resize(NUM_3D_FACES);
+        d_bdry_face_inflow_T.resize(NUM_3D_FACES);
+        d_bdry_face_inflow_vel.resize(NUM_3D_FACES*3);
+
+        d_bdry_face_pressure_inflow_p_tot.resize(NUM_3D_FACES);
+        d_bdry_face_pressure_inflow_T_tot.resize(NUM_3D_FACES);
         d_bdry_face_pressure_inflow_vel.resize(NUM_3D_FACES*3);
     }
 }
@@ -570,6 +587,7 @@ FlowModelBoundaryUtilitiesSingleSpecies::fill2dEdgeBoundaryData(
     const std::vector<int>& bdry_edge_conds,
     const std::vector<std::vector<double> >& bdry_edge_values,
     const hier::IntVector& ghost_width_to_fill) {
+
     TBOX_ASSERT(static_cast<int>(conservative_var_data.size()) == 3);
     for (int vi = 0; vi < static_cast<int>(conservative_var_data.size()); vi++) {
         TBOX_ASSERT(conservative_var_data[vi]);
@@ -634,6 +652,8 @@ FlowModelBoundaryUtilitiesSingleSpecies::fill2dEdgeBoundaryData(
     const std::vector <hier::BoundaryBox> &edge_bdry =
             patch_geom->getCodimensionBoundaries(BDRY::EDGE2D);
 
+    const double *const x_lo = patch_geom->getXLower();
+
     for (int ei = 0; ei < static_cast<int>(edge_bdry.size()); ei++) {
         TBOX_ASSERT(edge_bdry[ei].getBoundaryType() == BDRY::EDGE2D);
 
@@ -659,7 +679,8 @@ FlowModelBoundaryUtilitiesSingleSpecies::fill2dEdgeBoundaryData(
             if ((bdry_edge_conds[edge_loc] == BDRY_COND::FLOW_MODEL::ADIABATIC_NO_SLIP) ||
                 (bdry_edge_conds[edge_loc] == BDRY_COND::FLOW_MODEL::ISOTHERMAL_NO_SLIP) ||
                 (bdry_edge_conds[edge_loc] == BDRY_COND::FLOW_MODEL::PRESSURE_OUTFLOW) ||
-                (bdry_edge_conds[edge_loc] == BDRY_COND::FLOW_MODEL::PRESSURE_INFLOW)) {
+                (bdry_edge_conds[edge_loc] == BDRY_COND::FLOW_MODEL::PRESSURE_INFLOW) ||
+                (bdry_edge_conds[edge_loc] == BDRY_COND::FLOW_MODEL::TEMPERATURE_INFLOW)) {
                 /*
                  * Get the pointers to the conservative variables.
                  * Get the numbers of ghost cells and the dimensions of the ghost cell boxes of
@@ -977,284 +998,232 @@ FlowModelBoundaryUtilitiesSingleSpecies::fill2dEdgeBoundaryData(
                     // Remove edge locations that have boundary conditions identified.
                     bdry_edge_locs.erase(std::remove(bdry_edge_locs.begin(), bdry_edge_locs.end(), edge_loc),
                                          bdry_edge_locs.end());
-                } else if ((bdry_edge_conds[edge_loc] == BDRY_COND::FLOW_MODEL::PRESSURE_OUTFLOW) ||
-                           (bdry_edge_conds[edge_loc] == BDRY_COND::FLOW_MODEL::PRESSURE_INFLOW)) {
-                    //  Motheau, Emmanuel, Ann Almgren, and John B. Bell.
-                    // "Navier–stokes characteristic boundary conditions using ghost cells." AIAA Journal (2017): 3399-3408.
-                    // todo only for x direction pressure inflow/outflow
-
-		    std::vector < std::vector < std::vector < double > > > V;
-                    std::vector <std::vector<double>> dVdx, dVdy;
-                    V.resize(4);
-                    dVdx.resize(4);
-                    dVdy.resize(4);
-
-                    //save 3 closest colume primitive interoior |0 1 2 .... 2 1 0| to V, and the first column derivatives to dVdx and dVdy
-                    if (edge_loc == BDRY_LOC::XLO) {
-                        // compute derivatives
-                        for (int di = 0; di < 4; di++) {
-                            V[di].resize(3);
-                            dVdx[di].resize(fill_box_hi_idx[1] - fill_box_lo_idx[1] + 1);
-                            dVdy[di].resize(fill_box_hi_idx[1] - fill_box_lo_idx[1] + 1);
-                            for (int i = 0; i < 3; i++)
-                                V[di][i].resize(fill_box_hi_idx[1] - fill_box_lo_idx[1] + 1);
-                        }
-
-
-                        for (int i = 0; i < 3; i++) {
-                            for (int j = fill_box_lo_idx[1]; j <= fill_box_hi_idx[1]; j++) {
-                                const int idx_cell_pivot =
-                                        (interior_box_lo_idx[0] + num_subghosts_conservative_var[0][0] + i) +
-                                        (j + num_subghosts_conservative_var[0][1]) *
-                                        subghostcell_dims_conservative_var[0][0];
-
-                                const double rho_pivot = Q[0][idx_cell_pivot];
-                                const double u_pivot   = Q[1][idx_cell_pivot] / Q[0][idx_cell_pivot];
-                                const double v_pivot   = Q[2][idx_cell_pivot] / Q[0][idx_cell_pivot];
-                                const double epsilon_pivot = Q[3][idx_cell_pivot] / rho_pivot -
-                                                             0.5 * (u_pivot * u_pivot + v_pivot * v_pivot);
-                                const double p_pivot = d_equation_of_state_mixing_rules->getEquationOfState()->
-                                        getPressure(&rho_pivot, &epsilon_pivot, thermo_properties_ptr);
-                    
-                                const int idx_j = j + num_subghosts_conservative_var[0][1];
-                     
-                                //std::cout <<"XLO " << fill_box_lo_idx[1] << " " << fill_box_hi_idx[1] << " " << j << " "<< idx_j<<  std::endl;
-                    
-                                V[0][i][idx_j] = rho_pivot;
-                                V[1][i][idx_j] = u_pivot;
-                                V[2][i][idx_j] = v_pivot;
-                                V[3][i][idx_j] = p_pivot;
-
-                            }
-                        }
-                        for (int di = 0; di < 4; di++) {
-                            for (int j = fill_box_lo_idx[1]; j <= fill_box_hi_idx[1]; j++) {
-                                const int idx_j = j + num_subghosts_conservative_var[0][1];
-                                dVdx[di][idx_j] =
-                                        (-3.0 * V[di][0][idx_j] + 4 * V[di][1][idx_j] - V[di][2][idx_j]) / (2 * dx[0]);
-
-                                if (j == fill_box_lo_idx[1]) {
-                                    dVdy[di][idx_j] = (V[di][0][idx_j + 1] - V[di][0][idx_j]) / dx[1];
-                                } else if (j == fill_box_hi_idx[1]) {
-                                    dVdy[di][idx_j] = (V[di][0][idx_j] - V[di][0][idx_j - 1]) / dx[1];
-                                } else {
-                                    dVdy[di][idx_j] = (V[di][0][idx_j + 1] - V[di][0][idx_j - 1]) / (2 * dx[1]);
-                                }
-                            }
-                        }
-                    } else if (edge_loc == BDRY_LOC::XHI) {
-                        // compute derivatives
-                        for (int di = 0; di < 4; di++) {
-                            V[di].resize(3);
-                            dVdx[di].resize(fill_box_hi_idx[1] - fill_box_lo_idx[1] + 1);
-                            dVdy[di].resize(fill_box_hi_idx[1] - fill_box_lo_idx[1] + 1);
-                            for (int i = 0; i < 3; i++)
-                                V[di][i].resize(fill_box_hi_idx[1] - fill_box_lo_idx[1] + 1);
-                        }
-                        for (int i = 0; i < 3; i++) {
-                            for (int j = fill_box_lo_idx[1]; j <= fill_box_hi_idx[1]; j++) {
-                                const int idx_cell_pivot =
-                                        (interior_box_hi_idx[0] + num_subghosts_conservative_var[0][0] - i) +
-                                        (j + num_subghosts_conservative_var[0][1]) *
-                                        subghostcell_dims_conservative_var[0][0];
-
-                                const double rho_pivot = Q[0][idx_cell_pivot];
-                                const double u_pivot   = Q[1][idx_cell_pivot] / Q[0][idx_cell_pivot];
-                                const double v_pivot   = Q[2][idx_cell_pivot] / Q[0][idx_cell_pivot];
-                                const double epsilon_pivot = Q[3][idx_cell_pivot] / rho_pivot -
-                                                             0.5 * (u_pivot * u_pivot + v_pivot * v_pivot);
-                                const double p_pivot = d_equation_of_state_mixing_rules->getEquationOfState()->
-                                        getPressure(&rho_pivot, &epsilon_pivot, thermo_properties_ptr);
-             
-                                const int idx_j = j + num_subghosts_conservative_var[0][1];
-                    
-                                //std::cout <<"XHI " << fill_box_lo_idx[1] << " " << fill_box_hi_idx[1] << " " << j << " "<< idx_j<<  std::endl;
-                    
-                                V[0][i][idx_j] = rho_pivot;
-                                V[1][i][idx_j] = u_pivot;
-                                V[2][i][idx_j] = v_pivot;
-                                V[3][i][idx_j] = p_pivot;
-
-                            }
-                        }
-                        for (int di = 0; di < 4; di++) {
-                            for (int j = fill_box_lo_idx[1]; j <= fill_box_hi_idx[1]; j++) {
-                                const int idx_j = j + num_subghosts_conservative_var[0][1];
-                                dVdx[di][idx_j] =
-                                        (3 * V[di][0][idx_j] - 4 * V[di][1][idx_j] + V[di][2][idx_j]) / (2 * dx[0]);
-                                if (j == fill_box_lo_idx[1]) {
-                                    dVdy[di][idx_j] = (V[di][0][idx_j + 1] - V[di][0][idx_j]) / dx[1];
-                                } else if (j == fill_box_hi_idx[1]) {
-                                    dVdy[di][idx_j] = (V[di][0][idx_j] - V[di][0][idx_j - 1]) / dx[1];
-                                } else {
-                                    dVdy[di][idx_j] = (V[di][0][idx_j + 1] - V[di][0][idx_j - 1]) / (2 * dx[1]);
-                                }
-                            }
-                        }
-                    } else {
-                        std::cout << "Presure Inflow/outflow only for x-direction" << std::endl;
-                    }
-
-
-                    //pivot is the first node
-                    for (int i = fill_box_lo_idx[0]; i <= fill_box_hi_idx[0]; i++) {
-                        for (int j = fill_box_lo_idx[1]; j <= fill_box_hi_idx[1]; j++) {
-                            const int idx_cell = (i + num_subghosts_conservative_var[0][0]) +
-                                                 (j + num_subghosts_conservative_var[0][1]) *
-                                                 subghostcell_dims_conservative_var[0][0];
-
-                            const int idx_j = j + num_subghosts_conservative_var[0][1];
-                            int idx_cell_pivot_0 = idx_cell;
-                            int idx_cell_pivot_1 = idx_cell;
-                            int idx_cell_pivot_2 = idx_cell;
-
-                            if (edge_loc == BDRY_LOC::XLO) {
-                                idx_cell_pivot_0 =
-                                        (interior_box_lo_idx[0] + num_subghosts_conservative_var[0][0]) +
-                                        (j + num_subghosts_conservative_var[0][1]) *
-                                        subghostcell_dims_conservative_var[0][0];
-
-                                idx_cell_pivot_1 =
-                                        (interior_box_lo_idx[0] + num_subghosts_conservative_var[0][0] + 1) +
-                                        (j + num_subghosts_conservative_var[0][1]) *
-                                        subghostcell_dims_conservative_var[0][0];
-
-                                idx_cell_pivot_2 =
-                                        (interior_box_lo_idx[0] + num_subghosts_conservative_var[0][0] + 2) +
-                                        (j + num_subghosts_conservative_var[0][1]) *
-                                        subghostcell_dims_conservative_var[0][0];
-
-                            } else if (edge_loc == BDRY_LOC::XHI) {
-                                idx_cell_pivot_0 =
-                                        (interior_box_hi_idx[0] + num_subghosts_conservative_var[0][0]) +
-                                        (j + num_subghosts_conservative_var[0][1]) *
-                                        subghostcell_dims_conservative_var[0][0];
-
-                                idx_cell_pivot_1 =
-                                        (interior_box_hi_idx[0] + num_subghosts_conservative_var[0][0] - 1) +
-                                        (j + num_subghosts_conservative_var[0][1]) *
-                                        subghostcell_dims_conservative_var[0][0];
-
-                                idx_cell_pivot_2 =
-                                        (interior_box_hi_idx[0] + num_subghosts_conservative_var[0][0] - 2) +
-                                        (j + num_subghosts_conservative_var[0][1]) *
-                                        subghostcell_dims_conservative_var[0][0];
-                            } else {
-                                std::cout << "Presure Inflow/outflow only for x-direction" << std::endl;
-                            }
-
-                            double rho_pivot = V[0][0][idx_j];
-                            double u_pivot = V[1][0][idx_j];
-                            double v_pivot = V[2][0][idx_j];
-                            double v_mag_pivot = sqrt(u_pivot * u_pivot + v_pivot * v_pivot);
-                            double p_pivot = V[3][0][idx_j];
-                            double c_pivot = d_equation_of_state_mixing_rules->getEquationOfState()->
-                                    getSoundSpeed(&rho_pivot, &p_pivot, thermo_properties_ptr);
-                            double M_pivot = v_mag_pivot / c_pivot;
-
-
-                            if (M_pivot < 1.0) {
-                                //subsonic case
-                                double drhodx = dVdx[0][idx_j], dudx = dVdx[1][idx_j], dvdx = dVdx[2][idx_j], dpdx = dVdx[3][idx_j];
-                                double drhody = dVdy[0][idx_j], dudy = dVdy[1][idx_j], dvdy = dVdy[2][idx_j], dpdy = dVdy[3][idx_j];
-                                double lam[4] = {v_mag_pivot - c_pivot, v_mag_pivot, v_mag_pivot,
-                                                 v_mag_pivot + c_pivot};
-
-                                double lam_inv_L[4];
-                                if (bdry_edge_conds[edge_loc] == BDRY_COND::FLOW_MODEL::PRESSURE_OUTFLOW) {
-                                    lam_inv_L[0] = dpdx - rho_pivot * c_pivot * dudx;
-                                    lam_inv_L[1] = c_pivot * c_pivot * drhodx - dpdx;
-                                    lam_inv_L[2] = dvdx;
-                                    lam_inv_L[3] = dpdx + rho_pivot * c_pivot * dudx;
-
-                                    double p_inf = d_bdry_edge_pressure_outflow_p[edge_loc];
-
-                                    double sigma = 0.25, beta = 0.5, lx = 1.0;
-                                    double K = sigma * c_pivot * (1 - M_pivot * M_pivot) / lx;
-                                    const double &gamma = *(thermo_properties_ptr[0]);
-                                    if (edge_loc == BDRY_LOC::XLO) {
-                                        double T = v_pivot * (dpdy + rho_pivot * c_pivot * dudy) +
-                                                   gamma * p_pivot * dvdy;
-
-                                        lam_inv_L[3] = (K * (p_pivot - p_inf) - (1 - beta) * T) / lam[3];
-
-                                    } else if (edge_loc == BDRY_LOC::XHI) {
-                                        double T = v_pivot * (dpdy - rho_pivot * c_pivot * dudy) +
-                                                   gamma * p_pivot * dvdy;
-                                        if(fabs(lam[0]) < 1e-8) { std::cout << "Wrong lam[0]  is " << lam[0] << std::endl;}
-                                        lam_inv_L[0] = (K * (p_pivot - p_inf) - (1 - beta) * T) / lam[0];
-                                    }
-                                    ///////////////////////////////Shared part
-                                    double dVdxg[4];
-                                    dVdxg[0] = 1 / (c_pivot * c_pivot) *
-                                               (0.5 * lam_inv_L[0] + 1.0 * lam_inv_L[1] + 0.5 * lam_inv_L[3]);
-                                    dVdxg[1] = 1 / (rho_pivot * c_pivot) * (-0.5 * lam_inv_L[0] + 0.5 * lam_inv_L[3]);
-                                    dVdxg[2] = lam_inv_L[2];
-                                    dVdxg[3] = 0.5 * lam_inv_L[0] + 0.5 * lam_inv_L[3];
-
-                                    double Vg[4];
-                                    if (edge_loc == BDRY_LOC::XLO) {
-                                        Vg[0] = V[0][1][idx_j] - 2 * dx[0] * dVdxg[0];
-                                        Vg[1] = V[1][1][idx_j] - 2 * dx[0] * dVdxg[1];
-                                        Vg[2] = V[2][1][idx_j] - 2 * dx[0] * dVdxg[2];
-                                        Vg[3] = V[3][1][idx_j] - 2 * dx[0] * dVdxg[3];
-                                    } else if (edge_loc == BDRY_LOC::XHI) {
-                                        Vg[0] = V[0][1][idx_j] + 2 * dx[0] * dVdxg[0];
-                                        Vg[1] = V[1][1][idx_j] + 2 * dx[0] * dVdxg[1];
-                                        Vg[2] = V[2][1][idx_j] + 2 * dx[0] * dVdxg[2];
-                                        Vg[3] = V[3][1][idx_j] + 2 * dx[0] * dVdxg[3];
-                                    }
-
-                                    if(Vg[0] < 1e-8) { std::cout << "Negative density " << Vg[0]  <<" " << V[0][1][idx_j] << " " << dVdxg[0] << std::endl;}
-                                    if(Vg[3] < 1e-8) { std::cout << "Negative pressure " << Vg[3] <<" " << V[3][1][idx_j] << " " << dVdxg[3] << std::endl;}
-
-
-                                    Q[0][idx_cell] = Vg[0];
-                                    Q[1][idx_cell] = Vg[0] * Vg[1];
-                                    Q[2][idx_cell] = Vg[0] * Vg[1];
-                                    double epsilon_g = d_equation_of_state_mixing_rules->getEquationOfState()->
-                                            getInternalEnergy(&Vg[0], &Vg[3], thermo_properties_ptr);
-                                    Q[3][idx_cell] = Vg[0] * (epsilon_g + 0.5 * (Vg[1] * Vg[1] + Vg[2] * Vg[2]));
-				    
-                                    //todo delete test
-				    
-				    Q[0][idx_cell] = Q[0][idx_cell_pivot_0];
-				    Q[1][idx_cell] = Q[1][idx_cell_pivot_0];
-				    Q[2][idx_cell] = Q[2][idx_cell_pivot_0];
-                                    double epsilon = d_equation_of_state_mixing_rules->getEquationOfState()->
-				      getInternalEnergy(&rho_pivot, &p_inf, thermo_properties_ptr);
-                                    double E = Q[0][idx_cell_pivot_0] * epsilon +
-				      0.5 * (Q[1][idx_cell_pivot_0] * Q[1][idx_cell_pivot_0]
-					     + Q[2][idx_cell_pivot_0] * Q[2][idx_cell_pivot_0]) /
-				      rho_pivot;
-                                    Q[3][idx_cell] = E;
-                              
-                                } else if (bdry_edge_conds[edge_loc] == BDRY_COND::FLOW_MODEL::PRESSURE_INFLOW) {
-                                    //subsonic case
-                                    double p_inf = d_bdry_edge_pressure_inflow_p[edge_loc];
-                                    double u_inf = d_bdry_edge_pressure_inflow_vel[edge_loc * 2];
-                                    double v_inf = d_bdry_edge_pressure_inflow_vel[edge_loc * 2 + 1];
-
-                                    double epsilon = d_equation_of_state_mixing_rules->getEquationOfState()->
-                                            getInternalEnergy(&rho_pivot, &p_inf, thermo_properties_ptr);
-                                    double E = rho_pivot * (epsilon + 0.5 * (u_inf * u_inf + v_inf * v_inf));
-
-                                    Q[0][idx_cell] = rho_pivot;
-                                    Q[1][idx_cell] = rho_pivot * u_inf;
-                                    Q[2][idx_cell] = rho_pivot * v_inf;
-                                    Q[3][idx_cell] = E;
-                                }
-//                                else if (false /*bdry_edge_conds[edge_loc] == BDRY_COND::FLOW_MODEL::TEMPERATURE_INFLOW*/) {
-//                                    double p_inf = d_bdry_edge_pressure_inflow_p[edge_loc];
-//                                    double u_inf = d_bdry_edge_pressure_inflow_vel[edge_loc * 2];
-//                                    double v_inf = d_bdry_edge_pressure_inflow_vel[edge_loc * 2 + 1];
+                }
+//                else if ((bdry_edge_conds[edge_loc] == BDRY_COND::FLOW_MODEL::PRESSURE_OUTFLOW) ||
+//                           (bdry_edge_conds[edge_loc] == BDRY_COND::FLOW_MODEL::TEMPERATURE_INFLOW)) {
+//                    //  Motheau, Emmanuel, Ann Almgren, and John B. Bell.
+//                    // "Navier–stokes characteristic boundary conditions using ghost cells." AIAA Journal (2017): 3399-3408.
+//                    // todo only for x direction pressure inflow/outflow
+//
+//
+//                    std::vector < std::vector < std::vector < double > > > V;
+//                    std::vector <std::vector<double>> dVdx, dVdy;
+//                    V.resize(4);
+//                    dVdx.resize(4);
+//                    dVdy.resize(4);
+//
+//                    //save 3 closest colume primitive interoior |0 1 2 .... 2 1 0| to V, and the first column derivatives to dVdx and dVdy
+//                    if (edge_loc == BDRY_LOC::XLO) {
+//                        // compute derivatives
+//                        for (int di = 0; di < 4; di++) {
+//                            V[di].resize(3);
+//                            dVdx[di].resize(fill_box_hi_idx[1] - fill_box_lo_idx[1] + 1);
+//                            dVdy[di].resize(fill_box_hi_idx[1] - fill_box_lo_idx[1] + 1);
+//                            for (int i = 0; i < 3; i++)
+//                                V[di][i].resize(fill_box_hi_idx[1] - fill_box_lo_idx[1] + 1);
+//                        }
+//
+//                        for (int i = 0; i < 3; i++) {
+//                            for (int j = fill_box_lo_idx[1]; j <= fill_box_hi_idx[1]; j++) {
+//                                const int idx_cell_pivot =
+//                                        (interior_box_lo_idx[0] + num_subghosts_conservative_var[0][0] + i) +
+//                                        (j + num_subghosts_conservative_var[0][1]) *
+//                                        subghostcell_dims_conservative_var[0][0];
+//
+//                                const double rho_pivot = Q[0][idx_cell_pivot];
+//                                const double u_pivot = Q[1][idx_cell_pivot] / Q[0][idx_cell_pivot];
+//                                const double v_pivot = Q[2][idx_cell_pivot] / Q[0][idx_cell_pivot];
+//                                const double epsilon_pivot = Q[3][idx_cell_pivot] / rho_pivot -
+//                                                             0.5 * (u_pivot * u_pivot + v_pivot * v_pivot);
+//                                const double p_pivot = d_equation_of_state_mixing_rules->getEquationOfState()->
+//                                        getPressure(&rho_pivot, &epsilon_pivot, thermo_properties_ptr);
+//
+//                                const int idx_j = j + gcw_to_fill[1];
+//
+//                                V[0][i][idx_j] = rho_pivot;
+//                                V[1][i][idx_j] = u_pivot;
+//                                V[2][i][idx_j] = v_pivot;
+//                                V[3][i][idx_j] = p_pivot;
+//
+//                            }
+//                        }
+//                        for (int di = 0; di < 4; di++) {
+//                            for (int j = fill_box_lo_idx[1]; j <= fill_box_hi_idx[1]; j++) {
+//                                const int idx_j = j + gcw_to_fill[1];
+//                                dVdx[di][idx_j] =
+//                                        (-3.0 * V[di][0][idx_j] + 4 * V[di][1][idx_j] - V[di][2][idx_j]) / (2 * dx[0]);
+//
+//                                if (j == fill_box_lo_idx[1]) {
+//                                    dVdy[di][idx_j] = (V[di][0][idx_j + 1] - V[di][0][idx_j]) / dx[1];
+//                                } else if (j == fill_box_hi_idx[1]) {
+//                                    dVdy[di][idx_j] = (V[di][0][idx_j] - V[di][0][idx_j - 1]) / dx[1];
+//                                } else {
+//                                    dVdy[di][idx_j] = (V[di][0][idx_j + 1] - V[di][0][idx_j - 1]) / (2 * dx[1]);
+//                                }
+//                            }
+//                        }
+//                    } else if (edge_loc == BDRY_LOC::XHI) {
+//                        // compute derivatives
+//                        for (int di = 0; di < 4; di++) {
+//                            V[di].resize(3);
+//                            dVdx[di].resize(fill_box_hi_idx[1] - fill_box_lo_idx[1] + 1);
+//                            dVdy[di].resize(fill_box_hi_idx[1] - fill_box_lo_idx[1] + 1);
+//                            for (int i = 0; i < 3; i++)
+//                                V[di][i].resize(fill_box_hi_idx[1] - fill_box_lo_idx[1] + 1);
+//                        }
+//
+//                        for (int i = 0; i < 3; i++) {
+//                            for (int j = fill_box_lo_idx[1]; j <= fill_box_hi_idx[1]; j++) {
+//                                const int idx_cell_pivot =
+//                                        (interior_box_hi_idx[0] + num_subghosts_conservative_var[0][0] - i) +
+//                                        (j + num_subghosts_conservative_var[0][1]) *
+//                                        subghostcell_dims_conservative_var[0][0];
+//
+//                                const double rho_pivot = Q[0][idx_cell_pivot];
+//                                const double u_pivot = Q[1][idx_cell_pivot] / Q[0][idx_cell_pivot];
+//                                const double v_pivot = Q[2][idx_cell_pivot] / Q[0][idx_cell_pivot];
+//                                const double epsilon_pivot = Q[3][idx_cell_pivot] / rho_pivot -
+//                                                             0.5 * (u_pivot * u_pivot + v_pivot * v_pivot);
+//                                const double p_pivot = d_equation_of_state_mixing_rules->getEquationOfState()->
+//                                        getPressure(&rho_pivot, &epsilon_pivot, thermo_properties_ptr);
+//
+//                                const int idx_j = j + gcw_to_fill[1];
+//
+//                                V[0][i][idx_j] = rho_pivot;
+//                                V[1][i][idx_j] = u_pivot;
+//                                V[2][i][idx_j] = v_pivot;
+//                                V[3][i][idx_j] = p_pivot;
+//
+//                            }
+//                        }
+//                        for (int di = 0; di < 4; di++) {
+//                            for (int j = fill_box_lo_idx[1]; j <= fill_box_hi_idx[1]; j++) {
+//                                const int idx_j = j + gcw_to_fill[1];
+//                                dVdx[di][idx_j] =
+//                                        (3 * V[di][0][idx_j] - 4 * V[di][1][idx_j] + V[di][2][idx_j]) / (2 * dx[0]);
+//                                if (j == fill_box_lo_idx[1]) {
+//                                    dVdy[di][idx_j] = (V[di][0][idx_j + 1] - V[di][0][idx_j]) / dx[1];
+//                                } else if (j == fill_box_hi_idx[1]) {
+//                                    dVdy[di][idx_j] = (V[di][0][idx_j] - V[di][0][idx_j - 1]) / dx[1];
+//                                } else {
+//                                    dVdy[di][idx_j] = (V[di][0][idx_j + 1] - V[di][0][idx_j - 1]) / (2 * dx[1]);
+//                                }
+//                                if(di == 2 && fabs(dVdx[di][idx_j]) > 1e-8)
+//                                    std::cout <<V[di][0][idx_j] << " " << V[di][1][idx_j] <<" " <<  V[di][2][idx_j] << std::endl;
+//                            }
+//                        }
+//                    } else {
+//                        std::cout << "Temperature Inflow/Pressure outflow only for x-direction" << std::endl;
+//                    }
+//
+//
+//                    //pivot is the first node
+//                    for (int i = fill_box_lo_idx[0]; i <= fill_box_hi_idx[0]; i++) {
+//                        for (int j = fill_box_lo_idx[1]; j <= fill_box_hi_idx[1]; j++) {
+//                            const int idx_cell = (i + num_subghosts_conservative_var[0][0]) +
+//                                                 (j + num_subghosts_conservative_var[0][1]) *
+//                                                 subghostcell_dims_conservative_var[0][0];
+//
+//                            const int idx_j = j + gcw_to_fill[1];
+//                            int idx_cell_pivot_0 = idx_cell;
+//                            int idx_cell_pivot_1 = idx_cell;
+//                            int idx_cell_pivot_2 = idx_cell;
+//
+//                            if (edge_loc == BDRY_LOC::XLO) {
+//                                idx_cell_pivot_0 =
+//                                        (interior_box_lo_idx[0] + num_subghosts_conservative_var[0][0]) +
+//                                        (j + num_subghosts_conservative_var[0][1]) *
+//                                        subghostcell_dims_conservative_var[0][0];
+//
+//                                idx_cell_pivot_1 =
+//                                        (interior_box_lo_idx[0] + num_subghosts_conservative_var[0][0] + 1) +
+//                                        (j + num_subghosts_conservative_var[0][1]) *
+//                                        subghostcell_dims_conservative_var[0][0];
+//
+//                                idx_cell_pivot_2 =
+//                                        (interior_box_lo_idx[0] + num_subghosts_conservative_var[0][0] + 2) +
+//                                        (j + num_subghosts_conservative_var[0][1]) *
+//                                        subghostcell_dims_conservative_var[0][0];
+//
+//                            } else if (edge_loc == BDRY_LOC::XHI) {
+//                                idx_cell_pivot_0 =
+//                                        (interior_box_hi_idx[0] + num_subghosts_conservative_var[0][0]) +
+//                                        (j + num_subghosts_conservative_var[0][1]) *
+//                                        subghostcell_dims_conservative_var[0][0];
+//
+//                                idx_cell_pivot_1 =
+//                                        (interior_box_hi_idx[0] + num_subghosts_conservative_var[0][0] - 1) +
+//                                        (j + num_subghosts_conservative_var[0][1]) *
+//                                        subghostcell_dims_conservative_var[0][0];
+//
+//                                idx_cell_pivot_2 =
+//                                        (interior_box_hi_idx[0] + num_subghosts_conservative_var[0][0] - 2) +
+//                                        (j + num_subghosts_conservative_var[0][1]) *
+//                                        subghostcell_dims_conservative_var[0][0];
+//                            } else {
+//                                std::cout << "Presure Inflow/outflow only for x-direction" << std::endl;
+//                            }
+//
+//                            double rho_pivot = V[0][0][idx_j];
+//                            double u_pivot = V[1][0][idx_j];
+//                            double v_pivot = V[2][0][idx_j];
+//                            double v_mag_pivot = sqrt(u_pivot * u_pivot + v_pivot * v_pivot);
+//                            double p_pivot = V[3][0][idx_j];
+//                            double T_pivot = d_equation_of_state_mixing_rules->getEquationOfState()->
+//                                    getTemperature(&rho_pivot, &p_pivot, thermo_properties_ptr);
+//                            double c_pivot = d_equation_of_state_mixing_rules->getEquationOfState()->
+//                                    getSoundSpeed(&rho_pivot, &p_pivot, thermo_properties_ptr);
+//                            double M_pivot = v_mag_pivot / c_pivot;
+//
+//
+//                            if (M_pivot < 1.0) {
+//                                //subsonic case
+//                                double drhodx = dVdx[0][idx_j], dudx = dVdx[1][idx_j], dvdx = dVdx[2][idx_j], dpdx = dVdx[3][idx_j];
+//                                double drhody = dVdy[0][idx_j], dudy = dVdy[1][idx_j], dvdy = dVdy[2][idx_j], dpdy = dVdy[3][idx_j];
+//                                double lam[4] = {v_mag_pivot - c_pivot, v_mag_pivot, v_mag_pivot,
+//                                                 v_mag_pivot + c_pivot};
+//
+//                                double lam_inv_L[4];
+//                                if (bdry_edge_conds[edge_loc] == BDRY_COND::FLOW_MODEL::PRESSURE_OUTFLOW) {
+//                                    lam_inv_L[0] = dpdx - rho_pivot * c_pivot * dudx;
+//                                    lam_inv_L[1] = c_pivot * c_pivot * drhodx - dpdx;
+//                                    lam_inv_L[2] = dvdx;
+//                                    lam_inv_L[3] = dpdx + rho_pivot * c_pivot * dudx;
+//
+//                                    double p_inf = d_bdry_edge_pressure_outflow_p[edge_loc];
+//
+//                                    double sigma = 0.25, beta = 1.0, lx = 1.0;
+//                                    double K = sigma * c_pivot * (1 - M_pivot * M_pivot) / lx;
+//                                    const double &gamma = *(thermo_properties_ptr[0]);
+//                                    if (edge_loc == BDRY_LOC::XLO) {
+//                                        double T = v_pivot * (dpdy + rho_pivot * c_pivot * dudy) +
+//                                                   gamma * p_pivot * dvdy;
+//
+//                                        lam_inv_L[3] = (K * (p_pivot - p_inf) - (1 - beta) * T) / lam[3];
+//
+//                                    } else if (edge_loc == BDRY_LOC::XHI) {
+//                                        double T = v_pivot * (dpdy - rho_pivot * c_pivot * dudy) +
+//                                                   gamma * p_pivot * dvdy;
+//                                        if (fabs(lam[0]) < 1e-8) {
+//                                            std::cout << "Wrong lam[0]  is " << lam[0] << std::endl;
+//                                        }
+//                                        lam_inv_L[0] = (K * (p_pivot - p_inf) - (1 - beta) * T) / lam[0];
+//                                    }
+//
+//
+//                                }
+//                                else if (bdry_edge_conds[edge_loc] == BDRY_COND::FLOW_MODEL::TEMPERATURE_INFLOW) {
+//                                    double T_inf = d_bdry_edge_inflow_T[edge_loc];
+//                                    double u_inf = d_bdry_edge_inflow_vel[edge_loc * 2];
+//                                    double v_inf = d_bdry_edge_inflow_vel[edge_loc * 2 + 1];
 //
 //                                    const double & R = *(thermo_properties_ptr[1]);
 //                                    const double & gamma = *(thermo_properties_ptr[0]);
 //
+//                                    double beta = 0.5, lx = 1.0;
 //                                    double eta0 = 2.0, eta1 = -2.0, eta2 = 2.0, eta3 = 2.0;
 //                                    double T2 = v_pivot * (c_pivot * c_pivot * drhody - dpdy) +
-//                                                c_pivot * c_pivot * rho_pivot * dvdy - gamma * p * dvdy;
+//                                                c_pivot * c_pivot * rho_pivot * dvdy - gamma * p_pivot * dvdy;
 //                                    double T3 = v_pivot * dvdy + 1 / rho_pivot * dpdy;
 //                                    lam_inv_L[0] = dpdx - rho_pivot * c_pivot * dudx;
 //                                    lam_inv_L[1] =
@@ -1263,7 +1232,7 @@ FlowModelBoundaryUtilitiesSingleSpecies::fill2dEdgeBoundaryData(
 //                                    lam_inv_L[3] = dpdx + rho_pivot * c_pivot * dudx;
 //
 //
-//                                    double beta = 0.5, lx = 1.0;
+//
 //
 //                                    if (edge_loc == BDRY_LOC::XLO) {
 //                                        double K = eta3 * rho_pivot * c_pivot * c_pivot * (1 - M_pivot * M_pivot) / lx;
@@ -1297,6 +1266,9 @@ FlowModelBoundaryUtilitiesSingleSpecies::fill2dEdgeBoundaryData(
 //                                    Vg[2] = V[2][1][idx_j] + 2 * dx[0] * dVdxg[2];
 //                                    Vg[3] = V[3][1][idx_j] + 2 * dx[0] * dVdxg[3];
 //                                }
+//				                if(fabs(Vg[2]) >  1e-8)
+//                                std::cout << "Vg " << Vg[0] << " " << dVdxg[0] << " " << Vg[1]  << " " << dVdxg[1]
+//                                          << " " << Vg[2] <<" " << dVdxg[2] << " " <<Vg[3] <<" " <<  dVdxg[3]<<std::endl;
 //
 //
 //                                Q[0][idx_cell] = Vg[0];
@@ -1305,29 +1277,136 @@ FlowModelBoundaryUtilitiesSingleSpecies::fill2dEdgeBoundaryData(
 //                                double epsilon_g = d_equation_of_state_mixing_rules->getEquationOfState()->
 //                                        getInternalEnergy(&Vg[0], &Vg[3], thermo_properties_ptr);
 //                                Q[3][idx_cell] = Vg[0] * (epsilon_g + 0.5 * (Vg[1] * Vg[1] + Vg[2] * Vg[2]));
+//
+//                            } else { //supersonic flow
+//                                if (bdry_edge_conds[edge_loc] == BDRY_COND::FLOW_MODEL::PRESSURE_OUTFLOW) {
+//                                    Q[0][idx_cell] = Q[0][idx_cell_pivot_0];
+//                                    Q[1][idx_cell] = Q[1][idx_cell_pivot_0];
+//                                    Q[2][idx_cell] = Q[2][idx_cell_pivot_0];
+//                                    Q[3][idx_cell] = Q[3][idx_cell_pivot_0];
+//                                } else if (bdry_edge_conds[edge_loc] == BDRY_COND::FLOW_MODEL::TEMPERATURE_INFLOW) {
+//                                    double rho_inf = d_bdry_edge_inflow_rho[edge_loc];
+//                                    double T_inf = d_bdry_edge_inflow_T[edge_loc];
+//                                    double u_inf = d_bdry_edge_inflow_vel[edge_loc * 2];
+//                                    double v_inf = d_bdry_edge_inflow_vel[edge_loc * 2 + 1];
+//
+//                                    double epsilon_inf = d_equation_of_state_mixing_rules->getEquationOfState()->
+//                                            getInternalEnergyFromTemperature(&rho_inf, &T_inf, thermo_properties_ptr);
+//                                    double E_inf = rho_inf * (epsilon_inf + 0.5 * (u_inf * u_inf + v_inf * v_inf));
+//                                    Q[0][idx_cell] = rho_inf;
+//                                    Q[1][idx_cell] = rho_inf * u_inf;
+//                                    Q[2][idx_cell] = rho_inf * v_inf;
+//                                    Q[3][idx_cell] = E_inf;
+//                                }
+//                            }
+//                        }
+//                    }
+//                    // Remove edge locations that have boundary conditions identified.
+//                    bdry_edge_locs.erase(std::remove(bdry_edge_locs.begin(), bdry_edge_locs.end(), edge_loc),
+//                                         bdry_edge_locs.end());
+//                }
+                else if (bdry_edge_conds[edge_loc] == BDRY_COND::FLOW_MODEL::PRESSURE_INFLOW) {
+                    // total pressure, total temperature and flow direction
+                    // pivot is the first node
+                    for (int i = fill_box_lo_idx[0]; i <= fill_box_hi_idx[0]; i++) {
+                        for (int j = fill_box_lo_idx[1]; j <= fill_box_hi_idx[1]; j++) {
+                            const int idx_cell = (i + num_subghosts_conservative_var[0][0]) +
+                                                     (j + num_subghosts_conservative_var[0][1]) *
+                                                     subghostcell_dims_conservative_var[0][0];
 
-                            } else
-                            { //supersonic flow
-                                if (bdry_edge_conds[edge_loc] == BDRY_COND::FLOW_MODEL::PRESSURE_OUTFLOW) {
-                                    Q[0][idx_cell] = Q[0][idx_cell_pivot_0];
-                                    Q[1][idx_cell] = Q[1][idx_cell_pivot_0];
-                                    Q[2][idx_cell] = Q[2][idx_cell_pivot_0];
-                                    Q[3][idx_cell] = Q[3][idx_cell_pivot_0];
-                                }
-                                else if (bdry_edge_conds[edge_loc] == BDRY_COND::FLOW_MODEL::PRESSURE_INFLOW) {
-                                    double rho_inf = d_bdry_edge_pressure_inflow_rho[edge_loc];
-                                    double p_inf = d_bdry_edge_pressure_inflow_p[edge_loc];
-                                    double u_inf = d_bdry_edge_pressure_inflow_vel[edge_loc * 2];
-                                    double v_inf = d_bdry_edge_pressure_inflow_vel[edge_loc * 2 + 1];
+                            int idx_cell_pivot = idx_cell;
 
-                                    double epsilon_inf = d_equation_of_state_mixing_rules->getEquationOfState()->
-                                            getInternalEnergy(&rho_inf, &p_inf, thermo_properties_ptr);
-                                    double E_inf = rho_inf * (epsilon_inf + 0.5 * (u_inf * u_inf + v_inf * v_inf));
-                                    Q[0][idx_cell] = rho_inf;
-                                    Q[1][idx_cell] = rho_inf * u_inf;
-                                    Q[2][idx_cell] = rho_inf * v_inf;
-                                    Q[3][idx_cell] = E_inf;
-                                }
+                            if (edge_loc == BDRY_LOC::XLO) {
+                                idx_cell_pivot = (interior_box_lo_idx[0] +
+                                                      num_subghosts_conservative_var[0][0]) +
+                                                     (j + num_subghosts_conservative_var[0][1]) *
+                                                     subghostcell_dims_conservative_var[0][0];
+
+                            } else if (edge_loc == BDRY_LOC::XHI) {
+                                idx_cell_pivot = (interior_box_hi_idx[0] +
+                                                      num_subghosts_conservative_var[0][0]) +
+                                                     (j + num_subghosts_conservative_var[0][1]) *
+                                                     subghostcell_dims_conservative_var[0][0];
+
+                            } else {
+                            std::cout << "Presure Inflow/outflow only for x-direction" << std::endl;
+                            }
+                            /*
+                             * Set the values for density, momentum and total internal energy.
+                             * Supersonic, rho = rho, rhou = rho*u, rhov = rho*v, E = E
+                             * Subsonic,   rho = rho_in, rhou = rho_in*u, rhov = rho_in*v, E = E(rho_in, u, v, p)
+                             */
+
+                            const double & R = *(thermo_properties_ptr[1]);
+                            const double & gamma = *(thermo_properties_ptr[0]);
+
+                            double rho_pivot = Q[0][idx_cell_pivot];
+                            double u_pivot   = Q[1][idx_cell_pivot]/Q[0][idx_cell_pivot];
+                            double v_pivot   = Q[2][idx_cell_pivot]/Q[0][idx_cell_pivot];
+                            double epsilon_pivot = (Q[3][idx_cell_pivot] -
+                                                    0.5 * (Q[1][idx_cell_pivot] * Q[1][idx_cell_pivot] +
+                                                           Q[2][idx_cell_pivot] * Q[2][idx_cell_pivot]) /
+                                                    Q[0][idx_cell_pivot]) / Q[0][idx_cell_pivot];
+
+                            double p_pivot = d_equation_of_state_mixing_rules->getEquationOfState()->
+                                    getPressure(&rho_pivot, &epsilon_pivot, thermo_properties_ptr);
+                            double c_pivot = d_equation_of_state_mixing_rules->getEquationOfState()->
+                                    getSoundSpeed(&rho_pivot, &p_pivot, thermo_properties_ptr);
+                            double M_pivot = sqrt(Q[1][idx_cell_pivot] * Q[1][idx_cell_pivot] +
+                                                  Q[2][idx_cell_pivot] * Q[2][idx_cell_pivot]) /
+                                             (rho_pivot * c_pivot);
+                            //subsonic case
+                            if (M_pivot < 1.0) {//todo only for edge_loc == BDRY_LOC::XLO
+                                double p_tot = d_bdry_edge_pressure_inflow_p_tot[edge_loc];
+                                double T_tot = d_bdry_edge_pressure_inflow_T_tot[edge_loc * 2];
+
+
+
+                                double T_T_tot = (1. - (gamma - 1.)/2.* u_pivot*u_pivot/(T_tot*gamma*R));
+                                double p_u_pivot = p_tot*pow(T_T_tot, gamma/(gamma - 1));
+                                double dp_du_pivot = -p_tot*pow(T_T_tot, 1./(gamma - 1))*u_pivot/(T_tot*R);
+                                double u_inf = u_pivot - (p_pivot - p_u_pivot)/(rho_pivot*c_pivot - dp_du_pivot);
+                                double v_inf = 0.0;
+                                T_T_tot = 1. - (gamma - 1.)/2.* u_inf*u_inf/(T_tot*gamma*R);
+                                double T_inf = T_tot*T_T_tot;
+                                double p_inf = p_tot*pow(T_T_tot, gamma/(gamma - 1));
+
+
+
+                                double rho_inf = d_equation_of_state_mixing_rules->getEquationOfState()->
+                                        getDensity(&p_inf, &T_inf, thermo_properties_ptr);
+
+                                double epsilon_inf = d_equation_of_state_mixing_rules->getEquationOfState()->
+                                        getInternalEnergy(&rho_inf, &p_inf, thermo_properties_ptr);
+
+                                double E_inf = rho_inf * (epsilon_inf + 0.5 * (u_inf * u_inf + v_inf*v_inf));
+
+                                Q[0][idx_cell] = rho_inf;
+                                Q[1][idx_cell] = rho_inf * u_inf;
+                                Q[2][idx_cell] = rho_inf * v_inf;
+                                Q[3][idx_cell] = E_inf;
+                            } else {
+                                double T_tot = d_bdry_edge_pressure_inflow_T_tot[edge_loc];
+                                double p_tot = d_bdry_edge_pressure_inflow_p_tot[edge_loc];
+                                double u_inf = d_bdry_edge_pressure_inflow_vel[edge_loc * 2];
+                                double v_inf = d_bdry_edge_pressure_inflow_vel[edge_loc * 2 + 1];
+
+                                double T_T_tot = (1. - (gamma - 1.)/2.* u_inf*u_inf/(T_tot*gamma*R));
+                                double T_inf = T_tot*T_T_tot;
+                                double p_inf = p_tot*pow(T_T_tot, gamma/(gamma - 1));
+
+                                double rho_inf = d_equation_of_state_mixing_rules->getEquationOfState()->
+                                        getDensity(&p_inf, &T_inf, thermo_properties_ptr);
+
+                                double epsilon_inf = d_equation_of_state_mixing_rules->getEquationOfState()->
+                                        getInternalEnergy(&rho_inf, &p_inf, thermo_properties_ptr);
+
+                                double E_inf = rho_inf * (epsilon_inf + 0.5 * (u_inf * u_inf + v_inf * v_inf));
+
+                                Q[0][idx_cell] = rho_inf;
+                                Q[1][idx_cell] = rho_inf * u_inf;
+                                Q[2][idx_cell] = rho_inf * v_inf;
+                                Q[3][idx_cell] = E_inf;
                             }
                         }
                     }
@@ -1335,10 +1414,98 @@ FlowModelBoundaryUtilitiesSingleSpecies::fill2dEdgeBoundaryData(
                     bdry_edge_locs.erase(std::remove(bdry_edge_locs.begin(), bdry_edge_locs.end(), edge_loc),
                                          bdry_edge_locs.end());
                 }
+                else if (bdry_edge_conds[edge_loc] == BDRY_COND::FLOW_MODEL::PRESSURE_OUTFLOW) {
+                    // total pressure, total temperature and flow direction
+                    // pivot is the first node
+                    for (int i = fill_box_lo_idx[0]; i <= fill_box_hi_idx[0]; i++) {
+                        for (int j = fill_box_lo_idx[1]; j <= fill_box_hi_idx[1]; j++) {
+                            const int idx_cell = (i + num_subghosts_conservative_var[0][0]) +
+                                                 (j + num_subghosts_conservative_var[0][1]) *
+                                                 subghostcell_dims_conservative_var[0][0];
+
+                            int idx_cell_pivot = idx_cell;
+
+                            if (edge_loc == BDRY_LOC::XLO) {
+                                idx_cell_pivot = (interior_box_lo_idx[0] +
+                                                  num_subghosts_conservative_var[0][0]) +
+                                                 (j + num_subghosts_conservative_var[0][1]) *
+                                                 subghostcell_dims_conservative_var[0][0];
+
+                            } else if (edge_loc == BDRY_LOC::XHI) {
+                                idx_cell_pivot = (interior_box_hi_idx[0] +
+                                                  num_subghosts_conservative_var[0][0]) +
+                                                 (j + num_subghosts_conservative_var[0][1]) *
+                                                 subghostcell_dims_conservative_var[0][0];
+
+                            } else {
+                                std::cout << "Presure Inflow/outflow only for x-direction" << std::endl;
+                            }
+                            /*
+                             * Set the values for density, momentum and total internal energy.
+                             * Supersonic, rho = rho, rhou = rho*u, rhov = rho*v, E = E
+                             * Subsonic,   rho = rho_in, rhou = rho_in*u, rhov = rho_in*v, E = E(rho_in, u, v, p)
+                             */
+
+
+                            double rho_pivot = Q[0][idx_cell_pivot];
+                            double u_pivot   = Q[1][idx_cell_pivot]/Q[0][idx_cell_pivot];
+                            double v_pivot   = Q[2][idx_cell_pivot]/Q[0][idx_cell_pivot];
+                            double epsilon_pivot = (Q[3][idx_cell_pivot] -
+                                                    0.5 * (Q[1][idx_cell_pivot] * Q[1][idx_cell_pivot] +
+                                                           Q[2][idx_cell_pivot] * Q[2][idx_cell_pivot]) /
+                                                    Q[0][idx_cell_pivot]) / Q[0][idx_cell_pivot];
+
+                            double p_pivot = d_equation_of_state_mixing_rules->getEquationOfState()->
+                                    getPressure(&rho_pivot, &epsilon_pivot, thermo_properties_ptr);
+                            double c_pivot = d_equation_of_state_mixing_rules->getEquationOfState()->
+                                    getSoundSpeed(&rho_pivot, &p_pivot, thermo_properties_ptr);
+                            double M_pivot = sqrt(Q[1][idx_cell_pivot] * Q[1][idx_cell_pivot] +
+                                                  Q[2][idx_cell_pivot] * Q[2][idx_cell_pivot]) /
+                                             (rho_pivot * c_pivot);
+                            //subsonic case
+                            if (M_pivot < 1.0) {//todo only for edge_loc == BDRY_LOC::XLO
+                                double p_inf = d_bdry_edge_pressure_outflow_p[edge_loc];
+
+                                double epsilon_inf = d_equation_of_state_mixing_rules->getEquationOfState()->
+                                        getInternalEnergy(&rho_pivot, &p_inf, thermo_properties_ptr);
+                                double E_inf = rho_pivot*(epsilon_inf + 0.5*(u_pivot*u_pivot + v_pivot*v_pivot));
+
+                                Q[0][idx_cell] = Q[0][idx_cell_pivot];
+                                Q[1][idx_cell] = Q[1][idx_cell_pivot];
+                                Q[2][idx_cell] = Q[2][idx_cell_pivot];
+                                Q[3][idx_cell] = E_inf;
+//                                double p_inf = d_bdry_edge_pressure_outflow_p[edge_loc];
+//                                double u_inf = (p_inf - p_pivot)/(rho_pivot*c_pivot) + u_pivot;
+//                                double v_inf = v_pivot;
+//                                double rho_inf = (p_inf - p_pivot)/(c_pivot*c_pivot) + rho_pivot;
+//
+//                                double epsilon_inf = d_equation_of_state_mixing_rules->getEquationOfState()->
+//                                        getInternalEnergy(&rho_inf, &p_inf, thermo_properties_ptr);
+//
+//                                double E_inf = rho_inf * (epsilon_inf + 0.5 * (u_inf * u_inf + v_inf*v_inf));
+//
+//                                Q[0][idx_cell] = rho_inf;
+//                                Q[1][idx_cell] = rho_inf * u_inf;
+//                                Q[2][idx_cell] = rho_inf * v_inf;
+//                                Q[3][idx_cell] = E_inf;
+                            } else {
+                                Q[0][idx_cell] = Q[0][idx_cell_pivot];
+                                Q[1][idx_cell] = Q[1][idx_cell_pivot];
+                                Q[2][idx_cell] = Q[2][idx_cell_pivot];
+                                Q[3][idx_cell] = Q[3][idx_cell_pivot];
+                            }
+                        }
+                    }
+                    // Remove edge locations that have boundary conditions identified.
+                    bdry_edge_locs.erase(std::remove(bdry_edge_locs.begin(), bdry_edge_locs.end(), edge_loc),
+                                         bdry_edge_locs.end());
+                }
+
             }
         }
     }
 }
+
 
 /*
  * Function to fill 2d node boundary values for a patch.
@@ -2903,10 +3070,10 @@ FlowModelBoundaryUtilitiesSingleSpecies::fill3dFaceBoundaryData(
 
                                     //subsonic case
                                     if (M_pivot < 1.0) {
-                                        double p_inf = d_bdry_face_pressure_inflow_p[face_loc];
-                                        double u_inf = d_bdry_face_pressure_inflow_vel[face_loc*3];
-                                        double v_inf = d_bdry_face_pressure_inflow_vel[face_loc*3 + 1];
-                                        double w_inf = d_bdry_face_pressure_inflow_vel[face_loc*3 + 2];
+                                        double p_inf = d_bdry_face_inflow_p[face_loc];
+                                        double u_inf = d_bdry_face_inflow_vel[face_loc*3];
+                                        double v_inf = d_bdry_face_inflow_vel[face_loc*3 + 1];
+                                        double w_inf = d_bdry_face_inflow_vel[face_loc*3 + 2];
 
                                         double epsilon = d_equation_of_state_mixing_rules->getEquationOfState()->
                                                 getInternalEnergy(&rho_pivot, &p_inf, thermo_properties_ptr);
@@ -2919,11 +3086,11 @@ FlowModelBoundaryUtilitiesSingleSpecies::fill3dFaceBoundaryData(
                                         Q[4][idx_cell_E] = E;
                                     }
                                     else{
-                                        double rho_inf = d_bdry_face_pressure_inflow_rho[face_loc];
-                                        double p_inf = d_bdry_face_pressure_inflow_p[face_loc];
-                                        double u_inf = d_bdry_face_pressure_inflow_vel[face_loc*3];
-                                        double v_inf = d_bdry_face_pressure_inflow_vel[face_loc*3 + 1];
-                                        double w_inf = d_bdry_face_pressure_inflow_vel[face_loc*3 + 2];
+                                        double rho_inf = d_bdry_face_inflow_rho[face_loc];
+                                        double p_inf = d_bdry_face_inflow_p[face_loc];
+                                        double u_inf = d_bdry_face_inflow_vel[face_loc*3];
+                                        double v_inf = d_bdry_face_inflow_vel[face_loc*3 + 1];
+                                        double w_inf = d_bdry_face_inflow_vel[face_loc*3 + 2];
 
                                         double epsilon_inf = d_equation_of_state_mixing_rules->getEquationOfState()->
                                                 getInternalEnergy(&rho_inf, &p_inf, thermo_properties_ptr);
@@ -5297,6 +5464,17 @@ FlowModelBoundaryUtilitiesSingleSpecies::read1dBdryNodes(
 
                     node_locs[ni] = BOGUS_BDRY_LOC;
                 }
+                else if (bdry_cond_str == "TEMPERATURE_INFLOW")
+                {
+                    node_conds[s] = BDRY_COND::FLOW_MODEL::TEMPERATURE_INFLOW;
+
+                    readTemperatureInflow(
+                            bdry_loc_db,
+                            bdry_loc_str,
+                            s);
+
+                    node_locs[ni] = BOGUS_BDRY_LOC;
+                }
             } // if (need_data_read)
         } // for (int ni = 0 ...
     } // if (num_per_dirs < 1)
@@ -5416,6 +5594,16 @@ FlowModelBoundaryUtilitiesSingleSpecies::read2dBdryEdges(
                     edge_conds[s] = BDRY_COND::FLOW_MODEL::PRESSURE_INFLOW;
 
                     readPressureInflow(
+                            bdry_loc_db,
+                            bdry_loc_str,
+                            s);
+
+                    edge_locs[ei] = BOGUS_BDRY_LOC;
+                }
+                else if (bdry_cond_str == "TEMPERATURE_INFLOW") {
+                    edge_conds[s] = BDRY_COND::FLOW_MODEL::TEMPERATURE_INFLOW;
+
+                    readTemperatureInflow(
                             bdry_loc_db,
                             bdry_loc_str,
                             s);
@@ -5739,6 +5927,17 @@ FlowModelBoundaryUtilitiesSingleSpecies::read3dBdryFaces(
                     face_conds[s] = BDRY_COND::FLOW_MODEL::PRESSURE_INFLOW;
 
                     readPressureInflow(
+                            bdry_loc_db,
+                            bdry_loc_str,
+                            s);
+
+                    face_locs[fi] = BOGUS_BDRY_LOC;
+                }
+                else if (bdry_cond_str == "TEMPERATURE_INFLOW")
+                {
+                    face_conds[s] = BDRY_COND::FLOW_MODEL::TEMPERATURE_INFLOW;
+
+                    readTemperatureInflow(
                             bdry_loc_db,
                             bdry_loc_str,
                             s);
@@ -6572,32 +6771,32 @@ FlowModelBoundaryUtilitiesSingleSpecies::readPressureInflow(
     TBOX_ASSERT(db);
     TBOX_ASSERT(!db_name.empty());
 
-    double data_p = 0.0, data_rho = 0.0;
+    double data_p = 0.0, data_T = 0.0;
     std::vector<double> data_vel;
 
-    if (db->keyExists("pressure"))
+    if (db->keyExists("total_pressure"))
     {
-        data_p = db->getDouble("pressure");
+        data_p = db->getDouble("total_pressure");
     }
     else
     {
         TBOX_ERROR(d_object_name
                    << ": FlowModelBoundaryUtilitiesSingleSpecies::readPressureInflow()\n"
-                   << "'pressure' entry missing from '"
+                   << "'total_pressure' entry missing from '"
                    << db_name
                    << "' input database."
                    << std::endl);
     }
 
-    if (db->keyExists("density"))
+    if (db->keyExists("total_temperature"))
     {
-        data_rho = db->getDouble("density");
+        data_T = db->getDouble("total_temperature");
     }
     else
     {
         TBOX_ERROR(d_object_name
                    << ": FlowModelBoundaryUtilitiesSingleSpecies::readPressureInflow()\n"
-                   << "'temperature' entry missing from '"
+                   << "'total_temperature' entry missing from '"
                    << db_name
                    << "' input database."
                    << std::endl);
@@ -6610,11 +6809,11 @@ FlowModelBoundaryUtilitiesSingleSpecies::readPressureInflow(
     else
     {
         TBOX_ERROR(d_object_name
-                   << ": FlowModelBoundaryUtilitiesSingleSpecies::readPressureInflow()\n"
-                   << "'velocity' entry missing from '"
-                   << db_name
-                   << "' input database."
-                   << std::endl);
+                           << ": FlowModelBoundaryUtilitiesSingleSpecies::readPressureInflow()\n"
+                           << "'velocity' entry missing from '"
+                           << db_name
+                           << "' input database."
+                           << std::endl);
     }
 
     if (d_dim == tbox::Dimension(1))
@@ -6629,9 +6828,9 @@ FlowModelBoundaryUtilitiesSingleSpecies::readPressureInflow(
                        << std::endl);
         }
 
-        d_bdry_node_pressure_inflow_rho[bdry_location_index] = data_rho;
-        d_bdry_node_pressure_inflow_p[bdry_location_index] = data_p;
-        d_bdry_node_pressure_inflow_vel[bdry_location_index] = data_vel[0];
+        d_bdry_node_pressure_inflow_p_tot[bdry_location_index] = data_p;
+        d_bdry_node_pressure_inflow_T_tot[bdry_location_index] = data_T;
+        d_bdry_node_inflow_vel[bdry_location_index] = data_vel[0];
     }
     else if (d_dim == tbox::Dimension(2))
     {
@@ -6645,10 +6844,10 @@ FlowModelBoundaryUtilitiesSingleSpecies::readPressureInflow(
                        << std::endl);
         }
 
-        d_bdry_edge_pressure_inflow_rho[bdry_location_index] = data_rho;
-        d_bdry_edge_pressure_inflow_p[bdry_location_index] = data_p;
-        d_bdry_edge_pressure_inflow_vel[bdry_location_index*2] = data_vel[0];
-        d_bdry_edge_pressure_inflow_vel[bdry_location_index*2 + 1] = data_vel[1];
+        d_bdry_edge_pressure_inflow_p_tot[bdry_location_index] = data_p;
+        d_bdry_edge_pressure_inflow_T_tot[bdry_location_index] = data_T;
+        d_bdry_edge_inflow_vel[bdry_location_index*2] = data_vel[0];
+        d_bdry_edge_inflow_vel[bdry_location_index*2 + 1] = data_vel[1];
     }
     else if (d_dim == tbox::Dimension(3))
     {
@@ -6662,11 +6861,117 @@ FlowModelBoundaryUtilitiesSingleSpecies::readPressureInflow(
                        << std::endl);
         }
 
-        d_bdry_face_pressure_inflow_rho[bdry_location_index] = data_rho;
-        d_bdry_face_pressure_inflow_p[bdry_location_index] = data_p;
-        d_bdry_face_pressure_inflow_vel[bdry_location_index*3] = data_vel[0];
-        d_bdry_face_pressure_inflow_vel[bdry_location_index*3 + 1] = data_vel[1];
-        d_bdry_face_pressure_inflow_vel[bdry_location_index*3 + 2] = data_vel[2];
+        d_bdry_face_pressure_inflow_p_tot[bdry_location_index] = data_p;
+        d_bdry_face_pressure_inflow_T_tot[bdry_location_index] = data_T;
+        d_bdry_face_inflow_vel[bdry_location_index*3] = data_vel[0];
+        d_bdry_face_inflow_vel[bdry_location_index*3 + 1] = data_vel[1];
+        d_bdry_face_inflow_vel[bdry_location_index*3 + 2] = data_vel[2];
     }
 }
 
+void
+FlowModelBoundaryUtilitiesSingleSpecies::readTemperatureInflow(
+        const boost::shared_ptr<tbox::Database>& db,
+        std::string& db_name,
+        int bdry_location_index)
+{
+    TBOX_ASSERT(db);
+    TBOX_ASSERT(!db_name.empty());
+
+    double data_T = 0.0, data_rho = 0.0;
+    std::vector<double> data_vel;
+
+    if (db->keyExists("temperature"))
+    {
+        data_T = db->getDouble("temperature");
+    }
+    else
+    {
+        TBOX_ERROR(d_object_name
+                           << ": FlowModelBoundaryUtilitiesSingleSpecies::readTemperatureInflow()\n"
+                           << "'temperature' entry missing from '"
+                           << db_name
+                           << "' input database."
+                           << std::endl);
+    }
+
+    if (db->keyExists("density"))
+    {
+        data_rho = db->getDouble("density");
+    }
+    else
+    {
+        TBOX_ERROR(d_object_name
+                           << ": FlowModelBoundaryUtilitiesSingleSpecies::readPressureInflow()\n"
+                           << "'temperature' entry missing from '"
+                           << db_name
+                           << "' input database."
+                           << std::endl);
+    }
+
+    if (db->keyExists("velocity"))
+    {
+        data_vel = db->getDoubleVector("velocity");
+    }
+    else
+    {
+        TBOX_ERROR(d_object_name
+                           << ": FlowModelBoundaryUtilitiesSingleSpecies::readPressureInflow()\n"
+                           << "'velocity' entry missing from '"
+                           << db_name
+                           << "' input database."
+                           << std::endl);
+    }
+
+    if (d_dim == tbox::Dimension(1))
+    {
+        if (static_cast<int>(data_vel.size()) != 1)
+        {
+            TBOX_ERROR(d_object_name
+                               << ": FlowModelBoundaryUtilitiesSingleSpecies::readIsothermalNoSlip()\n"
+                               << "'velocity' entry from '"
+                               << db_name
+                               << "' input database has incorrect size."
+                               << std::endl);
+        }
+
+        d_bdry_node_inflow_rho[bdry_location_index] = data_rho;
+        d_bdry_node_inflow_T[bdry_location_index] = data_T;
+        d_bdry_node_inflow_vel[bdry_location_index] = data_vel[0];
+    }
+    else if (d_dim == tbox::Dimension(2))
+    {
+        if (static_cast<int>(data_vel.size()) != 2)
+        {
+            TBOX_ERROR(d_object_name
+                               << ": FlowModelBoundaryUtilitiesSingleSpecies::readIsothermalNoSlip()\n"
+                               << "'velocity' entry from '"
+                               << db_name
+                               << "' input database has incorrect size."
+                               << std::endl);
+        }
+
+        d_bdry_edge_inflow_rho[bdry_location_index] = data_rho;
+        d_bdry_edge_inflow_T[bdry_location_index] = data_T;
+        d_bdry_edge_inflow_vel[bdry_location_index*2] = data_vel[0];
+        d_bdry_edge_inflow_vel[bdry_location_index*2 + 1] = data_vel[1];
+    }
+    else if (d_dim == tbox::Dimension(3))
+    {
+        if (static_cast<int>(data_vel.size()) != 3)
+        {
+            TBOX_ERROR(d_object_name
+                               << ": FlowModelBoundaryUtilitiesSingleSpecies::readIsothermalNoSlip()\n"
+                               << "'velocity' entry from '"
+                               << db_name
+                               << "' input database has incorrect size."
+                               << std::endl);
+        }
+
+        d_bdry_face_inflow_rho[bdry_location_index] = data_rho;
+        d_bdry_face_inflow_T[bdry_location_index] = data_T;
+        d_bdry_face_inflow_vel[bdry_location_index*3] = data_vel[0];
+        d_bdry_face_inflow_vel[bdry_location_index*3 + 1] = data_vel[1];
+        d_bdry_face_inflow_vel[bdry_location_index*3 + 2] = data_vel[2];
+    }
+}

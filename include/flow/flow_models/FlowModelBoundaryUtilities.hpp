@@ -28,6 +28,7 @@ namespace BDRY_COND
             ISOTHERMAL_NO_SLIP  = 11,
             PRESSURE_INFLOW     = 12,
             PRESSURE_OUTFLOW    = 13,
+            TEMPERATURE_INFLOW    = 14,
             XADIABATIC_NO_SLIP  = 100,
             YADIABATIC_NO_SLIP  = 101,
             ZADIABATIC_NO_SLIP  = 102,
@@ -39,7 +40,10 @@ namespace BDRY_COND
             ZPRESSURE_INFLOW    = 122,
             XPRESSURE_OUTFLOW   = 130,
             YPRESSURE_OUTFLOW   = 131,
-            ZPRESSURE_OUTFLOW   = 132
+            ZPRESSURE_OUTFLOW   = 132,
+            XTEMPERATURE_INFLOW   = 140,
+            YTEMPERATURE_INFLOW   = 141,
+            ZTEMPERATURE_INFLOW   = 142
         };
     }
 }

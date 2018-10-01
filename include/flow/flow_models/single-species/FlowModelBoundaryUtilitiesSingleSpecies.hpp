@@ -203,6 +203,11 @@ class FlowModelBoundaryUtilitiesSingleSpecies: public FlowModelBoundaryUtilities
             const boost::shared_ptr<tbox::Database>& db,
             std::string& db_name,
             int bdry_location_index);
+        void
+            readTemperatureInflow(
+            const boost::shared_ptr<tbox::Database>& db,
+            std::string& db_name,
+            int bdry_location_index);
         
         /*
          * Thermodynamic properties of the species.
@@ -234,14 +239,31 @@ class FlowModelBoundaryUtilitiesSingleSpecies: public FlowModelBoundaryUtilities
         std::vector<double> d_bdry_face_pressure_outflow_p;
 
         /*
-         * Vectors of node (1D), edge (2D) or face (3D) boundary values for PRSSURE_INFLOW case.
+         * Vectors of node (1D), edge (2D) or face (3D) boundary values for PRSSURE_INFLOW/TEMPERATURE_INFLOW case.
          */
-        std::vector<double>  d_bdry_node_pressure_inflow_rho;
-        std::vector<double>  d_bdry_edge_pressure_inflow_rho;
-        std::vector<double>  d_bdry_face_pressure_inflow_rho;
-        std::vector<double>  d_bdry_node_pressure_inflow_p;
-        std::vector<double>  d_bdry_edge_pressure_inflow_p;
-        std::vector<double>  d_bdry_face_pressure_inflow_p;
+        std::vector<double>  d_bdry_node_inflow_rho;
+        std::vector<double>  d_bdry_edge_inflow_rho;
+        std::vector<double>  d_bdry_face_inflow_rho;
+        std::vector<double>  d_bdry_node_inflow_p;
+        std::vector<double>  d_bdry_edge_inflow_p;
+        std::vector<double>  d_bdry_face_inflow_p;
+        std::vector<double>  d_bdry_node_inflow_T;
+        std::vector<double>  d_bdry_edge_inflow_T;
+        std::vector<double>  d_bdry_face_inflow_T;
+        std::vector<double>  d_bdry_node_inflow_vel;
+        std::vector<double>  d_bdry_edge_inflow_vel;
+        std::vector<double>  d_bdry_face_inflow_vel;
+
+
+    /*
+         * Vectors of node (1D), edge (2D) or face (3D) boundary values for PRSSURE_INFLOW/TEMPERATURE_INFLOW case.
+         */
+        std::vector<double>  d_bdry_node_pressure_inflow_p_tot;
+        std::vector<double>  d_bdry_edge_pressure_inflow_p_tot;
+        std::vector<double>  d_bdry_face_pressure_inflow_p_tot;
+        std::vector<double>  d_bdry_node_pressure_inflow_T_tot;
+        std::vector<double>  d_bdry_edge_pressure_inflow_T_tot;
+        std::vector<double>  d_bdry_face_pressure_inflow_T_tot;
         std::vector<double>  d_bdry_node_pressure_inflow_vel;
         std::vector<double>  d_bdry_edge_pressure_inflow_vel;
         std::vector<double>  d_bdry_face_pressure_inflow_vel;
