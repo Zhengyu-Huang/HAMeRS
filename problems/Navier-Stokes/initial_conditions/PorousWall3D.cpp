@@ -11,10 +11,12 @@ NavierStokesInitialConditions::initializeDataOnPatch(
     const bool initial_time) {
     NULL_USE(data_time);
 
-    if (d_project_name != "3D porous wall") {
+    if ((d_project_name != "3D porous wall NASA-exp") &&
+        (d_project_name != "3D porous wall Mars")) {
         TBOX_ERROR(d_object_name
                            << ": "
-                           << "Can only initialize data for 'project_name' = '3D porous wall'!\n"
+                           << "Can only initialize data for 'project_name' = '3D porous wall NASA-exp' or "
+                           << "'3D porous wall Mars'!\n"
                            << "'project_name' = '"
                            << d_project_name
                            << "' is given."
@@ -24,7 +26,7 @@ NavierStokesInitialConditions::initializeDataOnPatch(
     if (d_dim != tbox::Dimension(3)) {
         TBOX_ERROR(d_object_name
                            << ": "
-                           << "Dimension of problem should be 2!"
+                           << "Dimension of problem should be 3!"
                            << std::endl);
     }
 
@@ -47,13 +49,13 @@ NavierStokesInitialConditions::initializeDataOnPatch(
         const double *const dx = patch_geom->getDx();
         const double *const patch_xlo = patch_geom->getXLower();
 
-        // Get the dimensions of box that covers the interior of Patch.
+// Get the dimensions of box that covers the interior of Patch.
         hier::Box patch_box = patch.getBox();
         const hier::IntVector patch_dims = patch_box.numberCells();
 
-        /*
-         * Initialize data for a 2D shock-vortex interaction problem.
-         */
+/*
+ * Initialize data for a 2D shock-vortex interaction problem.
+ */
 
         boost::shared_ptr <pdat::CellData<double>> density = conservative_variables[0];
         boost::shared_ptr <pdat::CellData<double>> momentum = conservative_variables[1];
@@ -64,61 +66,116 @@ NavierStokesInitialConditions::initializeDataOnPatch(
         double *rho_v = momentum->getPointer(1);
         double *rho_w = momentum->getPointer(2);
         double *E = total_energy->getPointer(0);
+        if (d_project_name == "3D porous wall NASA-exp") {
+            const double gamma = double(7) / double(5);
 
-        const double gamma = double(7) / double(5);
+// Post-shock condition.
+            const double rho_post = double(1.0);
+            const double p_post = double(946.25);
+            const double u_post = double(0.0);
+            const double v_post = double(0.0);
+            const double w_post = double(0.0);
+
+// Pre-shock condition.
+            const double rho_pre = double(0.9989431968295907);
+            const double p_pre = double(945.25);
+            const double u_pre = double(0.0);
+            const double v_pre = double(0.0);
+            const double w_pre = double(0.0);
+
+//seperation between preshock and postshock
+            double x0 = 0.0;
+            for (int k = 0; k < patch_dims[2]; k++) {
+                for (int j = 0; j < patch_dims[1]; j++) {
+                    for (int i = 0; i < patch_dims[0]; i++) {
+// Compute index into linear data array.
+                        int idx_cell = i + j * patch_dims[0] + k * patch_dims[0] * patch_dims[1];
+
+// Compute the coordinates.
+                        double x[3];
+                        x[0] = patch_xlo[0] + (double(i) + double(1) / double(2)) * dx[0];
+                        x[1] = patch_xlo[1] + (double(j) + double(1) / double(2)) * dx[1];
+                        x[2] = patch_xlo[2] + (double(k) + double(1) / double(2)) * dx[2];
+
+                        if (x[0] < x0) {
+                            rho[idx_cell] = rho_post;
+                            rho_u[idx_cell] = rho_post * u_post;
+                            rho_v[idx_cell] = rho_post * v_post;
+                            rho_w[idx_cell] = rho_post * w_post;
+                            E[idx_cell] = p_post / (gamma - double(1)) + double(1) / double(2) *
+                                                                         rho_post *
+                                                                         (u_post
+                                                                          * u_post +
+                                                                          v_post * v_post
+                                                                          +
+                                                                          w_post * w_post
+                                                                         );
+
+                        } else {
+                            rho[idx_cell] = rho_pre;
+                            rho_u[idx_cell] = rho_pre * u_pre;
+                            rho_v[idx_cell] = rho_pre * v_pre;
+                            rho_w[idx_cell] = rho_pre * w_pre;
+                            E[idx_cell] = p_pre / (gamma - double(1)) + double(1) / double(2) *
+                                                                        rho_pre *
+                                                                        (u_pre
+                                                                         * u_pre +
+                                                                         v_pre * v_pre
+                                                                         +
+                                                                         w_pre * w_pre
+                                                                        );
+                        }
+                    }
+                }
+            }
+        }
+        if (d_project_name == "3D porous wall Mars") {
+            const double gamma = 1.33;
 
 
+// Post-shock condition.
+            const double rho_post = double(1.0);
+            const double p_post = double(0.7518796992481204);
+            const double u_post = double(1.0);
+            const double v_post = double(0.0);
 
-        // Post-shock condition.
-        const double rho_post = double(1.0);
-        const double p_post = double(1.0) / gamma;
-        const double u_post = double(0.0);
-        const double v_post = double(0.0);
-        const double w_post = double(1.8);
+// Pre-shock condition.
+            const double rho_pre = double(0.3649922771465224);
+            const double p_pre = double(0.1770957021238189);
+            const double u_pre = double(0.0);
+            const double v_pre = double(0.0);
 
-        // Pre-shock condition.
-        const double rho_pre = double(1.);
-        const double p_pre = double(1.0) / gamma;
-        const double u_pre = double(0);
-        const double v_pre = double(0);
-        const double w_pre = double(0);
+//seperation between preshock and postshock
+            double x0 = -0.5;
 
-        //seperation between preshock and postshock
-        double x2 = -0.5;
-        for (int k = 0; k < patch_dims[2]; k++) {
             for (int j = 0; j < patch_dims[1]; j++) {
                 for (int i = 0; i < patch_dims[0]; i++) {
-                    // Compute index into linear data array.
-                    int idx_cell = i + j * patch_dims[0] + k*patch_dims[0]*patch_dims[1];
+// Compute index into linear data array.
+                    int idx_cell = i + j * patch_dims[0];
 
-                    // Compute the coordinates.
-                    double x[3];
+// Compute the coordinates.
+                    double x[2];
                     x[0] = patch_xlo[0] + (double(i) + double(1) / double(2)) * dx[0];
                     x[1] = patch_xlo[1] + (double(j) + double(1) / double(2)) * dx[1];
-                    x[2] = patch_xlo[2] + (double(k) + double(1) / double(2)) * dx[2];
 
-                    if (x[2] < x2) {
+
+                    if (x[0] < x0) {
                         rho[idx_cell] = rho_post;
                         rho_u[idx_cell] = rho_post * u_post;
                         rho_v[idx_cell] = rho_post * v_post;
-                        rho_w[idx_cell] = rho_post * w_post;
                         E[idx_cell] = p_post / (gamma - double(1)) + double(1) / double(2) * rho_post *
-                                                                     (u_post*u_post + v_post*v_post + w_post*w_post);
-
+                                                                     (u_post * u_post + v_post * v_post);
                     } else {
 
                         rho[idx_cell] = rho_pre;
                         rho_u[idx_cell] = rho_pre * u_pre;
                         rho_v[idx_cell] = rho_pre * v_pre;
-                        rho_w[idx_cell] = rho_pre * w_pre;
                         E[idx_cell] = p_pre / (gamma - double(1)) + double(1) / double(2) * rho_pre *
-                                                                    (u_pre*u_pre + v_pre*v_pre + w_pre*w_pre);
-
+                                                                    (u_pre * u_pre + v_pre * v_pre);
 
                     }
                 }
             }
-
         }
     }
 }

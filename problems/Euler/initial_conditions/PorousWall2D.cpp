@@ -115,6 +115,49 @@ const bool initial_time) {
             }
         }
         if (d_project_name == "2D porous wall Mars") {
+            const double gamma = 1.33;
+// Post-shock condition.
+            const double rho_post = double(1.0);
+            const double p_post = double(0.7518796992481204);
+            const double u_post = double(1.0);
+            const double v_post = double(0.0);
+
+// Pre-shock condition.
+            const double rho_pre = double(0.3649922771465224);
+            const double p_pre = double(0.1770957021238189);
+            const double u_pre = double(0.0);
+            const double v_pre = double(0.0);
+
+//seperation between preshock and postshock
+            double x0 = -0.5;
+            for (int j = 0; j < patch_dims[1]; j++) {
+                for (int i = 0; i < patch_dims[0]; i++) {
+// Compute index into linear data array.
+                    int idx_cell = i + j * patch_dims[0];
+
+// Compute the coordinates.
+                    double x[2];
+                    x[0] = patch_xlo[0] + (double(i) + double(1) / double(2)) * dx[0];
+                    x[1] = patch_xlo[1] + (double(j) + double(1) / double(2)) * dx[1];
+
+// Compute the distance from the initial material interface.
+                    if (x[0] < x0) {
+                        rho[idx_cell] = rho_post;
+                        rho_u[idx_cell] = rho_post * u_post;
+                        rho_v[idx_cell] = rho_post * v_post;
+                        E[idx_cell] = p_post / (gamma - double(1)) + double(1) / double(2) * rho_post *
+                                                                     (u_post * u_post + v_post * v_post);
+                    } else {
+
+                        rho[idx_cell] = rho_pre;
+                        rho_u[idx_cell] = rho_pre * u_pre;
+                        rho_v[idx_cell] = rho_pre * v_pre;
+                        E[idx_cell] = p_pre / (gamma - double(1)) + double(1) / double(2) * rho_pre *
+                                                                    (u_pre * u_pre + v_pre * v_pre);
+
+                    }
+                }
+	    }
         }
     }
 }

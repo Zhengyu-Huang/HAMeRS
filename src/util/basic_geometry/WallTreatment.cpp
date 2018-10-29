@@ -54,9 +54,9 @@ int isOutsidePorousWall2X(int dim, double x, double y, double z)
      */
 
     double x0 = 0.0, r_hole = 4./100;
-    if(fabs(x - x0) > r_hole) return 1;
+    if(fabs(x - x0) > 2*r_hole) return 1;
     if(dim == 2 || dim == 3){
-        if(y < 45./100 || (y > 55./100))
+        if(y < 0.5 - r_hole || (y > 0.5 + r_hole))
             return 0;
         else
             return 1;
@@ -163,10 +163,10 @@ int isOutsidePorousWall4X(int dim, double x, double y, double z)
      * 5 4 5
      */
 
-    double x0 = 0.0, r_hole = 1./7;
-    if(fabs(x - x0) > r_hole) return 1;
+    double x0 = 0.0, r_hole = 1./7, hole_half_thickness = 8./100;
+    if(fabs(x - x0) > hole_half_thickness) return 1;
     if(dim == 2 || dim == 3){
-        if((y < 5./14. || y > 9./14.) || (z < 5./14. || z > 9./14.))
+        if((y < 0.5 - r_hole|| y > 0.5 + r_hole) || (z < 0.5 - r_hole|| z > 0.5 + r_hole))
             return 0;
         else
             return 1;
@@ -181,12 +181,12 @@ int isOutsidePorousWall4X(int dim, double x, double y, double z)
  * the mesh size is 1/(8N).
  *
  */
-int isOutsidePorousWall4Y(int dim, double x, double y, double z)
+int isOutsidePorousWall4X_2(int dim, double x, double y, double z)
 {
-    /*
+    /* 8.0 percents = (2./10)*(4./10)
      * The porous wall is centered at x0. and this is a 3D structure
-     * The computational domain is at least is 8 by 8 by 8
-     * There are 1 holes in x direction at x = 0.0, of size 2,
+     * The computational domain is at least is 14 by 14 by 14
+     * There are 1 holes in x direction at x = 0.0, of size 4,
      *                ########
      *                ########
      *                ########
@@ -195,15 +195,13 @@ int isOutsidePorousWall4Y(int dim, double x, double y, double z)
      *                ########
      *                ########
      *                ########
-     * 3 2 3
+     * 5 4 5
      */
 
-
-    double y0 = 0.0, r_hole = 1./8;
-    if(fabs(y - y0) > r_hole) return 1;
+    double x0 = 0.0, r_hole_y = 1./10, r_hole_z = 2./10, hole_half_thickness = 8./100;
+    if(fabs(x - x0) > hole_half_thickness) return 1;
     if(dim == 2 || dim == 3){
-        double xx = x/r_hole, zz = z/r_hole;
-        if((xx < 3 || xx > 5) || (zz < 3 || zz > 5))
+        if((y < 0.5 - r_hole_y|| y > 0.5 + r_hole_y) || (z < 0.5 - r_hole_z|| z > 0.5 + r_hole_z))
             return 0;
         else
             return 1;
@@ -211,20 +209,12 @@ int isOutsidePorousWall4Y(int dim, double x, double y, double z)
     return 1;
 }
 
-
-/* This is simple debugging setup
- * This function decide point (x, y, z) is in the wall or not
- * return 0 if the point is in the wall
- * return 1 if the point is outside
- * the mesh size is 1/(8N).
- *
- */
-int isOutsidePorousWall4Z(int dim, double x, double y, double z)
+int isOutsidePorousWall4X_3(int dim, double x, double y, double z)
 {
-    /*
+    /* 8.0 percents = (1./10)*(8./10)
      * The porous wall is centered at x0. and this is a 3D structure
-     * The computational domain is at least is 8 by 8 by 8
-     * There are 1 holes in x direction at x = 0.0, of size 2,
+     * The computational domain is at least is 14 by 14 by 14
+     * There are 1 holes in x direction at x = 0.0, of size 4,
      *                ########
      *                ########
      *                ########
@@ -233,21 +223,20 @@ int isOutsidePorousWall4Z(int dim, double x, double y, double z)
      *                ########
      *                ########
      *                ########
-     * 3 2 3
+     * 5 4 5
      */
 
-
-    double z0 = 0.0, r_hole = 1./8;
-    if(fabs(z - z0) > r_hole) return 1;
+    double x0 = 0.0, r_hole_y = 1./20, r_hole_z = 4./10, hole_half_thickness = 8./100;
+    if(fabs(x - x0) > hole_half_thickness) return 1;
     if(dim == 2 || dim == 3){
-        double yy = y/r_hole, xx = x/r_hole;
-        if((yy < 3 || yy > 5) || (xx < 3 || xx > 5))
+        if((y < 0.5 - r_hole_y|| y > 0.5 + r_hole_y) || (z < 0.5 - r_hole_z|| z > 0.5 + r_hole_z))
             return 0;
         else
             return 1;
     }
     return 1;
 }
+
 
 void
 initializeCellStatus(hier::Patch& patch,
@@ -299,7 +288,7 @@ initializeCellStatus(hier::Patch& patch,
                                  y = x_lo[1] + (j + 0.5) * dx[1],
                                  z = x_lo[2] + (k + 0.5) * dx[2];
                     const int idx = i + j * patch_dims[0] + k*patch_dims[0]*patch_dims[1];
-                    cell_status_data[idx] = isOutsidePorousWall4X(3, x, y, z);
+                    cell_status_data[idx] = isOutsidePorousWall4X_2(3, x, y, z);
                 }
             }
         }
