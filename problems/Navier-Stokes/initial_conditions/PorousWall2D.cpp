@@ -119,20 +119,41 @@ NavierStokesInitialConditions::initializeDataOnPatch(
             const double gamma = 1.33;
 
 
+//// Post-shock condition.
+//            const double rho_post = double(1.0);
+//            const double p_post = double(0.7518796992481204);
+//            const double u_post = double(1.0);
+//            const double v_post = double(0.0);
+//// Pre-shock condition.
+//            const double rho_pre = double(0.3649922771465224);
+//            const double p_pre = double(0.1770957021238189);
+//            const double u_pre = double(0.0);
+//            const double v_pre = double(0.0);
+
+
 // Post-shock condition.
             const double rho_post = double(1.0);
-            //const double p_post = double(790.3842940685046);
             const double p_post = double(0.7518796992481204);
-            const double u_post = double(1.0);
+            const double u_post = double(1.2);
             const double v_post = double(0.0);
-
 // Pre-shock condition.
-            //const double rho_pre = double(0.987347926730015);
-            //const double p_pre = double(780.3842940685046);
-            const double rho_pre = double(0.3649922771465224);
-            const double p_pre = double(0.1770957021238189);
+            const double rho_pre = double(0.30276434298491006);
+            const double p_pre = double(0.12658085012624493);
             const double u_pre = double(0.0);
             const double v_pre = double(0.0);
+
+//// Post-shock condition.
+//            const double rho_post = double(1.0);
+//            const double p_post = double(0.7518796992481204);
+//            const double u_post = double(0.6);
+//            const double v_post = double(0.0);
+//// Pre-shock condition.
+//            const double rho_pre = double(0.5419203691155778);
+//            const double p_pre = double(0.32599013828916323);
+//            const double u_pre = double(0.0);
+//            const double v_pre = double(0.0);
+
+
 
 //seperation between preshock and postshock
             double x0 = -0.5;

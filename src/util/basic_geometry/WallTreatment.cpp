@@ -155,8 +155,14 @@ int isOutsidePorousWall4X(int dim, double x, double y, double z)
      *                ########
      *                ########
      *                ########
+     *                ########
+     *                ########
      *                ###  ###
      *                ###  ###
+     *                ###  ###
+     *                ###  ###
+     *                ########
+     *                ########
      *                ########
      *                ########
      *                ########
@@ -288,7 +294,7 @@ initializeCellStatus(hier::Patch& patch,
                                  y = x_lo[1] + (j + 0.5) * dx[1],
                                  z = x_lo[2] + (k + 0.5) * dx[2];
                     const int idx = i + j * patch_dims[0] + k*patch_dims[0]*patch_dims[1];
-                    cell_status_data[idx] = isOutsidePorousWall4X_2(3, x, y, z);
+                    cell_status_data[idx] = isOutsidePorousWall4X(3, x, y, z);
                 }
             }
         }

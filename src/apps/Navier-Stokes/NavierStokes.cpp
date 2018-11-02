@@ -808,7 +808,7 @@ NavierStokes::computeStableDtOnPatch(
                 
                 const double spectral_radius_acoustic = max_lambda_x[idx]/dx_0 +
                     max_lambda_y[idx]/dx_1;
-                
+
                 stable_spectral_radius = fmax(stable_spectral_radius, spectral_radius_acoustic);
             }
         }
