@@ -73,12 +73,12 @@ BasicCartesianBoundaryUtilities3::getFromInput(
     TBOX_ASSERT(static_cast<int>(face_locs.size()) <= NUM_3D_FACES);
     TBOX_ASSERT(static_cast<int>(edge_locs.size()) <= NUM_3D_EDGES);
     TBOX_ASSERT(static_cast<int>(node_locs.size()) <= NUM_3D_NODES);
-    TBOX_ASSERT(*min_element(face_locs.begin(), face_locs.end()) >= 0);
-    TBOX_ASSERT(*max_element(face_locs.begin(), face_locs.end()) < NUM_3D_FACES);
-    TBOX_ASSERT(*min_element(edge_locs.begin(), edge_locs.end()) >= 0);
-    TBOX_ASSERT(*max_element(edge_locs.begin(), edge_locs.end()) < NUM_3D_EDGES);
-    TBOX_ASSERT(*min_element(node_locs.begin(), node_locs.end()) >= 0);
-    TBOX_ASSERT(*max_element(node_locs.begin(), node_locs.end()) < NUM_3D_NODES);
+//    TBOX_ASSERT(*min_element(face_locs.begin(), face_locs.end()) >= 0);
+//    TBOX_ASSERT(*max_element(face_locs.begin(), face_locs.end()) < NUM_3D_FACES);
+//    TBOX_ASSERT(*min_element(edge_locs.begin(), edge_locs.end()) >= 0);
+//    TBOX_ASSERT(*max_element(edge_locs.begin(), edge_locs.end()) < NUM_3D_EDGES);
+//    TBOX_ASSERT(*min_element(node_locs.begin(), node_locs.end()) >= 0);
+//    TBOX_ASSERT(*max_element(node_locs.begin(), node_locs.end()) < NUM_3D_NODES);
     TBOX_ASSERT(static_cast<int>(face_conds.size()) == NUM_3D_FACES);
     TBOX_ASSERT(static_cast<int>(edge_conds.size()) == NUM_3D_EDGES);
     TBOX_ASSERT(static_cast<int>(node_conds.size()) == NUM_3D_NODES);
@@ -1868,6 +1868,7 @@ BasicCartesianBoundaryUtilities3::read3dBdryFaces(
     std::vector<int>& face_conds,
     const hier::IntVector& periodic)
 {
+    if(face_locs.empty()) return;
     TBOX_DIM_ASSERT(periodic.getDim() == tbox::Dimension(3));
     
     TBOX_ASSERT(bdry_strategy != 0);
@@ -2003,6 +2004,7 @@ BasicCartesianBoundaryUtilities3::read3dBdryEdges(
     std::vector<int>& edge_conds,
     const hier::IntVector& periodic)
 {
+    if(edge_locs.empty()) return;
     TBOX_DIM_ASSERT(periodic.getDim() == tbox::Dimension(3));
     
     TBOX_ASSERT(input_db);
@@ -2520,6 +2522,7 @@ BasicCartesianBoundaryUtilities3::read3dBdryNodes(
     std::vector<int>& node_conds,
     const hier::IntVector& periodic)
 {
+    if(node_locs.empty()) return;
     TBOX_DIM_ASSERT(periodic.getDim() == tbox::Dimension(3));
     
     TBOX_ASSERT(input_db);

@@ -73,3 +73,9 @@ The code is managed by Man-Long Wong (wongml@stanford.edu) of the [Flow Physics 
 
 ### Copyright ###
 HAMeRS is licensed under a GNU Lesser General Public License v3.0.
+
+
+
+### TODO ###
+Add PRESSURE_INFLOW and PRESSURE_OUTFLOW only for 2D and constantly populate farfield ghost nodes(first order)
+comments out the usage of getFaceLocationForEdgeBdry

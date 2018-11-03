@@ -129,7 +129,7 @@ NavierStokesBoundaryConditions::NavierStokesBoundaryConditions(
                 {
                     node_locs.push_back(ni);
                 }
-                
+
                 flow_model_boundary_utilities->
                     getFromInput2d(
                         boundary_conditions_db,
@@ -138,7 +138,7 @@ NavierStokesBoundaryConditions::NavierStokesBoundaryConditions(
                         d_master_bdry_edge_conds,
                         d_master_bdry_node_conds,
                         periodic);
-                
+
                 BasicCartesianBoundaryUtilities2::getFromInput(
                     this,
                     boundary_conditions_db,
@@ -147,6 +147,7 @@ NavierStokesBoundaryConditions::NavierStokesBoundaryConditions(
                     d_master_bdry_edge_conds,
                     d_master_bdry_node_conds,
                     periodic);
+
             }
             else if (d_dim == tbox::Dimension(3))
             {
@@ -238,13 +239,13 @@ NavierStokesBoundaryConditions::NavierStokesBoundaryConditions(
             {
                 d_scalar_bdry_node_conds[i] = BDRY_COND::BASIC::YSYMMETRY;
             }
-            
-            if (d_master_bdry_node_conds[i] != BOGUS_BDRY_DATA)
-            {
-                d_node_bdry_edge[i] =
-                    BasicCartesianBoundaryUtilities2::getEdgeLocationForNodeBdry(
-                        i, d_master_bdry_node_conds[i]);
-            }
+            //todo never used
+//            if (d_master_bdry_node_conds[i] != BOGUS_BDRY_DATA)
+//            {
+//                d_node_bdry_edge[i] =
+//                    BasicCartesianBoundaryUtilities2::getEdgeLocationForNodeBdry(
+//                        i, d_master_bdry_node_conds[i]);
+//            }
         }
     }
     else if (d_dim == tbox::Dimension(3))
@@ -277,13 +278,13 @@ NavierStokesBoundaryConditions::NavierStokesBoundaryConditions(
             {
                 d_scalar_bdry_edge_conds[i] = BDRY_COND::BASIC::ZSYMMETRY;
             }
-            
-            if (d_master_bdry_edge_conds[i] != BOGUS_BDRY_DATA)
-            {
-                d_edge_bdry_face[i] =
-                    BasicCartesianBoundaryUtilities3::getFaceLocationForEdgeBdry(
-                        i, d_master_bdry_edge_conds[i]);
-            }
+            //todo never used
+//            if (d_master_bdry_edge_conds[i] != BOGUS_BDRY_DATA)
+//            {
+//                d_edge_bdry_face[i] =
+//                    BasicCartesianBoundaryUtilities3::getFaceLocationForEdgeBdry(
+//                        i, d_master_bdry_edge_conds[i]);
+//            }
         }
         
         for (int i = 0; i < NUM_3D_NODES; i++)

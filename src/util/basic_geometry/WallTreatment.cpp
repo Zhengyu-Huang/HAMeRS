@@ -243,7 +243,27 @@ int isOutsidePorousWall4X_3(int dim, double x, double y, double z)
     return 1;
 }
 
-
+/* This is simple debugging setup
+ * This function decide point (x, y, z) is in the wall or not
+ * return 0 if the point is in the wall
+ * return 1 if the point is outside
+ * the mesh size is 1/(8N).
+ *
+ */
+int isOutsideTandem(int dim, double x, double y, double z)
+{
+    const double d = 2.5, r = 0.5;
+    double x0 = d, x1 = -d, y0 = 0.0, z0 = 0.0;
+    if(dim == 2){
+        if(((x < x0 + r && x > x0 - r)||(x < x1 + r && x > x1 - r)) && (y < y0 + r && y > y0 - r))
+            return 0;
+    }
+    if(dim == 3){
+        if(((x < x0 + r && x > x0 - r)||(x < x1 + r && x > x1 - r)) && (z < z0 + r && z > z0 - r) && (y < y0 + r && y > y0 - r))
+            return 0;
+    }
+    return 1;
+}
 void
 initializeCellStatus(hier::Patch& patch,
                      boost::shared_ptr<pdat::CellData<double> > &cell_status) {
@@ -278,7 +298,9 @@ initializeCellStatus(hier::Patch& patch,
                 const double x = x_lo[0] + (i + 0.5) * dx[0],
                         y = x_lo[1] + (j + 0.5) * dx[1];
                 const int idx = i + j * patch_dims[0];
-                cell_status_data[idx] = isOutsidePorousWall2X(2, x, y);
+                //cell_status_data[idx] = isOutsidePorousWall2X(2, x, y);
+                cell_status_data[idx] = isOutsideTandem(2, x, y);
+
             }
         }
 

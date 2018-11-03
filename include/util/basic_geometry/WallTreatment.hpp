@@ -43,6 +43,8 @@ int isOutsidePorousWall3Z(int dim, double x, double y, double z);
 int isOutsidePorousWall4X(int dim, double x, double y, double z);
 int isOutsidePorousWall4X_2(int dim, double x, double y, double z);
 int isOutsidePorousWall4X_3(int dim, double x, double y, double z);
+
+int isOutsideTandem(int dim, double x, double y, double z = 0.0);
 void
         initializeCellStatus(hier::Patch& patch,
                              boost::shared_ptr <pdat::CellData<double>> &cell_status);

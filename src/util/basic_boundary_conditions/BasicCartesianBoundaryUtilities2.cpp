@@ -67,10 +67,10 @@ BasicCartesianBoundaryUtilities2::getFromInput(
     TBOX_ASSERT(bdry_strategy != 0);
     TBOX_ASSERT(static_cast<int>(edge_locs.size()) <= NUM_2D_EDGES);
     TBOX_ASSERT(static_cast<int>(node_locs.size()) <= NUM_2D_NODES);
-    TBOX_ASSERT(*min_element(edge_locs.begin(), edge_locs.end()) >= 0);
-    TBOX_ASSERT(*max_element(edge_locs.begin(), edge_locs.end()) < NUM_2D_EDGES);
-    TBOX_ASSERT(*min_element(node_locs.begin(), node_locs.end()) >= 0);
-    TBOX_ASSERT(*max_element(node_locs.begin(), node_locs.end()) < NUM_2D_NODES);
+//    TBOX_ASSERT(*min_element(edge_locs.begin(), edge_locs.end()) >= 0);
+//    TBOX_ASSERT(*max_element(edge_locs.begin(), edge_locs.end()) < NUM_2D_EDGES);
+//    TBOX_ASSERT(*min_element(node_locs.begin(), node_locs.end()) >= 0);
+//    TBOX_ASSERT(*max_element(node_locs.begin(), node_locs.end()) < NUM_2D_NODES);
     TBOX_ASSERT(static_cast<int>(edge_conds.size()) == NUM_2D_EDGES);
     TBOX_ASSERT(static_cast<int>(node_conds.size()) == NUM_2D_NODES);
     
@@ -828,8 +828,8 @@ BasicCartesianBoundaryUtilities2::read2dBdryEdges(
     TBOX_ASSERT(bdry_strategy != 0);
     TBOX_ASSERT(input_db);
     TBOX_ASSERT(static_cast<int>(edge_locs.size()) <= NUM_2D_EDGES);
-    TBOX_ASSERT(*min_element(edge_locs.begin(), edge_locs.end()) >= 0);
-    TBOX_ASSERT(*max_element(edge_locs.begin(), edge_locs.end()) < NUM_2D_EDGES);
+//    TBOX_ASSERT(*min_element(edge_locs.begin(), edge_locs.end()) >= 0);
+//    TBOX_ASSERT(*max_element(edge_locs.begin(), edge_locs.end()) < NUM_2D_EDGES);
     TBOX_ASSERT(static_cast<int>(edge_conds.size()) == NUM_2D_EDGES);
     
     int num_per_dirs = 0;
@@ -948,8 +948,8 @@ BasicCartesianBoundaryUtilities2::read2dBdryNodes(
     
     TBOX_ASSERT(input_db);
     TBOX_ASSERT(static_cast<int>(node_locs.size()) <= NUM_2D_NODES);
-    TBOX_ASSERT(*min_element(node_locs.begin(), node_locs.end()) >= 0);
-    TBOX_ASSERT(*max_element(node_locs.begin(), node_locs.end()) < NUM_2D_NODES);
+//    TBOX_ASSERT(*min_element(node_locs.begin(), node_locs.end()) >= 0);
+//    TBOX_ASSERT(*max_element(node_locs.begin(), node_locs.end()) < NUM_2D_NODES);
     TBOX_ASSERT(static_cast<int>(edge_conds.size()) == NUM_2D_EDGES);
     TBOX_ASSERT(static_cast<int>(node_conds.size()) == NUM_2D_NODES);
     

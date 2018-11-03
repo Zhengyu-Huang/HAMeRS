@@ -47,8 +47,8 @@ BasicCartesianBoundaryUtilities1::getFromInput(
     TBOX_DIM_ASSERT(periodic.getDim() == tbox::Dimension(1));
     TBOX_ASSERT(bdry_strategy != 0);
     TBOX_ASSERT(static_cast<int>(node_locs.size()) <= NUM_1D_NODES);
-    TBOX_ASSERT(*min_element(node_locs.begin(), node_locs.end()) >= 0);
-    TBOX_ASSERT(*max_element(node_locs.begin(), node_locs.end()) < NUM_1D_NODES);
+//    TBOX_ASSERT(*min_element(node_locs.begin(), node_locs.end()) >= 0);
+//    TBOX_ASSERT(*max_element(node_locs.begin(), node_locs.end()) < NUM_1D_NODES);
     TBOX_ASSERT(static_cast<int>(node_conds.size()) == NUM_1D_NODES);
     
     if (!input_db)
@@ -283,12 +283,13 @@ BasicCartesianBoundaryUtilities1::read1dBdryNodes(
     std::vector<int>& node_conds,
     const hier::IntVector& periodic)
 {
+    if(node_locs.empty()) return;
     TBOX_DIM_ASSERT(periodic.getDim() == tbox::Dimension(1));
     
     TBOX_ASSERT(bdry_strategy != 0);
     TBOX_ASSERT(input_db);
     TBOX_ASSERT(static_cast<int>(node_locs.size()) <= NUM_1D_NODES);
-    TBOX_ASSERT(*min_element(node_locs.begin(), node_locs.end()) >= 0);
+    //TBOX_ASSERT(*min_element(node_locs.begin(), node_locs.end()) >= 0);
     TBOX_ASSERT(*max_element(node_locs.begin(), node_locs.end()) < NUM_1D_NODES);
     TBOX_ASSERT(static_cast<int>(node_conds.size()) == NUM_1D_NODES);
     
