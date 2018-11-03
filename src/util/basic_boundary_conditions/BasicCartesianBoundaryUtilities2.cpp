@@ -658,7 +658,7 @@ BasicCartesianBoundaryUtilities2::fillNodeBoundaryData(
                         {
                             var_data->getPointer(di)[idx_cell] = var_data->getPointer(di)[idx_cell_pivot];
                         }
-                        
+
                         var_data->getPointer(1)[idx_cell] = -var_data->getPointer(1)[idx_cell_pivot];
                     }
                 }

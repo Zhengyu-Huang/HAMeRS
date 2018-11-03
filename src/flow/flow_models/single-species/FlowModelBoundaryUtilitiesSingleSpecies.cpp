@@ -1446,6 +1446,7 @@ FlowModelBoundaryUtilitiesSingleSpecies::fill2dEdgeBoundaryData(
                                              (rho_pivot * c_pivot);
                             //subsonic case
                             if (M_pivot < 1.0) {
+
                                 double p_inf = d_bdry_edge_farfield_p[edge_loc];
 
                                 double epsilon_inf = d_equation_of_state_mixing_rules->getEquationOfState()->
@@ -2347,7 +2348,7 @@ FlowModelBoundaryUtilitiesSingleSpecies::fill2dNodeBoundaryData(
                     bdry_node_locs.erase(std::remove(bdry_node_locs.begin(), bdry_node_locs.end(), node_loc),
                                          bdry_node_locs.end());
                 }
-                else if (bdry_node_conds[node_loc] == BDRY_COND::FLOW_MODEL::YPRESSURE_INFLOW) {
+                else if (bdry_node_conds[node_loc] == BDRY_COND::FLOW_MODEL::YPRESSURE_OUTFLOW) {
                     for (int i = fill_box_lo_idx[0]; i <= fill_box_hi_idx[0]; i++) {
                         for (int j = fill_box_lo_idx[1]; j <= fill_box_hi_idx[1]; j++) {
                             const int idx_cell = (i + num_subghosts_conservative_var[0][0]) +
