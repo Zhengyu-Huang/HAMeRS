@@ -15,8 +15,8 @@ NavierStokesInitialConditions::initializeDataOnPatch(
         (d_project_name != "2D tandem supersonic")) {
         TBOX_ERROR(d_object_name
                            << ": "
-                           << "Can only initialize data for 'project_name' = '2D tandem' or "
-                           << "'2D tandem shear'!\n"
+                           << "Can only initialize data for 'project_name' = '2D tandem subsonic' or "
+                           << "'2D tandem supersonic'!\n"
                            << "'project_name' = '"
                            << d_project_name
                            << "' is given."
